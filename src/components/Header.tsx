@@ -16,7 +16,8 @@ const navItems = [
 const secondaryItems = [
   { title: "Vistoria", path: "/vistoria" },
   { title: "Solicitações", path: "/solicitacoes" },
-  { title: "Ficha Cadastral", path: "/ficha-cadastral" },
+  { title: "Ficha Locatário", path: "/ficha-cadastral" },
+  { title: "Ficha Fiador", path: "/ficha-fiador" },
   { title: "Garagem", path: "/garagem" },
 ];
 

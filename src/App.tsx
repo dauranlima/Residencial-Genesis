@@ -12,6 +12,7 @@ import OutrosImoveis from "./pages/OutrosImoveis";
 import Solicitacoes from "./pages/Solicitacoes";
 import Vistoria from "./pages/Vistoria";
 import FichaCadastral from "./pages/FichaCadastral";
+import FichaFiador from "./pages/FichaFiador";
 import Regimento from "./pages/Regimento";
 import Garagem from "./pages/Garagem";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/solicitacoes" element={<Solicitacoes />} />
             <Route path="/vistoria" element={<Vistoria />} />
             <Route path="/ficha-cadastral" element={<FichaCadastral />} />
+            <Route path="/ficha-fiador" element={<FichaFiador />} />
             <Route path="/regimento" element={<Regimento />} />
             <Route path="/garagem" element={<Garagem />} />
             <Route path="*" element={<NotFound />} />
