@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Building2, Camera, MapPin, ClipboardCheck, Car, Home, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-condo.jpg";
+import heroImageMob from "@/assets/hero-condoMob.png";
 
 const features = [
   { icon: Building2, title: "Apartamentos", desc: "Conheça nossos flats exclusivos", path: "/apartamentos" },
@@ -26,7 +27,10 @@ export default function Index() {
     <div>
       {/* Hero */}
       <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-        <img src={heroImage} alt="Residencial Morada do Sol II" className="absolute inset-0 w-full h-full object-cover" />
+        <picture className="absolute inset-0 w-full h-full">
+          <source media="(max-width: 767px)" srcSet={heroImageMob} />
+          <img src={heroImage} alt="Residencial Morada do Sol II" className="w-full h-full object-cover" />
+        </picture>
         <div className="absolute inset-0 bg-hero-overlay" />
         <div className="relative z-10 text-center px-4 max-w-3xl">
           <motion.h1
