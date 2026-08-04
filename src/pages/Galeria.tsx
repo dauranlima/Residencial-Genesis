@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import poolImg from "@/assets/gallery-pool.jpg";
-import gymImg from "@/assets/gallery-gym.jpg";
-import apt1 from "@/assets/apartment-1.jpg";
-import apt2 from "@/assets/apartment-2.jpg";    
 import frente from "@/assets/galeriaCond/frente.png";
 import interfone from "@/assets/galeriaCond/interfone.png";
 import garagem from "@/assets/galeriaCond/garagem.png";

@@ -52,10 +52,10 @@ export default function Index() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Button variant="hero" size="lg" asChild>
-              <Link to="/apartamentos">Ver Apartamentos</Link>
+              <Link to="/regimento">Regimento</Link>
             </Button>
             <Button variant="hero-outline" size="lg" asChild>
-              <Link to="/outros-imoveis">Apartamentos Disponíveis</Link>
+              <Link to="/outros-imoveis">Classificados</Link>
             </Button>
           </motion.div>
         </div>

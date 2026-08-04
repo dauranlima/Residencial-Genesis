@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { FileText, Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import regimentoPdf from "@/assets/REGIMENTO INTERNO DO  RESIDENCIAL Morada do Sol 2 -CORRIGIDO.pdf";
+import regimentoPdf from "@/assets/REGIMENTO INTERNO DO  RESIDENCIAL GÊNESIS FLAT-CORRIGIDO.pdf";
 import {
   Accordion,
   AccordionContent,
