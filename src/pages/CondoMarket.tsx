@@ -114,8 +114,8 @@ const INITIAL_COUPONS: Coupon[] = [
     merchantCategory: "Mercado",
     merchantWhatsapp: "(45) 99111-2233",
     title: "20% Desconto em qualquer produto",
-    description: "Válido para compras de qualquer produto hoje.",
-    discountValue: "20% OFF",
+    description: "Válido para compras na padaria hoje.",
+    discountValue: "10% OFF",
     totalQuantity: 10,
     remainingQuantity: 2, // Urgente!
     expiresAt: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
