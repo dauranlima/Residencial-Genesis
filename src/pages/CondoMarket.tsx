@@ -242,7 +242,13 @@ export default function CondoMarket() {
           <ClassifiedsTab
             items={classifieds}
             isSeniorMode={isSeniorMode}
-            onOpenNewModal={() => setIsNewClassifiedOpen(true)}
+            onOpenNewModal={() => {
+              if (!currentUser) {
+                setIsRegisterOpen(true);
+              } else {
+                setIsNewClassifiedOpen(true);
+              }
+            }}
           />
         ) : (
           <MerchantsTab
@@ -260,6 +266,7 @@ export default function CondoMarket() {
         onClose={() => setIsNewClassifiedOpen(false)}
         onAddClassified={handleAddClassified}
         isSeniorMode={isSeniorMode}
+        currentUser={currentUser}
       />
 
       <RedeemCouponModal

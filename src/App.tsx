@@ -16,6 +16,7 @@ import FichaFiador from "./pages/FichaFiador";
 import Regimento from "./pages/Regimento";
 import Garagem from "./pages/Garagem";
 import CondoMarket from "./pages/CondoMarket";
+import Avisos from "./pages/Avisos";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/regimento" element={<Regimento />} />
             <Route path="/garagem" element={<Garagem />} />
             <Route path="/condo-market" element={<CondoMarket />} />
+            <Route path="/avisos" element={<Avisos />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>

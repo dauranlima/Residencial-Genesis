@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Upload, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ interface NewClassifiedModalProps {
   onClose: () => void;
   onAddClassified: (newItem: ClassifiedItem) => void;
   isSeniorMode: boolean;
+  currentUser?: { name: string; block: string; unit: string } | null;
 }
 
 const CATEGORIES = ["Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
@@ -19,6 +20,7 @@ export default function NewClassifiedModal({
   onClose,
   onAddClassified,
   isSeniorMode,
+  currentUser,
 }: NewClassifiedModalProps) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -29,6 +31,14 @@ export default function NewClassifiedModal({
   const [sellerBlock, setSellerBlock] = useState("");
   const [sellerUnit, setSellerUnit] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+
+  useEffect(() => {
+    if (currentUser) {
+      setSellerName(currentUser.name || "");
+      setSellerBlock(currentUser.block || "");
+      setSellerUnit(currentUser.unit || "");
+    }
+  }, [currentUser, isOpen]);
 
   if (!isOpen) return null;
 

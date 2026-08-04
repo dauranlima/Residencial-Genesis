@@ -59,7 +59,7 @@ export default function Index() {
               <Link to="/regimento">Regimento</Link>
             </Button>
             <Button variant="hero-outline" size="lg" asChild>
-              <Link to="/condo-market">Classificados</Link>
+              <Link to="/avisos">Avisos Importantes</Link>
             </Button>
           </motion.div>
         </div>

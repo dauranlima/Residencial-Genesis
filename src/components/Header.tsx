@@ -7,14 +7,15 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { title: "Início", path: "/" },
   { title: "CondoMarket", path: "/condo-market" },
-  { title: "Apartamentos", path: "/apartamentos" },
   { title: "Solicitações", path: "/solicitacoes" },
   { title: "Localização", path: "/localizacao" },
-  { title: "Apartamentos Disponíveis", path: "/outros-imoveis" },
+  { title: "Avisos Importantes", path: "/avisos" },
   { title: "Regimento", path: "/regimento" },
 ];
 
 const secondaryItems = [
+  { title: "Apartamentos", path: "/apartamentos" },
+  { title: "Apartamentos Disponíveis", path: "/outros-imoveis" },
   { title: "Vistoria", path: "/vistoria" },
   { title: "Galeria de Fotos", path: "/galeria" },
   { title: "Ficha Locatário", path: "/ficha-cadastral" },
