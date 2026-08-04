@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { StickyNote, Plus, Trash2, Pin, ShieldAlert, AlertTriangle, Info, Sparkles, User, Calendar, Edit3, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import MoradorAuthModal from "@/components/MoradorAuthModal";
 
 export interface Notice {
   id: string;
@@ -79,6 +81,7 @@ const INITIAL_NOTICES: Notice[] = [
 
 export default function Avisos() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [notices, setNotices] = useState<Notice[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -95,11 +98,14 @@ export default function Avisos() {
   const [filter, setFilter] = useState<string>("todos");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // PIN Authentication State
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [pinDigits, setPinDigits] = useState<string[]>(["", "", "", "", "", ""]);
-  const [pinError, setPinError] = useState(false);
-  const CORRECT_PIN = "85810220";
+  // Resident Auth (3 Digits - Apt Number)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Admin Auth PIN Modal State
+  const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
+  const [adminPinDigits, setAdminPinDigits] = useState<string[]>(["", "", "", "", "", "", "", ""]);
+  const [adminPinError, setAdminPinError] = useState(false);
+  const ADMIN_PIN = "85810220";
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notices));
@@ -110,59 +116,59 @@ export default function Avisos() {
       setIsAdmin(false);
       toast({
         title: "Modo Adm Desativado",
-        description: "Você voltou ao modo visualização de condômino.",
+        description: "Você voltou ao modo de visualização de condômino.",
       });
     } else {
-      setPinDigits(["", "", "", "", "", "", "", ""]);
-      setPinError(false);
-      setIsPinModalOpen(true);
+      setAdminPinDigits(["", "", "", "", "", "", "", ""]);
+      setAdminPinError(false);
+      setIsAdminPinModalOpen(true);
     }
   };
 
-  const handlePinChange = (index: number, value: string) => {
+  // Admin PIN Handlers
+  const handleAdminPinChange = (index: number, value: string) => {
     if (value.length > 1) {
-      // If user pastes multiple digits
       const digits = value.replace(/\D/g, "").slice(0, 8).split("");
-      const newPin = [...pinDigits];
+      const newPin = [...adminPinDigits];
       digits.forEach((d, i) => {
         if (index + i < 8) newPin[index + i] = d;
       });
-      setPinDigits(newPin);
-      const nextInput = document.getElementById(`pin-input-${Math.min(index + digits.length, 7)}`);
+      setAdminPinDigits(newPin);
+      const nextInput = document.getElementById(`admin-pin-input-${Math.min(index + digits.length, 7)}`);
       if (nextInput) nextInput.focus();
       return;
     }
 
     const digit = value.replace(/\D/g, "");
-    const newPin = [...pinDigits];
+    const newPin = [...adminPinDigits];
     newPin[index] = digit;
-    setPinDigits(newPin);
-    setPinError(false);
+    setAdminPinDigits(newPin);
+    setAdminPinError(false);
 
     if (digit && index < 7) {
-      const nextInput = document.getElementById(`pin-input-${index + 1}`);
+      const nextInput = document.getElementById(`admin-pin-input-${index + 1}`);
       if (nextInput) nextInput.focus();
     }
   };
 
-  const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !pinDigits[index] && index > 0) {
-      const prevInput = document.getElementById(`pin-input-${index - 1}`);
+  const handleAdminPinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !adminPinDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`admin-pin-input-${index - 1}`);
       if (prevInput) prevInput.focus();
     }
   };
 
-  const handleVerifyPin = () => {
-    const enteredPin = pinDigits.join("");
-    if (enteredPin === CORRECT_PIN) {
+  const handleVerifyAdminPin = () => {
+    const enteredPin = adminPinDigits.join("");
+    if (enteredPin === ADMIN_PIN) {
       setIsAdmin(true);
-      setIsPinModalOpen(false);
+      setIsAdminPinModalOpen(false);
       toast({
         title: "Acesso Concedido!",
         description: "Modo Administrador ativado com sucesso.",
       });
     } else {
-      setPinError(true);
+      setAdminPinError(true);
       toast({
         title: "PIN Incorreto",
         description: "O código digitado é inválido. Tente novamente.",
@@ -298,7 +304,8 @@ export default function Avisos() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950/50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+      {isAuthenticated ? (
+        <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header Banner */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-navy via-navy-light to-primary p-8 text-white shadow-xl">
@@ -471,6 +478,7 @@ export default function Avisos() {
         )}
 
       </div>
+      ) : null}
 
       {/* Admin Notice Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -575,8 +583,13 @@ export default function Avisos() {
         </DialogContent>
       </Dialog>
 
-      {/* PIN Verification Modal */}
-      <Dialog open={isPinModalOpen} onOpenChange={setIsPinModalOpen}>
+      {/* PIN Verification Modal (Autenticação Morador) */}
+      {!isAuthenticated && (
+        <MoradorAuthModal onAuthenticated={() => setIsAuthenticated(true)} />
+      )}
+
+      {/* Admin PIN Verification Modal (8 dígitos) */}
+      <Dialog open={isAdminPinModalOpen} onOpenChange={setIsAdminPinModalOpen}>
         <DialogContent className="sm:max-w-md bg-card border-border/80 shadow-2xl rounded-2xl p-6">
           <DialogHeader className="text-center space-y-2">
             <div className="mx-auto w-12 h-12 rounded-full bg-gold/15 flex items-center justify-center text-gold mb-1">
@@ -593,20 +606,19 @@ export default function Avisos() {
           <div className="py-6 space-y-4">
             {/* PIN Inputs with hyphens: 858 - 102 - 20 */}
             <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-              {/* Group 1: 3 digits */}
               <div className="flex items-center gap-1 sm:gap-1.5">
                 {[0, 1, 2].map((idx) => (
                   <input
                     key={idx}
-                    id={`pin-input-${idx}`}
+                    id={`admin-pin-input-${idx}`}
                     type="password"
                     inputMode="numeric"
                     maxLength={1}
-                    value={pinDigits[idx]}
-                    onChange={(e) => handlePinChange(idx, e.target.value)}
-                    onKeyDown={(e) => handlePinKeyDown(idx, e)}
+                    value={adminPinDigits[idx]}
+                    onChange={(e) => handleAdminPinChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleAdminPinKeyDown(idx, e)}
                     className={`w-9 h-11 sm:w-10 sm:h-12 text-center text-lg font-bold rounded-lg border-2 bg-background focus:outline-none transition-all shadow-xs ${
-                      pinError
+                      adminPinError
                         ? "border-red-500 text-red-600 focus:ring-2 focus:ring-red-400"
                         : "border-input focus:border-gold focus:ring-2 focus:ring-gold/30 text-foreground"
                     }`}
@@ -616,20 +628,19 @@ export default function Avisos() {
 
               <span className="text-lg font-bold text-muted-foreground/60 select-none">-</span>
 
-              {/* Group 2: 3 digits */}
               <div className="flex items-center gap-1 sm:gap-1.5">
                 {[3, 4, 5].map((idx) => (
                   <input
                     key={idx}
-                    id={`pin-input-${idx}`}
+                    id={`admin-pin-input-${idx}`}
                     type="password"
                     inputMode="numeric"
                     maxLength={1}
-                    value={pinDigits[idx]}
-                    onChange={(e) => handlePinChange(idx, e.target.value)}
-                    onKeyDown={(e) => handlePinKeyDown(idx, e)}
+                    value={adminPinDigits[idx]}
+                    onChange={(e) => handleAdminPinChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleAdminPinKeyDown(idx, e)}
                     className={`w-9 h-11 sm:w-10 sm:h-12 text-center text-lg font-bold rounded-lg border-2 bg-background focus:outline-none transition-all shadow-xs ${
-                      pinError
+                      adminPinError
                         ? "border-red-500 text-red-600 focus:ring-2 focus:ring-red-400"
                         : "border-input focus:border-gold focus:ring-2 focus:ring-gold/30 text-foreground"
                     }`}
@@ -639,20 +650,19 @@ export default function Avisos() {
 
               <span className="text-lg font-bold text-muted-foreground/60 select-none">-</span>
 
-              {/* Group 3: 2 digits */}
               <div className="flex items-center gap-1 sm:gap-1.5">
                 {[6, 7].map((idx) => (
                   <input
                     key={idx}
-                    id={`pin-input-${idx}`}
+                    id={`admin-pin-input-${idx}`}
                     type="password"
                     inputMode="numeric"
                     maxLength={1}
-                    value={pinDigits[idx]}
-                    onChange={(e) => handlePinChange(idx, e.target.value)}
-                    onKeyDown={(e) => handlePinKeyDown(idx, e)}
+                    value={adminPinDigits[idx]}
+                    onChange={(e) => handleAdminPinChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleAdminPinKeyDown(idx, e)}
                     className={`w-9 h-11 sm:w-10 sm:h-12 text-center text-lg font-bold rounded-lg border-2 bg-background focus:outline-none transition-all shadow-xs ${
-                      pinError
+                      adminPinError
                         ? "border-red-500 text-red-600 focus:ring-2 focus:ring-red-400"
                         : "border-input focus:border-gold focus:ring-2 focus:ring-gold/30 text-foreground"
                     }`}
@@ -661,7 +671,7 @@ export default function Avisos() {
               </div>
             </div>
 
-            {pinError && (
+            {adminPinError && (
               <p className="text-xs text-red-500 text-center font-medium animate-shake">
                 ⚠️ Código incorreto. Verifique o PIN e tente novamente.
               </p>
@@ -671,13 +681,13 @@ export default function Avisos() {
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
-              onClick={() => setIsPinModalOpen(false)}
+              onClick={() => setIsAdminPinModalOpen(false)}
               className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
             <Button
-              onClick={handleVerifyPin}
+              onClick={handleVerifyAdminPin}
               className="w-full sm:w-auto bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
             >
               Confirmar PIN

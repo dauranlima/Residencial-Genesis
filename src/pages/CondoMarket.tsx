@@ -8,6 +8,7 @@ import RedeemCouponModal from "@/components/condo-market/RedeemCouponModal";
 import ResidentRegisterModal from "@/components/condo-market/ResidentRegisterModal";
 import { ClassifiedItem, Coupon, Merchant } from "@/components/condo-market/types";
 import { Button } from "@/components/ui/button";
+import MoradorAuthModal from "@/components/MoradorAuthModal";
 
 // Dados simulados iniciais para o MVP
 const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
@@ -142,12 +143,13 @@ export default function CondoMarket() {
   const [isSeniorMode, setIsSeniorMode] = useState(false);
   const [activeTab, setActiveTab] = useState<"classifieds" | "merchants">("classifieds");
 
-  // Estados dos Dados (em memória no MVP)
+  // Dados com estado para permitirem adição/atualização
   const [classifieds, setClassifieds] = useState<ClassifiedItem[]>(INITIAL_CLASSIFIEDS);
   const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [merchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
 
   // Estados dos Modais
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isNewClassifiedOpen, setIsNewClassifiedOpen] = useState(false);
   const [selectedCouponToRedeem, setSelectedCouponToRedeem] = useState<Coupon | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
