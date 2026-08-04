@@ -61,7 +61,7 @@ const Login = () => {
             <div className="bg-navy-dark p-3 rounded-lg inline-flex items-center justify-center shadow-lg mb-4">
               <Building2 className="w-8 h-8 text-gold" />
             </div>
-            <h1 className="text-3xl font-bold tracking-wider text-navy-dark">Residencial Gênesis</h1>
+            <h1 className="text-3xl font-bold tracking-wider text-navy-dark">Residencial Morada do Sol 2</h1>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">Portal de Acesso</p>
           </div>
 

@@ -26,7 +26,7 @@ export default function Index() {
     <div>
       {/* Hero */}
       <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-        <img src={heroImage} alt="Residencial Gênesis" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImage} alt="Residencial Morada do Sol II" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-hero-overlay" />
         <div className="relative z-10 text-center px-4 max-w-3xl">
           <motion.h1
@@ -35,7 +35,7 @@ export default function Index() {
             transition={{ duration: 0.7 }}
             className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4 leading-tight"
           >
-            Residencial <span className="text-gradient-gold">Gênesis</span>
+            Condomínio Residencial <span className="text-gradient-gold">Morada do Sol 2</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -43,7 +43,7 @@ export default function Index() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg md:text-xl text-primary-foreground/80 mb-8"
           >
-            Viva com sofisticação. Gestão moderna para o seu condomínio de alto padrão.
+            A experiência de viver bem em um condomínio moderno e seguro.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}

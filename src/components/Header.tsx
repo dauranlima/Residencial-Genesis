@@ -34,7 +34,7 @@ export default function Header() {
         <Link to="/" className="flex items-center gap-2">
           <Building2 className="h-7 w-7 text-accent" />
           <span className="text-lg font-bold text-primary-foreground tracking-tight">
-            Residencial <span className="text-gradient-gold">Gênesis</span>
+            Residencial <span className="text-gradient-gold">Morada do Sol II</span>
           </span>
         </Link>
 
