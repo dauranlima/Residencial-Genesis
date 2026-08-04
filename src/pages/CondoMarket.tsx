@@ -13,17 +13,17 @@ import { Button } from "@/components/ui/button";
 const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
   {
     id: "c-1",
-    title: "Sofá Retrátil 3 Lugares Suede Bege",
+    title: "Sofá Retrátil 3 Lugares Verde",
     description: "Sofá em ótimo estado de conservação, ideal para sala de estar. Sem manchas ou rasgos. Motivo da venda: mudança de apartamento.",
     price: 650.0,
     category: "Móveis",
     images: ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&auto=format&fit=crop&q=60"],
     status: "available",
     createdAt: "2026-08-04T10:00:00Z",
-    sellerName: "Dona Maria",
+    sellerName: "Dona Vera",
     sellerBlock: "A",
     sellerUnit: "302",
-    whatsapp: "(45) 99888-7766",
+    whatsapp: "(45) 9934-3095",
   },
   {
     id: "c-2",
@@ -37,7 +37,7 @@ const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
     sellerName: "Carlos Eduardo",
     sellerBlock: "B",
     sellerUnit: "104",
-    whatsapp: "(45) 99123-4567",
+    whatsapp: "(45) 9988-1153",
   },
   {
     id: "c-3",
@@ -97,11 +97,11 @@ const INITIAL_COUPONS: Coupon[] = [
   {
     id: "cp-1",
     merchantId: "m-1",
-    merchantName: "Padaria & Confeitaria Pão D'Oro",
-    merchantCategory: "Padaria",
+    merchantName: "Canário Bebidas & Convêniencia",
+    merchantCategory: "Mercado",
     merchantWhatsapp: "(45) 99111-2233",
-    title: "20% OFF na Linha de Tortas e Doces",
-    description: "Válido para compras de qualquer torta recheada ou caixa de doces finos hoje.",
+    title: "20% Desconto em qualquer produto",
+    description: "Válido para compras de qualquer produto hoje.",
     discountValue: "20% OFF",
     totalQuantity: 10,
     remainingQuantity: 2, // Urgente!
@@ -125,7 +125,7 @@ const INITIAL_COUPONS: Coupon[] = [
   {
     id: "cp-3",
     merchantId: "m-3",
-    merchantName: "Lava-Car Brilho Express",
+    merchantName: "Lava-Car DGD",
     merchantCategory: "Lava-Car",
     merchantWhatsapp: "(45) 99333-4455",
     title: "Lavagem Completa com Cera Grátis",

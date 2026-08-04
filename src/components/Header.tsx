@@ -8,7 +8,7 @@ const navItems = [
   { title: "Início", path: "/" },
   { title: "CondoMarket", path: "/condo-market" },
   { title: "Apartamentos", path: "/apartamentos" },
-  { title: "Galeria de Fotos", path: "/galeria" },
+  { title: "Solicitações", path: "/solicitacoes" },
   { title: "Localização", path: "/localizacao" },
   { title: "Apartamentos Disponíveis", path: "/outros-imoveis" },
   { title: "Regimento", path: "/regimento" },
@@ -16,7 +16,7 @@ const navItems = [
 
 const secondaryItems = [
   { title: "Vistoria", path: "/vistoria" },
-  { title: "Solicitações", path: "/solicitacoes" },
+  { title: "Galeria de Fotos", path: "/galeria" },
   { title: "Ficha Locatário", path: "/ficha-cadastral" },
   { title: "Ficha Fiador", path: "/ficha-fiador" },
   { title: "Garagem", path: "/garagem" },
@@ -75,7 +75,7 @@ export default function Header() {
           
           <Link to="/login" className="ml-2">
             <Button variant="hero" size="sm" className="shadow-none">
-              Área do Morador/Adm
+              Área Adm
             </Button>
           </Link>
         </nav>
@@ -120,7 +120,7 @@ export default function Header() {
                 onClick={() => setMobileOpen(false)}
                 className="px-4 py-3 rounded-md text-sm font-medium transition-colors text-primary-foreground/80 hover:bg-primary-foreground/10"
               >
-                Área do Morador/Adm
+                Área Adm
               </Link>
             </nav>
           </motion.div>

@@ -37,6 +37,7 @@ export interface Merchant {
   businessName: string;
   category: string;
   description: string;
+  address?: string;
   logoUrl?: string;
   whatsapp: string;
 }
@@ -47,6 +48,7 @@ export interface Coupon {
   merchantName: string;
   merchantCategory: string;
   merchantWhatsapp: string;
+  merchantAddress?: string;
   title: string;
   description: string;
   discountValue: string;

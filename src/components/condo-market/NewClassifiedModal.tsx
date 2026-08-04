@@ -201,7 +201,13 @@ export default function NewClassifiedModal({
                 required
                 placeholder="(45) 99999-9999"
                 value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                  let formatted = digits;
+                  if (digits.length > 2) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                  if (digits.length > 7) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                  setWhatsapp(formatted);
+                }}
                 className={isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}
               />
             </div>

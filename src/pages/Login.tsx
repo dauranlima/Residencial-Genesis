@@ -79,7 +79,7 @@ const Login = () => {
                   <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   <Input 
                     id="email" 
-                    placeholder="nome@residencia.com" 
+                    placeholder="Digite seu e-mail" 
                     className="pl-10 h-10 bg-secondary/30 border-secondary-foreground/10 focus:border-gold/50 focus:ring-gold/20"
                   />
                 </div>
@@ -156,7 +156,7 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="relative">
+            {/* <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-muted/50" />
               </div>
@@ -172,7 +172,7 @@ const Login = () => {
               <Button variant="outline" className="text-xs font-semibold h-9 border-muted-foreground/20 hover:border-gold/50 hover:bg-gold/5 hover:text-navy text-muted-foreground transition-colors">
                 ACESSO ADMINISTRATIVO
               </Button>
-            </div>
+            </div> */}
 
             <div className="w-full flex justify-center pt-2 border-t border-muted/20">
               <Link to="/" className="w-full">
@@ -190,8 +190,8 @@ const Login = () => {
         <div className="container mx-auto px-4">
           <p className="text-xs uppercase tracking-[0.2em] mb-4 font-medium">Excelência em Gestão</p>
           <div className="flex justify-center items-center gap-6 text-[10px] uppercase tracking-wider">
-            <span>© 2026 Gênesis Residencial</span>
-            <Link to="/privacy" className="hover:text-navy transition-colors">Política de Privacidade</Link>
+            <span>© 2026 Residencial Morada do Sol 2</span>
+            <Link to="/#" className="hover:text-navy transition-colors">Desenvolvido por: Dauran Lima</Link>
             {/* <Link to="/terms" className="hover:text-navy transition-colors">Termos de Serviço</Link> */}
             {/* <Link to="/support" className="hover:text-navy transition-colors">Suporte</Link> */}
           </div>

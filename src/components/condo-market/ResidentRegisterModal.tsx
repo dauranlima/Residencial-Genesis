@@ -10,6 +10,13 @@ interface ResidentRegisterModalProps {
   isSeniorMode: boolean;
 }
 
+const formatPhoneMask = (val: string) => {
+  const digits = val.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits ? `(${digits}` : "";
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
 export default function ResidentRegisterModal({
   isOpen,
   onClose,
@@ -113,7 +120,7 @@ export default function ResidentRegisterModal({
                 required
                 placeholder="(45) 99999-9999"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
                 className={isSeniorMode ? "h-14 text-lg" : "h-10"}
               />
             </div>

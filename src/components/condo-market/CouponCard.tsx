@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clock, Ticket, Flame, Store, CheckCircle, AlertTriangle } from "lucide-react";
+import { Clock, Ticket, Flame, Store, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Coupon } from "./types";
 
@@ -105,8 +105,8 @@ export default function CouponCard({ coupon, isSeniorMode, onRedeem }: CouponCar
         </div>
       </div>
 
-      {/* Ação de Resgate */}
-      <div className={`p-6 pt-0 ${isSeniorMode ? "p-8 pt-0" : ""}`}>
+      {/* Ação de Resgate & Como Chegar */}
+      <div className={`p-6 pt-0 space-y-2 ${isSeniorMode ? "p-8 pt-0 space-y-3" : ""}`}>
         <Button
           onClick={() => onRedeem(coupon)}
           disabled={coupon.remainingQuantity === 0}
@@ -117,6 +117,25 @@ export default function CouponCard({ coupon, isSeniorMode, onRedeem }: CouponCar
           <Ticket className={isSeniorMode ? "h-7 w-7" : "h-4 w-4"} />
           <span>{coupon.remainingQuantity > 0 ? "Resgatar Cupom Grátis" : "Cupons Esgotados"}</span>
         </Button>
+
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            coupon.merchantAddress || `${coupon.merchantName}, Cascavel - PR`
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full block"
+        >
+          <Button
+            variant="outline"
+            className={`w-full border-slate-300 text-slate-700 dark:text-slate-200 hover:bg-muted font-bold flex items-center justify-center gap-2 ${
+              isSeniorMode ? "py-5 text-lg rounded-xl" : "py-2 text-xs"
+            }`}
+          >
+            <MapPin className="h-4 w-4 text-red-500" />
+            <span>Como chegar (Google Maps)</span>
+          </Button>
+        </a>
       </div>
     </div>
   );
