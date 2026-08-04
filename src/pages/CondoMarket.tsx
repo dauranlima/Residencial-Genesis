@@ -6,19 +6,23 @@ import MerchantsTab from "@/components/condo-market/MerchantsTab";
 import NewClassifiedModal from "@/components/condo-market/NewClassifiedModal";
 import RedeemCouponModal from "@/components/condo-market/RedeemCouponModal";
 import ResidentRegisterModal from "@/components/condo-market/ResidentRegisterModal";
+import ClassifiedDetailModal from "@/components/condo-market/ClassifiedDetailModal";
 import { ClassifiedItem, Coupon, Merchant } from "@/components/condo-market/types";
 import { Button } from "@/components/ui/button";
-import MoradorAuthModal from "@/components/MoradorAuthModal";
 
-// Dados simulados iniciais para o MVP
+// Dados simulados iniciais para o MVP com múltiplas fotos para a tela de detalhes
 const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
   {
     id: "c-1",
     title: "Sofá Retrátil 3 Lugares Verde",
-    description: "Sofá em ótimo estado de conservação, ideal para sala de estar. Sem manchas ou rasgos. Motivo da venda: mudança de apartamento.",
+    description: "Sofá em ótimo estado de conservação, ideal para sala de estar. Sem manchas ou rasgos. Revestimento em tecido suede de alta durabilidade, estrutura em madeira de reflorestamento tratada. Motivo da venda: mudança de apartamento.",
     price: 650.0,
     category: "Móveis",
-    images: ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&auto=format&fit=crop&q=60"],
+    images: [
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80"
+    ],
     status: "available",
     createdAt: "2026-08-04T10:00:00Z",
     sellerName: "Dona Vera",
@@ -29,10 +33,13 @@ const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
   {
     id: "c-2",
     title: "Smart TV Samsung 50'' 4K HDR",
-    description: "Funcionando perfeitamente. Acompanha controle remoto inteligente original e cabo de força. Morador do bloco B.",
+    description: "Funcionando perfeitamente. Acompanha controle remoto inteligente original e cabo de força. Tela sem riscos nem pixels queimados, suporte de mesa e aplicativo de streaming já instalados. Morador do bloco B.",
     price: 1400.0,
     category: "Eletrônicos",
-    images: ["https://images.unsplash.com/photo-1593784991095-a205069470b6?w=600&auto=format&fit=crop&q=60"],
+    images: [
+      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1461151304267-38535e780c79?w=800&auto=format&fit=crop&q=80"
+    ],
     status: "available",
     createdAt: "2026-08-03T15:30:00Z",
     sellerName: "Carlos Eduardo",
@@ -43,10 +50,13 @@ const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
   {
     id: "c-3",
     title: "Bicicleta Caloi Aro 29 com 21 Marchas",
-    description: "Pouco usada, pneu seminovo e com revisão recente feita na oficina da rua. Ótima para andar no condomínio e no parque.",
+    description: "Pouco usada, pneu seminovo e com revisão recente feita na oficina da rua. Freio a disco, suspensão dianteira. Ótima para andar no condomínio e no parque.",
     price: 480.0,
     category: "Esportes",
-    images: ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=60"],
+    images: [
+      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=800&auto=format&fit=crop&q=80"
+    ],
     status: "available",
     createdAt: "2026-08-02T18:20:00Z",
     sellerName: "Fernando",
@@ -57,10 +67,12 @@ const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
   {
     id: "c-4",
     title: "Airfryer Mondial 4L Digital 110v",
-    description: "Funcionando 100%. Comprei uma maior e estou desapegando desta. Retirada na portaria ou entrego na porta.",
+    description: "Funcionando 100%. Comprei uma maior e estou desapegando desta. Acompanha cesto antiaderente e manual original. Retirada na portaria ou entrego na porta.",
     price: 120.0,
     category: "Eletrodomésticos",
-    images: ["https://images.unsplash.com/photo-1585515320310-259814833e62?w=600&auto=format&fit=crop&q=60"],
+    images: [
+      "https://images.unsplash.com/photo-1585515320310-259814833e62?w=800&auto=format&fit=crop&q=80"
+    ],
     status: "available",
     createdAt: "2026-08-01T09:00:00Z",
     sellerName: "Luciana",
@@ -149,9 +161,9 @@ export default function CondoMarket() {
   const [merchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
 
   // Estados dos Modais
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isNewClassifiedOpen, setIsNewClassifiedOpen] = useState(false);
   const [selectedCouponToRedeem, setSelectedCouponToRedeem] = useState<Coupon | null>(null);
+  const [selectedClassifiedItem, setSelectedClassifiedItem] = useState<ClassifiedItem | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; block: string; unit: string } | null>(null);
 
@@ -251,6 +263,7 @@ export default function CondoMarket() {
                 setIsNewClassifiedOpen(true);
               }
             }}
+            onSelectItem={(item) => setSelectedClassifiedItem(item)}
           />
         ) : (
           <MerchantsTab
@@ -263,6 +276,13 @@ export default function CondoMarket() {
       </main>
 
       {/* Modais */}
+      <ClassifiedDetailModal
+        item={selectedClassifiedItem}
+        isOpen={!!selectedClassifiedItem}
+        onClose={() => setSelectedClassifiedItem(null)}
+        isSeniorMode={isSeniorMode}
+      />
+
       <NewClassifiedModal
         isOpen={isNewClassifiedOpen}
         onClose={() => setIsNewClassifiedOpen(false)}
@@ -287,3 +307,4 @@ export default function CondoMarket() {
     </div>
   );
 }
+

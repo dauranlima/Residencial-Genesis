@@ -17,7 +17,10 @@ import {
   UserPlus,
   MessageSquare,
   HelpCircle,
-  MoreHorizontal
+  MoreHorizontal,
+  Camera,
+  LucideCameraOff,
+  LucideSwitchCamera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,23 +33,23 @@ import { Menu } from "lucide-react";
 export default function Admin() {
   const sidebarItems = [
     { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Building2, label: "Flats" },
-    { icon: ClipboardCheck, label: "Vistoria" },
+    { icon: Building2, label: "Apartamentos" },
+    { icon: ClipboardCheck, label: "Documentos" },
     { icon: FileText, label: "Ficha Cadastral", badge: true },
     { icon: FileCheck, label: "Regimento Interno" },
     { icon: Car, label: "Garagem" },
     { icon: Image, label: "Fotos" },
     { icon: MessageSquare, label: "Solicitações" },
-    { icon: MapPin, label: "Localização" },
-    { icon: Building2, label: "Outros Imóveis" },
+    { icon: LucideSwitchCamera, label: "Câmeras" },
+    { icon: Building2, label: "Mensagens" },
     { icon: Key, label: "Controle de Acesso" },
   ];
 
   const pendingApprovals = [
-    { name: "Leonardo", email: "Leonardo.m@exemplo.com", unit: "105", date: "24 Out, 09:12 AM", status: "Aguardando Revisão", initials: "JM", color: "bg-yellow-100 text-yellow-700" },
-    { name: "Matheus", email: "matheus12n@dominio.com", unit: "102", date: "23 Out, 04:45 PM", status: "Aguardando Revisão", initials: "SH", color: "bg-purple-100 text-purple-700" },
-    { name: "Pedro", email: "pedro309@web.com", unit: "106", date: "23 Out, 11:30 AM", status: "Aguardando Revisão", initials: "RB", color: "bg-pink-100 text-pink-700" },
-    { name: "Ronald", email: "ronald.s@web.com", unit: "206", date: "23 Out, 11:30 AM", status: "Aguardando Revisão", initials: "RB", color: "bg-pink-100 text-pink-700" },
+    { name: "Dauran", email: "dauranlima@exemplo.com", unit: "544", date: "02 Ago, 09:12 AM", status: "Aguardando Revisão", initials: "JM", color: "bg-yellow-100 text-yellow-700" },
+    { name: "Lucas", email: "Lucas123@dominio.com", unit: "541", date: "03 Ago, 04:45 PM", status: "Aguardando Revisão", initials: "SH", color: "bg-purple-100 text-purple-700" },
+    { name: "Nadir", email: "nardir309@web.com", unit: "532", date: "31 Jul, 11:30 AM", status: "Aguardando Revisão", initials: "RB", color: "bg-pink-100 text-pink-700" },
+    { name: "Vera", email: "vera.s@web.com", unit: "547", date: "01 Ago, 9:30 AM", status: "Aguardando Revisão", initials: "RB", color: "bg-pink-100 text-pink-700" },
   ];
 
   const SidebarContent = () => (
@@ -57,7 +60,7 @@ export default function Admin() {
             <Building2 className="w-6 h-6 text-navy-dark" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight">Gênesis Residencial</h1>
+            <h1 className="font-bold text-lg leading-tight">Condominium</h1>
             <p className="text-[10px] text-gray-400 tracking-wider">GESTÃO ADMINISTRATIVA</p>
           </div>
         </div>
@@ -96,11 +99,11 @@ export default function Admin() {
         <div className="flex items-center gap-3 bg-navy p-3 rounded-lg">
           <Avatar className="h-10 w-10 border-2 border-gold/20">
             <AvatarImage src="/placeholder-avatar.jpg" />
-            <AvatarFallback className="bg-navy text-gold">FE</AvatarFallback>
+            <AvatarFallback className="bg-navy text-gold">AL</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate text-white">Felix Esteves</p>
-            <p className="text-xs text-gold truncate">GESTOR CHEFE</p>
+            <p className="text-sm font-semibold truncate text-white">Alquimedes</p>
+            <p className="text-xs text-gold truncate">GESTOR</p>
           </div>
           <Settings className="w-4 h-4 text-gray-400 hover:text-white cursor-pointer" />
         </div>
@@ -131,7 +134,7 @@ export default function Admin() {
                 <SidebarContent />
               </SheetContent>
             </Sheet>
-            <h2 className="text-xl lg:text-2xl font-bold text-gray-800 truncate"> Gênesis Residencial | Visão Geral</h2>
+            <h2 className="text-xl lg:text-2xl font-bold text-gray-800 truncate"> Residencial Morada do Sol 2 |  Visão Geral</h2>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
@@ -153,15 +156,15 @@ export default function Admin() {
               <Button variant="ghost" size="icon" className="text-gray-500 hover:text-navy hover:bg-gray-100">
                 <Calendar className="w-5 h-5" />
               </Button>
-              <span className="text-sm font-medium text-gray-500">14 de Fev, 2026</span>
+              <span className="text-sm font-medium text-gray-500">04 de Ago, 2026</span>
             </div>
           </div>
         </header>
 
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-navy-dark mb-1">Bem-vindo de volta, Felix</h1>
-          <p className="text-gray-500">Veja o que está acontecendo no Gênesis Residencial hoje.</p>
+          <h1 className="text-3xl font-bold text-navy-dark mb-1">Bem-vindo de volta, Alquimedes</h1>
+          <p className="text-gray-500">Veja o que está acontecendo no Morada do Sol 2 hoje.</p>
         </div>
 
         {/* Stats Grid */}
@@ -175,7 +178,7 @@ export default function Admin() {
                 <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">85%</Badge>
               </div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">MORADORES TOTAIS</p>
-              <h3 className="text-4xl font-bold text-navy-dark">12</h3>
+              <h3 className="text-4xl font-bold text-navy-dark">64</h3>
             </CardContent>
           </Card>
 
@@ -187,7 +190,7 @@ export default function Admin() {
                 </div>
                 <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-100">Ação Necessária</Badge>
               </div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">SOLICITAÇÕES PENDENTES</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Encomendas na Portaria</p>
               <h3 className="text-4xl font-bold text-navy-dark">4</h3>
             </CardContent>
           </Card>
@@ -211,7 +214,7 @@ export default function Admin() {
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-none shadow-sm overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-gray-100 bg-white pt-6 px-6">
-                <CardTitle className="text-lg font-bold text-navy-dark">Aprovações de Usuários Pendentes</CardTitle>
+                <CardTitle className="text-lg font-bold text-navy-dark">AUTORIZAÇÕES</CardTitle>
                 <Button variant="link" className="text-gold hover:text-gold-dark font-medium text-sm">Ver Todos</Button>
               </CardHeader>
               <CardContent className="p-0">
@@ -294,21 +297,28 @@ export default function Admin() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-sm font-medium text-gray-700">Portões de Entrada</span>
+                      <span className="text-sm font-medium text-gray-700">Portões de Entrada Portaria</span>
                     </div>
                     <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded uppercase">Online</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-sm font-medium text-gray-700">Biometria Garagem</span>
+                      <span className="text-sm font-medium text-gray-700">Portão Fundo Garagem</span>
                     </div>
                     <span className="text-[10px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded uppercase">Online</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
-                      <span className="text-sm font-medium text-gray-700">Tags do portão</span>
+                      <span className="text-sm font-medium text-gray-700">Tag de acesso Bloco 5</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded uppercase">Offline</span>
+                  </div>
+                   <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      <span className="text-sm font-medium text-gray-700">Tags portas do Bloco 4</span>
                     </div>
                     <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded uppercase">Offline</span>
                   </div>

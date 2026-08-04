@@ -1,13 +1,14 @@
-import { MessageCircle, Tag, MapPin, Calendar } from "lucide-react";
+import { MessageCircle, Tag, MapPin, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassifiedItem } from "./types";
 
 interface ClassifiedCardProps {
   item: ClassifiedItem;
   isSeniorMode: boolean;
+  onSelectItem?: (item: ClassifiedItem) => void;
 }
 
-export default function ClassifiedCard({ item, isSeniorMode }: ClassifiedCardProps) {
+export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: ClassifiedCardProps) {
   const formatPrice = (val: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -28,16 +29,25 @@ export default function ClassifiedCard({ item, isSeniorMode }: ClassifiedCardPro
       }`}
     >
       {/* Imagem do Produto */}
-      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <div 
+        onClick={() => onSelectItem && onSelectItem(item)}
+        className="relative aspect-video w-full overflow-hidden bg-muted cursor-pointer group"
+      >
         <img
           src={item.images[0] || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&auto=format&fit=crop&q=60"}
           alt={item.title}
-          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <span className="absolute top-3 left-3 bg-primary/90 text-primary-foreground backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow">
           <Tag className="h-3 w-3" />
           {item.category}
         </span>
+        {item.images && item.images.length > 1 && (
+          <span className="absolute top-3 right-3 bg-black/70 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            {item.images.length} fotos
+          </span>
+        )}
         <span className="absolute bottom-3 right-3 bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg shadow-md text-base">
           {formatPrice(item.price)}
         </span>
@@ -47,7 +57,8 @@ export default function ClassifiedCard({ item, isSeniorMode }: ClassifiedCardPro
       <div className={`p-5 flex-1 flex flex-col justify-between ${isSeniorMode ? "p-6" : ""}`}>
         <div>
           <h3
-            className={`font-bold text-card-foreground line-clamp-1 mb-2 ${
+            onClick={() => onSelectItem && onSelectItem(item)}
+            className={`font-bold text-card-foreground line-clamp-1 mb-2 cursor-pointer hover:text-primary transition-colors ${
               isSeniorMode ? "text-2xl" : "text-lg"
             }`}
           >
@@ -63,14 +74,26 @@ export default function ClassifiedCard({ item, isSeniorMode }: ClassifiedCardPro
         </div>
 
         <div>
-          {/* Informações do Vendedor / Vizinho */}
-          <div className="flex items-center justify-between border-t border-border pt-3 mb-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-              <MapPin className={`text-accent ${isSeniorMode ? "h-5 w-5" : "h-3.5 w-3.5"}`} />
-              <span className={isSeniorMode ? "text-base font-bold" : "text-xs"}>
+          {/* Informações do Vendedor / Vizinho & Botão Ver Mais */}
+          <div className="flex items-center justify-between border-t border-border pt-3 mb-4 text-xs text-muted-foreground gap-2">
+            <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300 truncate">
+              <MapPin className={`text-accent shrink-0 ${isSeniorMode ? "h-5 w-5" : "h-3.5 w-3.5"}`} />
+              <span className={`truncate ${isSeniorMode ? "text-base font-bold" : "text-xs"}`}>
                 Vizinho: {item.sellerName} ({item.sellerBlock ? `Bloco ${item.sellerBlock} - ` : ""}Apto {item.sellerUnit})
               </span>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSelectItem && onSelectItem(item)}
+              className={`shrink-0 font-bold border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground flex items-center gap-1 transition-all shadow-sm ${
+                isSeniorMode ? "h-11 text-base px-4" : "h-8 text-xs px-3"
+              }`}
+            >
+              <Eye className={isSeniorMode ? "h-4 w-4" : "h-3.5 w-3.5"} />
+              Ver mais
+            </Button>
           </div>
 
           {/* Botão WhatsApp */}
@@ -89,3 +112,4 @@ export default function ClassifiedCard({ item, isSeniorMode }: ClassifiedCardPro
     </div>
   );
 }
+

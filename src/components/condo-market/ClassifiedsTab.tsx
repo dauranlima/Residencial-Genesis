@@ -9,11 +9,12 @@ interface ClassifiedsTabProps {
   items: ClassifiedItem[];
   isSeniorMode: boolean;
   onOpenNewModal: () => void;
+  onSelectItem?: (item: ClassifiedItem) => void;
 }
 
 const CATEGORIES = ["Todos", "Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
 
-export default function ClassifiedsTab({ items, isSeniorMode, onOpenNewModal }: ClassifiedsTabProps) {
+export default function ClassifiedsTab({ items, isSeniorMode, onOpenNewModal, onSelectItem }: ClassifiedsTabProps) {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -74,7 +75,12 @@ export default function ClassifiedsTab({ items, isSeniorMode, onOpenNewModal }: 
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
-            <ClassifiedCard key={item.id} item={item} isSeniorMode={isSeniorMode} />
+            <ClassifiedCard
+              key={item.id}
+              item={item}
+              isSeniorMode={isSeniorMode}
+              onSelectItem={onSelectItem}
+            />
           ))}
         </div>
       ) : (
