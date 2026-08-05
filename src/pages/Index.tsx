@@ -56,7 +56,7 @@ export default function Index() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Button variant="hero" size="lg" asChild>
-              <Link to="/regimento">Regimento</Link>
+              <Link to="/condo-market">Acessar CondoMarket</Link>
             </Button>
             <Button variant="hero-outline" size="lg" asChild>
               <Link to="/avisos">Avisos Importantes</Link>
@@ -65,7 +65,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Features Grid - Seção desativada temporariamente */}
+      {/* 
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
@@ -97,6 +98,7 @@ export default function Index() {
           </div>
         </div>
       </section>
+      */}
     </div>
   );
 }

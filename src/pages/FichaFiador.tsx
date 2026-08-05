@@ -56,8 +56,8 @@ export default function FichaFiador() {
                 <Select>
                   <SelectTrigger className="h-8 bg-white text-muted-foreground"><SelectValue placeholder="ESCOLHA - Apto. - Aluguel Bruto - Desc. Pontualidade - Aluguel Liquido + Agua" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="101">Apto 101 - R$ 1.200</SelectItem>
-                    <SelectItem value="102">Apto 102 - R$ 1.200</SelectItem>
+                    <SelectItem value="101">Apto 541 - R$ 1.200</SelectItem>
+                    <SelectItem value="102">Apto 541 - R$ 1.200</SelectItem>
                   </SelectContent>
                 </Select>
                 <span className="text-[10px] text-muted-foreground">Valores em Salário Mínimo (confirmar valor em R$).</span>

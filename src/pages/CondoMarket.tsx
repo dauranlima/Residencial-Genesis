@@ -42,9 +42,9 @@ const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
     ],
     status: "available",
     createdAt: "2026-08-03T15:30:00Z",
-    sellerName: "Carlos Eduardo",
+    sellerName: "Lucas",
     sellerBlock: "B",
-    sellerUnit: "104",
+    sellerUnit: "541",
     whatsapp: "(45) 9988-1153",
   },
   {
