@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Smartphone, ShieldCheck, ArrowRight, UserPlus, LogIn, ArrowLeft, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ export default function ResidentRegisterModal({
   // Modos: 'selection' (tela inicial com 2 botões) | 'register' | 'login' | 'otp'
   const [mode, setMode] = useState<"selection" | "register" | "login" | "otp">("selection");
   const [isFlipped, setIsFlipped] = useState(false);
+
+  // Ref para focar no campo Nome Completo no 1º acesso
+  const fullNameInputRef = useRef<HTMLInputElement>(null);
 
   // Form States
   const [fullName, setFullName] = useState("");
@@ -68,6 +71,9 @@ export default function ResidentRegisterModal({
   const handleChooseRegister = () => {
     setMode("register");
     setIsFlipped(true);
+    setTimeout(() => {
+      fullNameInputRef.current?.focus();
+    }, 200);
   };
 
   // Tratar escolha "Já me identifiquei antes"
@@ -330,7 +336,9 @@ export default function ResidentRegisterModal({
                       Nome Completo *
                     </label>
                     <Input
+                      ref={fullNameInputRef}
                       required
+                      autoFocus
                       placeholder="Seu Nome Completo"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
@@ -356,9 +364,12 @@ export default function ResidentRegisterModal({
                       </label>
                       <Input
                         required
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="Ex: 301"
                         value={unit}
-                        onChange={(e) => setUnit(e.target.value)}
+                        onChange={(e) => setUnit(e.target.value.replace(/\D/g, ""))}
                         className={isSeniorMode ? "h-14 text-lg" : "h-10"}
                       />
                     </div>
@@ -370,6 +381,8 @@ export default function ResidentRegisterModal({
                     </label>
                     <Input
                       required
+                      type="tel"
+                      inputMode="numeric"
                       placeholder="(45) 99999-9999"
                       value={phone}
                       onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
@@ -420,6 +433,8 @@ export default function ResidentRegisterModal({
                     <Input
                       required
                       autoFocus
+                      type="tel"
+                      inputMode="numeric"
                       placeholder="(45) 99999-9999"
                       value={phone}
                       onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
@@ -474,10 +489,13 @@ export default function ResidentRegisterModal({
                   <Input
                     required
                     autoFocus
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={4}
                     placeholder="1234"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className={`text-center font-mono font-bold tracking-widest ${
                       isSeniorMode ? "h-16 text-3xl" : "h-12 text-2xl"
                     }`}

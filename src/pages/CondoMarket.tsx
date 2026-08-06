@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Package, LogOut } from "lucide-react";
-import SeniorModeToggle from "@/components/condo-market/SeniorModeToggle";
 import ClassifiedsTab from "@/components/condo-market/ClassifiedsTab";
 import MerchantsTab from "@/components/condo-market/MerchantsTab";
 import MyClassifiedsTab from "@/components/condo-market/MyClassifiedsTab";
@@ -217,13 +216,8 @@ export default function CondoMarket() {
               </p>
             </div>
 
-            {/* Ações da Barra Superior (Modo Sênior & Login Morador) */}
+            {/* Ações da Barra Superior (Login Morador) */}
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-              <SeniorModeToggle
-                isSeniorMode={isSeniorMode}
-                onToggle={() => setIsSeniorMode(!isSeniorMode)}
-              />
-
               {currentUser ? (
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Button
@@ -266,10 +260,10 @@ export default function CondoMarket() {
           </div>
 
           {/* Abas de Navegação (Desapegos vs Promoções vs Meus Anúncios) */}
-          <div className="flex items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6 overflow-x-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6">
             <button
               onClick={() => setActiveTab("classifieds")}
-              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer ${
                 activeTab === "classifieds"
                   ? "bg-accent text-accent-foreground shadow-luxury font-black"
                   : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
@@ -281,7 +275,7 @@ export default function CondoMarket() {
 
             <button
               onClick={() => setActiveTab("merchants")}
-              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer ${
                 activeTab === "merchants"
                   ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
                   : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
@@ -294,7 +288,7 @@ export default function CondoMarket() {
             {currentUser && (
               <button
                 onClick={() => setActiveTab("my_classifieds")}
-                className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer border border-amber-500/40 ${
+                className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer border border-amber-500/40 ${
                   activeTab === "my_classifieds"
                     ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
                     : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
