@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser } from '@/components/condo-market/types';
+import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser, DatabaseCouponRedemption } from '@/components/condo-market/types';
 import { compressImage } from './imageCompression';
 
 // ==========================================
@@ -9,7 +9,7 @@ import { compressImage } from './imageCompression';
 export async function fetchClassifiedsFromSupabase(): Promise<ClassifiedItem[]> {
   const { data, error } = await supabase
     .from('classifieds')
-    .select('*')
+    .select('id, title, description, price, category, images, status, created_at, seller_name, seller_block, seller_unit, whatsapp')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -140,6 +140,88 @@ export async function updateClassifiedStatusInSupabase(
   return true;
 }
 
+export async function updateClassifiedInSupabase(
+  id: string,
+  updatedData: Omit<ClassifiedItem, 'id' | 'createdAt' | 'images'>,
+  existingImages: string[],
+  newFiles: File[]
+): Promise<ClassifiedItem> {
+  const totalPhotos = existingImages.length + newFiles.length;
+  if (totalPhotos === 0) {
+    throw new Error('É obrigatório incluir pelo menos 1 foto no anúncio.');
+  }
+
+  if (totalPhotos > 5) {
+    throw new Error('O anúncio pode ter no máximo 5 fotos.');
+  }
+
+  // 1. Upload das novas imagens caso existam
+  let uploadedUrls: string[] = [];
+  if (newFiles.length > 0) {
+    uploadedUrls = await uploadAnnouncementImages(newFiles);
+  }
+
+  const finalImages = [...existingImages, ...uploadedUrls];
+
+  // 2. Atualizar registro na tabela 'classifieds'
+  const { data, error } = await supabase
+    .from('classifieds')
+    .update({
+      title: updatedData.title,
+      price: updatedData.price,
+      description: updatedData.description,
+      category: updatedData.category,
+      images: finalImages,
+      status: updatedData.status || 'available',
+      seller_name: updatedData.sellerName,
+      seller_block: updatedData.sellerBlock || null,
+      seller_unit: updatedData.sellerUnit,
+      whatsapp: updatedData.whatsapp,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating classified in Supabase:', error);
+    throw new Error('Erro ao atualizar o anúncio no banco de dados.');
+  }
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description || '',
+    price: Number(data.price),
+    category: data.category,
+    images: data.images || [],
+    status: data.status as ClassifiedStatus,
+    createdAt: data.created_at,
+    sellerName: data.seller_name,
+    sellerBlock: data.seller_block || '',
+    sellerUnit: data.seller_unit,
+    whatsapp: data.whatsapp,
+  };
+}
+
+export async function deleteClassifiedInSupabase(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('classifieds')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting classified from Supabase:', error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Falha ao excluir anúncio no Supabase:', e);
+    return false;
+  }
+}
+
+
 // ==========================================
 // PROMOÇÕES RELÂMPAGO (Bucket: img_ofertas)
 // ==========================================
@@ -147,7 +229,7 @@ export async function updateClassifiedStatusInSupabase(
 export async function fetchPromotionsFromSupabase(): Promise<Coupon[]> {
   const { data, error } = await supabase
     .from('promotions')
-    .select('*')
+    .select('id, merchant_name, merchant_category, merchant_whatsapp, title, description, discount_value, total_quantity, remaining_quantity, expires_at, image_url, is_active')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -249,17 +331,328 @@ export async function createPromotionInSupabase(
   };
 }
 
-export async function redeemPromotionInSupabase(id: string, currentRemaining: number): Promise<boolean> {
+export async function deletePromotionInSupabase(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('promotions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao excluir promoção do Supabase:', error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Falha ao excluir promoção:', e);
+    return false;
+  }
+}
+
+export async function fetchUserRedeemedCouponIdsFromSupabase(phone: string): Promise<string[]> {
+  if (!phone) return [];
+  const cleanPhone = phone.replace(/\D/g, '');
+  
+  try {
+    const { data, error } = await supabase
+      .from('coupon_redemptions')
+      .select('coupon_id, resident_phone');
+
+    if (error) {
+      console.warn('Consulta na tabela coupon_redemptions no Supabase:', error);
+      return [];
+    }
+
+    const matches = (data || []).filter((row: any) => {
+      const rPhone = (row.resident_phone || '').replace(/\D/g, '');
+      return rPhone === cleanPhone || rPhone.endsWith(cleanPhone) || cleanPhone.endsWith(rPhone);
+    });
+
+    return matches.map((m: any) => m.coupon_id);
+  } catch (e) {
+    console.error('Erro ao carregar cupons resgatados do Supabase:', e);
+    return [];
+  }
+}
+
+export async function fetchCouponRedemptionsForMerchant(
+  couponId?: string
+): Promise<DatabaseCouponRedemption[]> {
+  try {
+    let query = supabase
+      .from('coupon_redemptions')
+      .select('id, coupon_id, resident_name, resident_phone, resident_unit, resident_block, redeemed_at')
+      .order('redeemed_at', { ascending: false });
+
+    if (couponId) {
+      query = query.eq('coupon_id', couponId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.warn('Erro ao consultar a tabela coupon_redemptions no Supabase:', error);
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      couponId: row.coupon_id,
+      residentName: row.resident_name,
+      residentPhone: row.resident_phone,
+      residentUnit: row.resident_unit,
+      residentBlock: row.resident_block || '',
+      redeemedAt: row.redeemed_at,
+    }));
+  } catch (e) {
+    console.error('Falha ao buscar resgates para comerciante:', e);
+    return [];
+  }
+}
+
+export async function fetchTotalRedemptionsCountFromSupabase(): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('coupon_redemptions')
+      .select('id', { count: 'exact', head: true });
+
+    if (error) {
+      console.warn('Tabela coupon_redemptions sem contagem:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (e) {
+    console.error('Erro ao buscar total de resgates no Supabase:', e);
+    return 0;
+  }
+}
+
+const MERCHANTS_STORAGE_KEY = 'condo_market_merchants_db';
+
+export async function createMerchantInSupabase(
+  merchant: Omit<Merchant, 'id'>
+): Promise<Merchant> {
+  // 1. Salva no LocalStorage fallback imediatamente
+  let localMerchants: Merchant[] = [];
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) localMerchants = JSON.parse(raw);
+  } catch (e) {
+    console.error('Erro ao ler merchants do localStorage:', e);
+  }
+
+  const newId = `m-${Date.now()}`;
+  const newMerchant: Merchant = {
+    id: newId,
+    ...merchant,
+  };
+
+  localMerchants.unshift(newMerchant);
+  try {
+    localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(localMerchants));
+  } catch (e) {
+    console.error('Erro ao salvar merchant no localStorage:', e);
+  }
+
+  // 2. Insere na tabela 'merchants' no Supabase
+  try {
+    const { data, error } = await supabase
+      .from('merchants')
+      .insert([
+        {
+          business_name: merchant.businessName,
+          category: merchant.category,
+          responsible_name: merchant.responsibleName || null,
+          phone: merchant.whatsapp,
+          address: merchant.address || null,
+          access_code: merchant.accessCode,
+          description: merchant.description || null,
+          logo_url: merchant.logoUrl || null,
+        },
+      ])
+      .select()
+      .single();
+
+    if (!error && data) {
+      return {
+        id: data.id,
+        businessName: data.business_name,
+        category: data.category,
+        responsibleName: data.responsible_name || '',
+        whatsapp: data.phone || merchant.whatsapp,
+        address: data.address || '',
+        accessCode: data.access_code || merchant.accessCode,
+        description: data.description || '',
+        logoUrl: data.logo_url || '',
+      };
+    } else {
+      console.warn('Aviso ao salvar comerciante no Supabase (usando fallback local):', error);
+    }
+  } catch (e) {
+    console.error('Erro ao conectar com Supabase ao criar merchant:', e);
+  }
+
+  return newMerchant;
+}
+
+export async function getMerchantByAccessCode(code: string): Promise<Merchant | null> {
+  if (!code) return null;
+  const cleanCode = code.trim();
+
+  // 1. Tentar buscar do localStorage
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      const localList: Merchant[] = JSON.parse(raw);
+      const match = localList.find((m) => m.accessCode === cleanCode);
+      if (match) return match;
+    }
+  } catch (e) {
+    console.error('Erro ao ler merchants no localStorage:', e);
+  }
+
+  // 2. Consultar no Supabase
+  try {
+    const { data, error } = await supabase
+      .from('merchants')
+      .select('id, business_name, category, responsible_name, phone, address, access_code, description, logo_url')
+      .eq('access_code', cleanCode)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      const m = data[0];
+      return {
+        id: m.id,
+        businessName: m.business_name || m.businessName,
+        category: m.category,
+        responsibleName: m.responsible_name || '',
+        whatsapp: m.phone || m.whatsapp || '',
+        address: m.address || '',
+        accessCode: m.access_code || cleanCode,
+        description: m.description || '',
+      };
+    }
+  } catch (e) {
+    console.error('Erro ao buscar comerciante por código no Supabase:', e);
+  }
+
+  return null;
+}
+
+export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
+  const resultMerchants: Merchant[] = [];
+  const addedIds = new Set<string>();
+
+  // 0. Carregar do localStorage
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      const localList: Merchant[] = JSON.parse(raw);
+      localList.forEach((m) => {
+        if (!addedIds.has(m.id)) {
+          addedIds.add(m.id);
+          resultMerchants.push(m);
+        }
+      });
+    }
+  } catch (_e) {}
+
+  try {
+    // 1. Tentar buscar da tabela 'merchants' se existir no Supabase (sem retornar access_code sensivel)
+    const { data: merchantsData, error: merchantsErr } = await supabase
+      .from('merchants')
+      .select('id, business_name, category, responsible_name, description, address, phone, logo_url');
+
+    if (!merchantsErr && merchantsData && merchantsData.length > 0) {
+      merchantsData.forEach((m: any) => {
+        if (!addedIds.has(m.id)) {
+          addedIds.add(m.id);
+          resultMerchants.push({
+            id: m.id,
+            businessName: m.business_name || m.businessName,
+            category: m.category,
+            responsibleName: m.responsible_name || '',
+            description: m.description || '',
+            address: m.address || '',
+            whatsapp: m.phone || m.whatsapp || '',
+            accessCode: m.access_code || '',
+          });
+        }
+      });
+    }
+
+    // 2. Extrair parceiros reais a partir dos anúncios na tabela 'promotions'
+    const { data: promotionsData } = await supabase
+      .from('promotions')
+      .select('merchant_name, merchant_category, merchant_whatsapp, description');
+
+    if (promotionsData && promotionsData.length > 0) {
+      promotionsData.forEach((p: any, idx: number) => {
+        const name = p.merchant_name || 'Comércio Local';
+        const exists = resultMerchants.some((m) => m.businessName.toLowerCase() === name.toLowerCase());
+        if (!exists) {
+          const promoMerchantId = `m-db-${idx}`;
+          if (!addedIds.has(promoMerchantId)) {
+            addedIds.add(promoMerchantId);
+            resultMerchants.push({
+              id: promoMerchantId,
+              businessName: name,
+              category: p.merchant_category || 'Geral',
+              description: p.description || 'Parceiro comercial do condomínio',
+              whatsapp: p.merchant_whatsapp || '',
+            });
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Erro ao buscar comerciantes do Supabase:', e);
+  }
+
+  return resultMerchants;
+}
+
+export async function redeemPromotionInSupabase(
+  id: string,
+  currentRemaining: number,
+  resident?: CurrentUser | null
+): Promise<boolean> {
   const newRemaining = Math.max(0, currentRemaining - 1);
-  const { error } = await supabase
+
+  // 1. Decrementar quantidade disponível na tabela 'promotions'
+  const { error: updateErr } = await supabase
     .from('promotions')
     .update({ remaining_quantity: newRemaining })
     .eq('id', id);
 
-  if (error) {
-    console.error('Error redeeming promotion in Supabase:', error);
-    return false;
+  if (updateErr) {
+    console.error('Error updating promotion remaining quantity in Supabase:', updateErr);
   }
+
+  // 2. Gravar vínculo de resgate na tabela 'coupon_redemptions' (moradora x cupom)
+  if (resident) {
+    try {
+      const { error: insertErr } = await supabase
+        .from('coupon_redemptions')
+        .insert([
+          {
+            coupon_id: id,
+            resident_name: resident.name,
+            resident_phone: resident.phone,
+            resident_unit: resident.unit,
+            resident_block: resident.block || null,
+          },
+        ]);
+
+      if (insertErr) {
+        console.warn('Aviso ao registrar resgate na tabela coupon_redemptions:', insertErr);
+      }
+    } catch (e) {
+      console.error('Falha ao registrar resgate em coupon_redemptions:', e);
+    }
+  }
+
   return true;
 }
 
@@ -274,34 +667,29 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
   const cleanPhone = phone.replace(/\D/g, '');
   if (!cleanPhone) return null;
 
-  // 1. Tenta buscar na tabela 'users' do Supabase (prioridade principal)
+  // 1. Tenta buscar na tabela 'users' do Supabase apenas o perfil correspondente
   try {
     const { data: usersData, error } = await supabase
       .from('users')
-      .select('*');
+      .select('name, block, unit, phone')
+      .or(`phone.eq.${phone},phone.eq.${cleanPhone},phone.eq.+55${cleanPhone}`);
 
     if (!error && usersData && usersData.length > 0) {
-      const match = usersData.find((u) => {
-        const uPhone = (u.phone || '').replace(/\D/g, '');
-        return uPhone === cleanPhone || uPhone.endsWith(cleanPhone) || cleanPhone.endsWith(uPhone);
-      });
-
-      if (match) {
-        const user: CurrentUser = {
-          name: match.name || match.full_name || 'Morador',
-          block: match.block || '',
-          unit: match.unit || 'Sem Apto',
-          phone: match.phone || phone,
-        };
-        // Atualiza cache local
-        try {
-          const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-          const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
-          db[cleanPhone] = user;
-          localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
-        } catch (_e) {}
-        return user;
-      }
+      const match = usersData[0];
+      const user: CurrentUser = {
+        name: match.name || 'Morador',
+        block: match.block || '',
+        unit: match.unit || 'Sem Apto',
+        phone: match.phone || phone,
+      };
+      // Atualiza cache local
+      try {
+        const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
+        const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
+        db[cleanPhone] = user;
+        localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
+      } catch (_e) {}
+      return user;
     }
   } catch (e) {
     console.warn('Consulta na tabela users no Supabase ignorada:', e);
@@ -320,13 +708,12 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
     console.error('Erro ao ler base de moradores local:', e);
   }
 
-  // 3. Tenta buscar na tabela 'classifieds' do Supabase (onde moradores postaram desapegos)
+  // 3. Tenta buscar na tabela 'classifieds' do Supabase (onde o morador postou anúncio)
   try {
-    // 3.1 Busca exata pelo formato salvo
     const { data: exactClassifieds } = await supabase
       .from('classifieds')
       .select('seller_name, seller_block, seller_unit, whatsapp')
-      .eq('whatsapp', phone)
+      .or(`whatsapp.eq.${phone},whatsapp.eq.${cleanPhone}`)
       .limit(1);
 
     if (exactClassifieds && exactClassifieds.length > 0) {
@@ -340,30 +727,6 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
       await saveResidentProfile(user);
       return user;
     }
-
-    // 3.2 Busca na tabela 'classifieds' comparando dígitos numéricos limpos em JS
-    const { data: allClassifieds } = await supabase
-      .from('classifieds')
-      .select('seller_name, seller_block, seller_unit, whatsapp');
-
-    if (allClassifieds && allClassifieds.length > 0) {
-      const match = allClassifieds.find((row) => {
-        if (!row.whatsapp) return false;
-        const rowClean = row.whatsapp.replace(/\D/g, '');
-        return rowClean === cleanPhone;
-      });
-
-      if (match) {
-        const user: CurrentUser = {
-          name: match.seller_name || 'Morador',
-          block: match.seller_block || '',
-          unit: match.seller_unit || 'Sem Apto',
-          phone: match.whatsapp || phone,
-        };
-        await saveResidentProfile(user);
-        return user;
-      }
-    }
   } catch (e) {
     console.error('Erro ao buscar morador nos anúncios do Supabase:', e);
   }
@@ -372,24 +735,20 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
   try {
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('*');
+      .select('full_name, block, unit, phone')
+      .or(`phone.eq.${phone},phone.eq.${cleanPhone}`)
+      .limit(1);
 
     if (profiles && profiles.length > 0) {
-      const match = profiles.find((p) => {
-        const pPhone = p.phone || p.whatsapp || '';
-        return pPhone.replace(/\D/g, '') === cleanPhone;
-      });
-
-      if (match) {
-        const user: CurrentUser = {
-          name: match.full_name || match.fullName || match.name || 'Morador',
-          block: match.block || '',
-          unit: match.unit || 'Sem Apto',
-          phone: match.phone || phone,
-        };
-        await saveResidentProfile(user);
-        return user;
-      }
+      const match = profiles[0];
+      const user: CurrentUser = {
+        name: match.full_name || 'Morador',
+        block: match.block || '',
+        unit: match.unit || 'Sem Apto',
+        phone: match.phone || phone,
+      };
+      await saveResidentProfile(user);
+      return user;
     }
   } catch (e) {
     console.log('Consulta na tabela profiles no Supabase ignorada:', e);

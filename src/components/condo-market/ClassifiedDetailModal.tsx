@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle } from "lucide-react";
+import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
@@ -11,6 +11,7 @@ interface ClassifiedDetailModalProps {
   currentUser?: CurrentUser | null;
   onUpdateStatus?: (itemId: string, newStatus: ClassifiedStatus) => void;
   onFinalize?: () => void;
+  onEdit?: (item: ClassifiedItem) => void;
 }
 
 export default function ClassifiedDetailModal({
@@ -21,6 +22,7 @@ export default function ClassifiedDetailModal({
   currentUser,
   onUpdateStatus,
   onFinalize,
+  onEdit,
 }: ClassifiedDetailModalProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
@@ -100,7 +102,19 @@ export default function ClassifiedDetailModal({
           {/* Botões de Ação para o Proprietário + Botão Fechar */}
           <div className="flex items-center gap-2">
             {isOwner && (
-              <div className="flex items-center gap-1.5 border border-red-500/80 p-1 rounded-lg bg-slate-900/60 backdrop-blur-sm">
+              <div className="flex items-center gap-1.5 border border-amber-500/60 p-1 rounded-lg bg-slate-900/80 backdrop-blur-sm">
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(item)}
+                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase rounded transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                    title="Editar informações ou fotos do anúncio"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    <span>EDITAR</span>
+                  </button>
+                )}
+
                 {item.status === "sold" ? (
                   <button
                     type="button"
@@ -271,6 +285,19 @@ export default function ClassifiedDetailModal({
             Voltar para lista
           </Button>
 
+          {isOwner && onEdit && (
+            <Button
+              type="button"
+              onClick={() => onEdit(item)}
+              className={`w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-amber-400 ${
+                isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-5 text-sm"
+              }`}
+            >
+              <Pencil className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
+              <span>Editar Anúncio</span>
+            </Button>
+          )}
+
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button
               className={`w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
@@ -283,6 +310,7 @@ export default function ClassifiedDetailModal({
           </a>
         </div>
       </div>
+
 
       {/* Modal de Confirmação para FINALIZAR */}
       {showFinalizeConfirm && (

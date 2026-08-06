@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
-import { X, Upload, CheckCircle2, Zap, Loader2, ImagePlus } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, Upload, CheckCircle2, Zap, Loader2, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Coupon } from "./types";
+import { Coupon, Merchant } from "./types";
 import { createPromotionInSupabase } from "@/lib/condoMarketService";
 import { toast } from "sonner";
 
@@ -12,6 +12,7 @@ interface NewPromotionModalProps {
   onClose: () => void;
   onAddPromotion: (newCoupon: Coupon) => void;
   isSeniorMode: boolean;
+  currentMerchant?: Merchant | null;
 }
 
 const MERCHANT_CATEGORIES = ["Padaria", "Petshop", "Lava-Car", "Mercado", "Restaurante", "Farmácia", "Serviços", "Outros"];
@@ -21,6 +22,7 @@ export default function NewPromotionModal({
   onClose,
   onAddPromotion,
   isSeniorMode,
+  currentMerchant,
 }: NewPromotionModalProps) {
   const [merchantName, setMerchantName] = useState("");
   const [merchantCategory, setMerchantCategory] = useState("Mercado");
@@ -36,6 +38,18 @@ export default function NewPromotionModal({
   const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen && currentMerchant) {
+      setMerchantName(currentMerchant.businessName || "");
+      if (currentMerchant.category && MERCHANT_CATEGORIES.includes(currentMerchant.category)) {
+        setMerchantCategory(currentMerchant.category);
+      } else if (currentMerchant.category) {
+        setMerchantCategory("Outros");
+      }
+      setMerchantWhatsapp(currentMerchant.whatsapp || "");
+    }
+  }, [isOpen, currentMerchant]);
 
   if (!isOpen) return null;
 
@@ -94,14 +108,14 @@ export default function NewPromotionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
       <div
-        className={`bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border overflow-hidden my-8 ${
+        className={`bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh] ${
           isSeniorMode ? "border-2 border-amber-500" : ""
         }`}
       >
         {/* Cabeçalho */}
-        <div className="bg-amber-500 p-6 text-slate-950 flex items-center justify-between">
+        <div className="bg-amber-500 p-4 sm:p-6 text-slate-950 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <Zap className="h-7 w-7 fill-slate-950" />
             <div>
@@ -123,7 +137,25 @@ export default function NewPromotionModal({
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className={`p-6 space-y-4 ${isSeniorMode ? "space-y-6" : ""}`}>
+        <form onSubmit={handleSubmit} className={`p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 ${isSeniorMode ? "space-y-6" : ""}`}>
+          {currentMerchant && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Store className="h-4 w-4 text-amber-500 shrink-0" />
+                <div>
+                  <span className="font-bold text-foreground">Autenticado como: </span>
+                  <span className="font-black text-amber-600 dark:text-amber-400">{currentMerchant.businessName}</span>
+                  {currentMerchant.responsibleName && (
+                    <span className="text-muted-foreground ml-1">({currentMerchant.responsibleName})</span>
+                  )}
+                </div>
+              </div>
+              <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded font-mono font-bold text-[10px]">
+                PIN OK
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>

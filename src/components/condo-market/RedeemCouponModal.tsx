@@ -1,7 +1,7 @@
+import { useState, useMemo } from "react";
 import { X, CheckCircle, Ticket, Copy, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Coupon } from "./types";
-import { useState } from "react";
 
 interface RedeemCouponModalProps {
   coupon: Coupon | null;
@@ -18,10 +18,15 @@ export default function RedeemCouponModal({
 }: RedeemCouponModalProps) {
   const [copied, setCopied] = useState(false);
 
-  if (!isOpen || !coupon) return null;
+  // Gerar código único fixo por sessão de abertura do modal
+  const code = useMemo(() => {
+    if (!coupon || !isOpen) return "";
+    const categoryPrefix = (coupon.merchantCategory || "MER").substring(0, 3).toUpperCase();
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    return `CONDO-${categoryPrefix}-${randomNumber}`;
+  }, [coupon?.id, isOpen]);
 
-  // Gerar código único simulado
-  const code = `CONDO-${coupon.merchantCategory.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (!isOpen || !coupon) return null;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);

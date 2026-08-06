@@ -8,6 +8,9 @@ import NewPromotionModal from "@/components/condo-market/NewPromotionModal";
 import RedeemCouponModal from "@/components/condo-market/RedeemCouponModal";
 import ResidentRegisterModal from "@/components/condo-market/ResidentRegisterModal";
 import ClassifiedDetailModal from "@/components/condo-market/ClassifiedDetailModal";
+import MerchantRedemptionsModal from "@/components/condo-market/MerchantRedemptionsModal";
+import SuperAdminRegisterMerchantModal from "@/components/condo-market/SuperAdminRegisterMerchantModal";
+import EditClassifiedModal from "@/components/condo-market/EditClassifiedModal";
 import AdminAuthPinModal from "@/components/AdminAuthPinModal";
 import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus } from "@/components/condo-market/types";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,9 @@ import {
   fetchPromotionsFromSupabase,
   redeemPromotionInSupabase,
   updateClassifiedStatusInSupabase,
+  fetchUserRedeemedCouponIdsFromSupabase,
+  fetchMerchantsFromSupabase,
+  deletePromotionInSupabase,
 } from "@/lib/condoMarketService";
 import { toast } from "sonner";
 
@@ -51,7 +57,7 @@ export default function CondoMarket() {
   // Dados reais persistidos no Supabase (zero mock)
   const [classifieds, setClassifieds] = useState<ClassifiedItem[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [merchants] = useState<Merchant[]>(CONDOCENTER_MERCHANTS);
+  const [merchants, setMerchants] = useState<Merchant[]>(CONDOCENTER_MERCHANTS);
 
   // Estados de carregamento
   const [isLoadingClassifieds, setIsLoadingClassifieds] = useState(true);
@@ -60,10 +66,23 @@ export default function CondoMarket() {
   // Estados dos Modais
   const [isNewClassifiedOpen, setIsNewClassifiedOpen] = useState(false);
   const [isAdminPinOpen, setIsAdminPinOpen] = useState(false);
+  const [isSuperAdminRegisterOpen, setIsSuperAdminRegisterOpen] = useState(false);
   const [isNewPromotionOpen, setIsNewPromotionOpen] = useState(false);
   const [selectedCouponToRedeem, setSelectedCouponToRedeem] = useState<Coupon | null>(null);
+  const [selectedCouponForRedemptions, setSelectedCouponForRedemptions] = useState<Coupon | null>(null);
   const [selectedClassifiedItem, setSelectedClassifiedItem] = useState<ClassifiedItem | null>(null);
+  const [editingClassifiedItem, setEditingClassifiedItem] = useState<ClassifiedItem | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  
+  const [currentMerchant, setCurrentMerchant] = useState<Merchant | null>(() => {
+    try {
+      const saved = localStorage.getItem("condo_market_current_merchant");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
     try {
       const saved = localStorage.getItem("condo_market_user");
@@ -73,11 +92,58 @@ export default function CondoMarket() {
     }
   });
 
+  const [redeemedCouponIds, setRedeemedCouponIds] = useState<string[]>([]);
+
+  // Carregar cupons resgatados do morador logado (do localStorage e do Supabase)
+  useEffect(() => {
+    let isMounted = true;
+    if (currentUser) {
+      // 1. LocalStorage fallback instantâneo
+      let localIds: string[] = [];
+      try {
+        const key = `condo_market_redeemed_${currentUser.phone || currentUser.unit || currentUser.name}`;
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          localIds = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar cupons resgatados do localStorage:", e);
+      }
+      setRedeemedCouponIds(localIds);
+
+      // 2. Busca oficial do banco Supabase (tabela coupon_redemptions)
+      if (currentUser.phone) {
+        fetchUserRedeemedCouponIdsFromSupabase(currentUser.phone).then((dbIds) => {
+          if (isMounted && dbIds && dbIds.length > 0) {
+            setRedeemedCouponIds((prev) => Array.from(new Set([...prev, ...dbIds])));
+          }
+        });
+      }
+    } else {
+      setRedeemedCouponIds([]);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
   // Carregar dados reais do Supabase na inicialização
   useEffect(() => {
     loadClassifieds();
     loadPromotions();
+    loadMerchants();
   }, []);
+
+  const loadMerchants = async () => {
+    try {
+      const dbMerchants = await fetchMerchantsFromSupabase();
+      if (dbMerchants && dbMerchants.length > 0) {
+        setMerchants(dbMerchants);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar parceiros comerciais do Supabase:", e);
+    }
+  };
 
   const loadClassifieds = async () => {
     try {
@@ -114,9 +180,32 @@ export default function CondoMarket() {
   };
 
   const handleRedeemCoupon = async (coupon: Coupon) => {
+    // 1. Exigir identificação prévia do morador
+    if (!currentUser) {
+      toast.warning("Para resgatar um cupom grátis, é necessário se identificar como morador primeiro.");
+      setIsRegisterOpen(true);
+      return;
+    }
+
+    // 2. Permitir apenas 1 resgate por morador por cupom
+    if (redeemedCouponIds.includes(coupon.id)) {
+      toast.error("Você já resgatou este cupom! Cada morador pode resgatar apenas 1 vez por promoção.");
+      return;
+    }
+
+    // Salvar localmente o ID do cupom resgatado para este morador
+    const newRedeemed = [...redeemedCouponIds, coupon.id];
+    setRedeemedCouponIds(newRedeemed);
+    try {
+      const key = `condo_market_redeemed_${currentUser.phone || currentUser.unit || currentUser.name}`;
+      localStorage.setItem(key, JSON.stringify(newRedeemed));
+    } catch (e) {
+      console.error("Erro ao salvar cupom resgatado no localStorage:", e);
+    }
+
     setSelectedCouponToRedeem(coupon);
     
-    // Atualizar local e sincronizar decremento no Supabase
+    // Atualizar local e sincronizar decremento + cadastro da moradora no Supabase
     setCoupons((prev) =>
       prev.map((c) =>
         c.id === coupon.id
@@ -126,7 +215,7 @@ export default function CondoMarket() {
     );
 
     try {
-      await redeemPromotionInSupabase(coupon.id, coupon.remainingQuantity);
+      await redeemPromotionInSupabase(coupon.id, coupon.remainingQuantity, currentUser);
     } catch (error) {
       console.error("Erro ao resgatar cupom no Supabase:", error);
     }
@@ -151,6 +240,35 @@ export default function CondoMarket() {
       console.error("Erro ao remover dados do morador no localStorage:", e);
     }
     toast.info("Você deslogou da sua conta de morador.");
+  };
+
+  const handleMerchantLogout = () => {
+    setCurrentMerchant(null);
+    try {
+      localStorage.removeItem("condo_market_current_merchant");
+    } catch (e) {
+      console.error("Erro ao remover comerciante no localStorage:", e);
+    }
+    toast.info("Sessão do comerciante encerrada. Digite o PIN de 8 dígitos para conectar outro parceiro.");
+  };
+
+  const handleOpenNewPromotionModal = () => {
+    if (currentMerchant) {
+      setIsNewPromotionOpen(true);
+    } else {
+      setIsAdminPinOpen(true);
+    }
+  };
+
+  const handleDeleteCoupon = async (couponToDelete: Coupon) => {
+    setCoupons((prev) => prev.filter((c) => c.id !== couponToDelete.id));
+    toast.success(`Oferta "${couponToDelete.title}" excluída com sucesso.`);
+
+    try {
+      await deletePromotionInSupabase(couponToDelete.id);
+    } catch (error) {
+      console.error("Erro ao excluir oferta no Supabase:", error);
+    }
   };
 
   const handleUpdateStatus = async (itemId: string, newStatus: ClassifiedStatus) => {
@@ -180,6 +298,22 @@ export default function CondoMarket() {
     setSelectedClassifiedItem(null);
     setActiveTab("my_classifieds");
     toast.success("Anúncio finalizado com sucesso! Ele foi removido da aba pública e está salvo em 'Meus Anúncios'.");
+  };
+
+  const handleUpdateClassified = (updatedItem: ClassifiedItem) => {
+    setClassifieds((prev) =>
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+    );
+    if (selectedClassifiedItem && selectedClassifiedItem.id === updatedItem.id) {
+      setSelectedClassifiedItem(updatedItem);
+    }
+  };
+
+  const handleDeleteClassified = (itemId: string) => {
+    setClassifieds((prev) => prev.filter((item) => item.id !== itemId));
+    if (selectedClassifiedItem && selectedClassifiedItem.id === itemId) {
+      setSelectedClassifiedItem(null);
+    }
   };
 
   // Contagem de anúncios do morador logado
@@ -324,8 +458,14 @@ export default function CondoMarket() {
             merchants={merchants}
             isLoading={isLoadingCoupons}
             isSeniorMode={isSeniorMode}
+            redeemedCouponIds={redeemedCouponIds}
+            currentMerchant={currentMerchant}
             onRedeemCoupon={handleRedeemCoupon}
-            onOpenNewPromotionModal={() => setIsAdminPinOpen(true)}
+            onOpenNewPromotionModal={handleOpenNewPromotionModal}
+            onViewRedemptions={(coupon) => setSelectedCouponForRedemptions(coupon)}
+            onDeleteCoupon={handleDeleteCoupon}
+            onMerchantLogout={handleMerchantLogout}
+            onOpenAdminAuth={() => setIsAdminPinOpen(true)}
           />
         ) : currentUser ? (
           <MyClassifiedsTab
@@ -347,6 +487,16 @@ export default function CondoMarket() {
         currentUser={currentUser}
         onUpdateStatus={handleUpdateStatus}
         onFinalize={handleFinalize}
+        onEdit={(item) => setEditingClassifiedItem(item)}
+      />
+
+      <EditClassifiedModal
+        item={editingClassifiedItem}
+        isOpen={!!editingClassifiedItem}
+        onClose={() => setEditingClassifiedItem(null)}
+        onUpdateClassified={handleUpdateClassified}
+        onDeleteClassified={handleDeleteClassified}
+        isSeniorMode={isSeniorMode}
       />
 
       <NewClassifiedModal
@@ -360,8 +510,22 @@ export default function CondoMarket() {
       <AdminAuthPinModal
         isOpen={isAdminPinOpen}
         onClose={() => setIsAdminPinOpen(false)}
-        onSuccess={() => setIsNewPromotionOpen(true)}
-        description="Digite o PIN de 8 dígitos para ativar o modo de gestão e anunciar uma oferta."
+        onSuperAdminSuccess={() => setIsSuperAdminRegisterOpen(true)}
+        onMerchantSuccess={(merchant) => {
+          setCurrentMerchant(merchant);
+          setIsNewPromotionOpen(true);
+        }}
+      />
+
+      <SuperAdminRegisterMerchantModal
+        isOpen={isSuperAdminRegisterOpen}
+        onClose={() => setIsSuperAdminRegisterOpen(false)}
+        onSuccess={(newMerchant) => {
+          setCurrentMerchant(newMerchant);
+          loadMerchants();
+          setIsNewPromotionOpen(true);
+        }}
+        isSeniorMode={isSeniorMode}
       />
 
       <NewPromotionModal
@@ -369,6 +533,7 @@ export default function CondoMarket() {
         onClose={() => setIsNewPromotionOpen(false)}
         onAddPromotion={handleAddPromotion}
         isSeniorMode={isSeniorMode}
+        currentMerchant={currentMerchant}
       />
 
       <RedeemCouponModal
@@ -376,6 +541,12 @@ export default function CondoMarket() {
         isOpen={!!selectedCouponToRedeem}
         onClose={() => setSelectedCouponToRedeem(null)}
         isSeniorMode={isSeniorMode}
+      />
+
+      <MerchantRedemptionsModal
+        coupon={selectedCouponForRedemptions}
+        isOpen={!!selectedCouponForRedemptions}
+        onClose={() => setSelectedCouponForRedemptions(null)}
       />
 
       <ResidentRegisterModal

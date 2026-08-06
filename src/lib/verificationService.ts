@@ -203,7 +203,7 @@ export async function verifyWhatsAppCode(phone: string, inputCode: string): Prom
   try {
     const { data, error } = await supabase
       .from('verification_tokens')
-      .select('*')
+      .select('id, code, expires_at, used')
       .eq('phone', cleanPhone)
       .eq('code', inputCode)
       .eq('used', false)

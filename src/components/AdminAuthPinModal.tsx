@@ -11,28 +11,37 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+import { Merchant } from "@/components/condo-market/types";
+import { getMerchantByAccessCode } from "@/lib/condoMarketService";
+
 interface AdminAuthPinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuperAdminSuccess?: () => void;
+  onMerchantSuccess?: (merchant: Merchant) => void;
+  onSuccess?: () => void;
   description?: string;
 }
 
-const ADMIN_PIN = "85810220";
+const SUPER_ADMIN_PIN = "85810220";
 
 export default function AdminAuthPinModal({
   isOpen,
   onClose,
+  onSuperAdminSuccess,
+  onMerchantSuccess,
   onSuccess,
-  description = "Digite o PIN de 8 dígitos para acessar a área administrativa.",
+  description = "Digite o código de 8 dígitos do comerciante parceiro ou o PIN de Super Admin.",
 }: AdminAuthPinModalProps) {
   const [pinDigits, setPinDigits] = useState<string[]>(["", "", "", "", "", "", "", ""]);
   const [pinError, setPinError] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPinDigits(["", "", "", "", "", "", "", ""]);
       setPinError(false);
+      setIsVerifying(false);
     }
   }, [isOpen]);
 
@@ -75,15 +84,54 @@ export default function AdminAuthPinModal({
     }
   };
 
-  const handleVerifyPin = () => {
+  const handleVerifyPin = async () => {
     const enteredPin = pinDigits.join("");
-    if (enteredPin === ADMIN_PIN) {
-      toast.success("Acesso Concedido! PIN autenticado com sucesso.");
-      onSuccess();
-      onClose();
-    } else {
+    if (enteredPin.length !== 8) {
       setPinError(true);
-      toast.error("PIN Incorreto. Verifique o código de 8 dígitos digitado.");
+      toast.error("Digite todos os 8 dígitos do código.");
+      return;
+    }
+
+    setIsVerifying(true);
+
+    try {
+      // 1. Código do Super Admin (85810220)
+      if (enteredPin === SUPER_ADMIN_PIN) {
+        toast.success("🔑 Modo Super Admin Ativado! Acessando cadastro de parceiros.");
+        if (onSuperAdminSuccess) {
+          onSuperAdminSuccess();
+        } else if (onSuccess) {
+          onSuccess();
+        }
+        onClose();
+        return;
+      }
+
+      // 2. Verificar se o código de 8 dígitos pertence a um parceiro comercial
+      const merchant = await getMerchantByAccessCode(enteredPin);
+
+      if (merchant) {
+        // Salvar autenticação do estabelecimento no localStorage para persistência
+        try {
+          localStorage.setItem("condo_market_current_merchant", JSON.stringify(merchant));
+        } catch (_e) {}
+
+        toast.success(`✨ Autenticado como "${merchant.businessName}"!`);
+        if (onMerchantSuccess) {
+          onMerchantSuccess(merchant);
+        } else if (onSuccess) {
+          onSuccess();
+        }
+        onClose();
+      } else {
+        setPinError(true);
+        toast.error("Código de 8 dígitos incorreto. Verifique o PIN do parceiro ou use o código Super Admin (85810220).");
+      }
+    } catch (e) {
+      console.error("Erro ao verificar PIN:", e);
+      toast.error("Erro ao verificar código de acesso.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 

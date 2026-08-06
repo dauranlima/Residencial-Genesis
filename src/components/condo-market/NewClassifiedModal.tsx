@@ -159,14 +159,14 @@ export default function NewClassifiedModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
       <div
-        className={`bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border overflow-hidden my-8 ${
+        className={`bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh] ${
           isSeniorMode ? "border-2 border-primary" : ""
         }`}
       >
         {/* Cabeçalho */}
-        <div className="bg-primary p-6 text-primary-foreground flex items-center justify-between">
+        <div className="bg-primary p-4 sm:p-6 text-primary-foreground flex items-center justify-between shrink-0">
           <div>
             <h2 className={`font-bold ${isSeniorMode ? "text-2xl" : "text-xl"}`}>
               Anunciar Novo Desapego
@@ -185,7 +185,7 @@ export default function NewClassifiedModal({
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSubmit} className={`p-6 space-y-4 ${isSeniorMode ? "space-y-6" : ""}`}>
+        <form onSubmit={handleSubmit} className={`p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 ${isSeniorMode ? "space-y-6" : ""}`}>
           <div>
             <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
               Título do Produto *

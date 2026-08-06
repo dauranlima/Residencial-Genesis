@@ -1,15 +1,25 @@
 import { useState, useEffect } from "react";
-import { Clock, Ticket, Flame, Store, MapPin } from "lucide-react";
+import { Clock, Ticket, Flame, Store, MapPin, Users, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Coupon } from "./types";
 
 interface CouponCardProps {
   coupon: Coupon;
   isSeniorMode: boolean;
+  isRedeemed?: boolean;
   onRedeem: (coupon: Coupon) => void;
+  onViewRedemptions?: (coupon: Coupon) => void;
+  onDeleteCoupon?: (coupon: Coupon) => void;
 }
 
-export default function CouponCard({ coupon, isSeniorMode, onRedeem }: CouponCardProps) {
+export default function CouponCard({
+  coupon,
+  isSeniorMode,
+  isRedeemed = false,
+  onRedeem,
+  onViewRedemptions,
+  onDeleteCoupon,
+}: CouponCardProps) {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 0,
     minutes: 0,
@@ -109,13 +119,21 @@ export default function CouponCard({ coupon, isSeniorMode, onRedeem }: CouponCar
       <div className={`p-6 pt-0 space-y-2 ${isSeniorMode ? "p-8 pt-0 space-y-3" : ""}`}>
         <Button
           onClick={() => onRedeem(coupon)}
-          disabled={coupon.remainingQuantity === 0}
-          className={`w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
-            isSeniorMode ? "py-6 text-xl rounded-xl" : "py-3 text-sm"
-          }`}
+          disabled={coupon.remainingQuantity === 0 || isRedeemed}
+          className={`w-full font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
+            isRedeemed
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white cursor-not-allowed opacity-90"
+              : "bg-amber-500 hover:bg-amber-600 text-slate-950"
+          } ${isSeniorMode ? "py-6 text-xl rounded-xl" : "py-3 text-sm"}`}
         >
           <Ticket className={isSeniorMode ? "h-7 w-7" : "h-4 w-4"} />
-          <span>{coupon.remainingQuantity > 0 ? "Resgatar Cupom Grátis" : "Cupons Esgotados"}</span>
+          <span>
+            {isRedeemed
+              ? "✓ Cupom Já Resgatado"
+              : coupon.remainingQuantity > 0
+              ? "Resgatar Cupom Grátis"
+              : "Cupons Esgotados"}
+          </span>
         </Button>
 
         <a
@@ -136,6 +154,34 @@ export default function CouponCard({ coupon, isSeniorMode, onRedeem }: CouponCar
             <span>Como chegar (Google Maps)</span>
           </Button>
         </a>
+
+        {onViewRedemptions && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onViewRedemptions(coupon)}
+            className="w-full text-xs font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 flex items-center justify-center gap-1.5 border border-amber-500/30 rounded-xl"
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Ver Moradores que Resgataram</span>
+          </Button>
+        )}
+
+        {onDeleteCoupon && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              if (window.confirm(`Tem certeza que deseja excluir a oferta "${coupon.title}"?`)) {
+                onDeleteCoupon(coupon);
+              }
+            }}
+            className="w-full text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 flex items-center justify-center gap-1.5 border border-red-500/30 rounded-xl transition-all"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>Excluir Oferta</span>
+          </Button>
+        )}
       </div>
     </div>
   );

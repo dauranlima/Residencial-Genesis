@@ -43,10 +43,12 @@ export interface Merchant {
   id: string;
   businessName: string;
   category: string;
-  description: string;
+  description?: string;
+  responsibleName?: string;
   address?: string;
   logoUrl?: string;
   whatsapp: string;
+  accessCode?: string; // Código de acesso de 8 dígitos
 }
 
 export interface Coupon {
@@ -72,5 +74,15 @@ export interface CouponRedemption {
   merchantName: string;
   code: string;
   discountValue: string;
+  redeemedAt: string;
+}
+
+export interface DatabaseCouponRedemption {
+  id: string;
+  couponId: string;
+  residentName: string;
+  residentPhone: string;
+  residentUnit: string;
+  residentBlock?: string;
   redeemedAt: string;
 }
