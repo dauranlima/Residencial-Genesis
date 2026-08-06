@@ -47,7 +47,7 @@ export default function UnderDevelopmentModal() {
           <div className="text-sm">
             <p className="font-semibold text-foreground">Acesso Liberado:</p>
             <p className="text-muted-foreground text-xs mt-0.5">
-              No momento, o sistema está disponível para uso na página <strong className="text-foreground">Início</strong>, no módulo <strong className="text-foreground">CondoMarket</strong> e na <strong className="text-foreground">Localização</strong>.
+              No momento, o sistema está disponível para uso na página <strong className="text-foreground">Início</strong>, no módulo <strong className="text-foreground">viziGO</strong> e na <strong className="text-foreground">Localização</strong>.
             </p>
           </div>
         </div>

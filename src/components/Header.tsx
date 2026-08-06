@@ -13,14 +13,14 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Navegação Focada no CondoMarket */}
+        {/* Navegação Focada no viziGO */}
         <nav className="flex items-center gap-2">
           <Link
             to="/condo-market"
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-accent text-accent-foreground shadow-md transition-all"
           >
             <ShoppingBag className="h-4 w-4" />
-            <span>CondoMarket</span>
+            <span>viziGO</span>
           </Link>
         </nav>
       </div>

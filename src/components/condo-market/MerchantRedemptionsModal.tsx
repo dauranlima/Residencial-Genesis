@@ -164,7 +164,7 @@ export default function MerchantRedemptionsModal({
 
                     <a
                       href={`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(
-                        `Olá ${item.residentName}, vi que você resgatou o cupom "${coupon.title}" no CondoMarket! Como podemos te atender?`
+                        `Olá ${item.residentName}, vi que você resgatou o cupom "${coupon.title}" no viziGO! Como podemos te atender?`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"

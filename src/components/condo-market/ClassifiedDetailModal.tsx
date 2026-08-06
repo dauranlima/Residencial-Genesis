@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle, Pencil } from "lucide-react";
+import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle, Pencil, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
@@ -61,7 +61,7 @@ export default function ClassifiedDetailModal({
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Olá ${item.sellerName}! Vi seu anúncio "${item.title}" por ${formatPrice(item.price)} no CondoMarket do condomínio e gostaria de ver mais detalhes ou negociar.`
+    `Olá ${item.sellerName}! Vi seu anúncio "${item.title}" por ${formatPrice(item.price)} no viziGO do condomínio e gostaria de ver mais detalhes ou negociar.`
   );
 
   const whatsappUrl = `https://wa.me/55${item.whatsapp.replace(/\D/g, "")}?text=${whatsappMessage}`;
@@ -103,25 +103,15 @@ export default function ClassifiedDetailModal({
           <div className="flex items-center gap-2">
             {isOwner && (
               <div className="flex items-center gap-1.5 border border-amber-500/60 p-1 rounded-lg bg-slate-900/80 backdrop-blur-sm">
-                {onEdit && (
+                {item.status === "sold" || item.status === "cancelled" ? (
                   <button
                     type="button"
-                    onClick={() => onEdit(item)}
-                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase rounded transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                    title="Editar informações ou fotos do anúncio"
+                    onClick={() => onUpdateStatus && onUpdateStatus(item.id, "available")}
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5 border border-emerald-400"
+                    title="Reativar anúncio para exibir novamente no Desapego dos Vizinhos"
                   >
-                    <Pencil className="h-3 w-3" />
-                    <span>EDITAR</span>
-                  </button>
-                )}
-
-                {item.status === "sold" ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowFinalizeConfirm(true)}
-                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white border border-amber-400 font-black text-xs uppercase tracking-wider rounded transition-all shadow-md active:scale-95 cursor-pointer"
-                  >
-                    FINALIZAR
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>ANUNCIAR NOVAMENTE</span>
                   </button>
                 ) : (
                   <>
@@ -150,10 +140,10 @@ export default function ClassifiedDetailModal({
 
                     <button
                       type="button"
-                      onClick={() => onUpdateStatus && onUpdateStatus(item.id, "sold")}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-emerald-300 font-bold text-xs uppercase rounded transition-all border border-emerald-500/50 cursor-pointer"
+                      onClick={() => setShowFinalizeConfirm(true)}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white border border-amber-400 font-black text-xs uppercase tracking-wider rounded transition-all shadow-md active:scale-95 cursor-pointer"
                     >
-                      VENDIDO
+                      FINALIZAR
                     </button>
                   </>
                 )}
@@ -284,6 +274,19 @@ export default function ClassifiedDetailModal({
           <Button variant="outline" onClick={onClose} className={`w-full sm:w-auto font-semibold ${isSeniorMode ? "h-14 text-lg px-6" : ""}`}>
             Voltar para lista
           </Button>
+
+          {isOwner && (item.status === "sold" || item.status === "cancelled") && (
+            <Button
+              type="button"
+              onClick={() => onUpdateStatus && onUpdateStatus(item.id, "available")}
+              className={`w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-emerald-400 ${
+                isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-5 text-sm"
+              }`}
+            >
+              <RotateCcw className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
+              <span>Anunciar novamente</span>
+            </Button>
+          )}
 
           {isOwner && onEdit && (
             <Button

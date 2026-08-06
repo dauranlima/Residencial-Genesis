@@ -287,7 +287,11 @@ export default function CondoMarket() {
       cancelled: "Cancelado",
     };
 
-    toast.success(`Anúncio atualizado para "${labels[newStatus]}"`);
+    if (newStatus === "available") {
+      toast.success("Anúncio ativado novamente! Ele voltou a ser exibido na aba 'Desapego de Vizinhos'.");
+    } else {
+      toast.success(`Anúncio atualizado para "${labels[newStatus]}"`);
+    }
     await updateClassifiedStatusInSupabase(itemId, newStatus);
   };
 
@@ -334,7 +338,7 @@ export default function CondoMarket() {
 
   return (
     <div className={`min-h-screen bg-background pb-16 transition-all duration-300 ${isSeniorMode ? "text-lg" : ""}`}>
-      {/* Banner Principal / Hero do CondoMarket */}
+      {/* Banner Principal / Hero do viziGO */}
       <section className="bg-primary text-primary-foreground py-10 px-4 border-b border-navy-light/30 shadow-luxury">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -343,7 +347,7 @@ export default function CondoMarket() {
                 <Sparkles className="h-4 w-4 text-amber-300" /> Plataforma Hiperlocal do Condomínio
               </div>
               <h1 className={`font-black tracking-tight ${isSeniorMode ? "text-4xl md:text-5xl" : "text-3xl md:text-4xl"}`}>
-                CondoMarket <span className="text-gradient-gold">Morada do Sol II</span>
+                viziGO <span className="text-gradient-gold">Morada do Sol II</span>
               </h1>
               <p className={`text-primary-foreground/80 max-w-2xl ${isSeniorMode ? "text-xl leading-relaxed" : "text-base"}`}>
                 Desapegue de itens seminovos com vizinhos do mesmo prédio e aproveite cupons de desconto relâmpago no comércio local.
@@ -474,6 +478,7 @@ export default function CondoMarket() {
             isSeniorMode={isSeniorMode}
             onOpenNewModal={() => setIsNewClassifiedOpen(true)}
             onSelectItem={(item) => setSelectedClassifiedItem(item)}
+            onUpdateStatus={handleUpdateStatus}
           />
         ) : null}
       </main>

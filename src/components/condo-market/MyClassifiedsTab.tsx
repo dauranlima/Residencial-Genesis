@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, PackageX, Tag, CheckCircle2, Clock, Ban, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ClassifiedCard from "./ClassifiedCard";
+import MarketPagination from "./MarketPagination";
 import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
 interface MyClassifiedsTabProps {
@@ -11,6 +12,7 @@ interface MyClassifiedsTabProps {
   isSeniorMode: boolean;
   onOpenNewModal: () => void;
   onSelectItem?: (item: ClassifiedItem) => void;
+  onUpdateStatus?: (itemId: string, newStatus: ClassifiedStatus) => void;
 }
 
 type StatusFilter = "all" | ClassifiedStatus;
@@ -23,15 +25,24 @@ const STATUS_OPTIONS: { id: StatusFilter; label: string; icon: any; color: strin
   { id: "cancelled", label: "Cancelados", icon: Ban, color: "bg-red-600 text-white" },
 ];
 
+const ITEMS_PER_PAGE = 9;
+
 export default function MyClassifiedsTab({
   items,
   currentUser,
   isSeniorMode,
   onOpenNewModal,
   onSelectItem,
+  onUpdateStatus,
 }: MyClassifiedsTabProps) {
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Resetar página quando os filtros de busca ou status mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus, searchQuery]);
 
   // Filter items created by current user
   const userItems = items.filter((item) => {
@@ -52,6 +63,13 @@ export default function MyClassifiedsTab({
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
+  const paginatedItems = filteredItems.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
+  );
 
   const getCount = (status: StatusFilter) => {
     if (status === "all") return userItems.length;
@@ -135,16 +153,30 @@ export default function MyClassifiedsTab({
 
       {/* Lista / Grid de Meus Anúncios */}
       {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
-            <ClassifiedCard
-              key={item.id}
-              item={item}
-              isSeniorMode={isSeniorMode}
-              onSelectItem={onSelectItem}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedItems.map((item) => (
+              <ClassifiedCard
+                key={item.id}
+                item={item}
+                isSeniorMode={isSeniorMode}
+                onSelectItem={onSelectItem}
+                currentUser={currentUser}
+                onUpdateStatus={onUpdateStatus}
+              />
+            ))}
+          </div>
+
+          <MarketPagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filteredItems.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={(p) => setCurrentPage(p)}
+            isSeniorMode={isSeniorMode}
+            itemLabel="anúncios"
+          />
+        </>
       ) : (
         <div className="text-center py-16 bg-card rounded-xl border border-dashed border-border p-6">
           <PackageX className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
@@ -153,7 +185,7 @@ export default function MyClassifiedsTab({
           </h3>
           <p className={`text-muted-foreground max-w-md mx-auto mb-6 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
             {userItems.length === 0
-              ? "Você ainda não publicou nenhum anúncio no CondoMarket. Clique no botão abaixo para começar!"
+              ? "Você ainda não publicou nenhum anúncio no viziGO. Clique no botão abaixo para começar!"
               : "Não há anúncios com o status selecionado."}
           </p>
           <Button onClick={onOpenNewModal} variant="hero">

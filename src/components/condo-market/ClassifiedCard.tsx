@@ -1,14 +1,30 @@
-import { MessageCircle, Tag, MapPin, Eye } from "lucide-react";
+import { MessageCircle, Tag, MapPin, Eye, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ClassifiedItem } from "./types";
+import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
 interface ClassifiedCardProps {
   item: ClassifiedItem;
   isSeniorMode: boolean;
   onSelectItem?: (item: ClassifiedItem) => void;
+  currentUser?: CurrentUser | null;
+  onUpdateStatus?: (itemId: string, newStatus: ClassifiedStatus) => void;
 }
 
-export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: ClassifiedCardProps) {
+export default function ClassifiedCard({
+  item,
+  isSeniorMode,
+  onSelectItem,
+  currentUser,
+  onUpdateStatus,
+}: ClassifiedCardProps) {
+  const isOwner = !!(
+    currentUser &&
+    (
+      (currentUser.phone && item.whatsapp && currentUser.phone.replace(/\D/g, "") === item.whatsapp.replace(/\D/g, "")) ||
+      (currentUser.unit === item.sellerUnit && currentUser.name.toLowerCase() === item.sellerName.toLowerCase())
+    )
+  );
+
   const formatPrice = (val: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -17,7 +33,7 @@ export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: Cla
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Olá ${item.sellerName}! Vi seu anúncio "${item.title}" por ${formatPrice(item.price)} no CondoMarket do condomínio e gostaria de saber se ainda está disponível.`
+    `Olá ${item.sellerName}! Vi seu anúncio "${item.title}" por ${formatPrice(item.price)} no viziGO do condomínio e gostaria de saber se ainda está disponível.`
   );
 
   const whatsappUrl = `https://wa.me/55${item.whatsapp.replace(/\D/g, "")}?text=${whatsappMessage}`;
@@ -92,7 +108,7 @@ export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: Cla
 
         <div>
           {/* Informações do Vendedor / Vizinho & Botão Ver Mais */}
-          <div className="flex items-center justify-between border-t border-border pt-3 mb-4 text-xs text-muted-foreground gap-2">
+          <div className="flex items-center justify-between border-t border-border pt-3 mb-3 text-xs text-muted-foreground gap-2">
             <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300 truncate">
               <MapPin className={`text-accent shrink-0 ${isSeniorMode ? "h-5 w-5" : "h-3.5 w-3.5"}`} />
               <span className={`truncate ${isSeniorMode ? "text-base font-bold" : "text-xs"}`}>
@@ -113,20 +129,37 @@ export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: Cla
             </Button>
           </div>
 
-          {/* Botão WhatsApp */}
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full block">
+          {/* Se o anúncio for do morador e estiver vendido/cancelado, exibir o botão Anunciar Novamente no Card */}
+          {isOwner && (item.status === "sold" || item.status === "cancelled") && onUpdateStatus ? (
             <Button
-              className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateStatus(item.id, "available");
+              }}
+              className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-emerald-400 ${
                 isSeniorMode ? "py-6 text-xl rounded-xl" : "py-2.5 text-sm"
               }`}
             >
-              <MessageCircle className={isSeniorMode ? "h-7 w-7" : "h-4 w-4"} />
-              <span>Falar com Vizinho (WhatsApp)</span>
+              <RotateCcw className={isSeniorMode ? "h-7 w-7" : "h-4 w-4"} />
+              <span>Anunciar novamente</span>
             </Button>
-          </a>
+          ) : (
+            /* Botão WhatsApp */
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full block">
+              <Button
+                className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
+                  isSeniorMode ? "py-6 text-xl rounded-xl" : "py-2.5 text-sm"
+                }`}
+              >
+                <MessageCircle className={isSeniorMode ? "h-7 w-7" : "h-4 w-4"} />
+                <span>Falar com Vizinho (WhatsApp)</span>
+              </Button>
+            </a>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
 

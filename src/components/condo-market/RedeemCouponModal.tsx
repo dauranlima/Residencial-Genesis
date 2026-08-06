@@ -35,7 +35,7 @@ export default function RedeemCouponModal({
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Olá ${coupon.merchantName}! Resgatei o cupom "${coupon.title}" (${coupon.discountValue}) no CondoMarket com o código ${code}. Gostaria de agendar / utilizar o desconto!`
+    `Olá ${coupon.merchantName}! Resgatei o cupom "${coupon.title}" (${coupon.discountValue}) no viziGO com o código ${code}. Gostaria de agendar / utilizar o desconto!`
   );
 
   const whatsappUrl = `https://wa.me/55${coupon.merchantWhatsapp.replace(/\D/g, "")}?text=${whatsappMessage}`;

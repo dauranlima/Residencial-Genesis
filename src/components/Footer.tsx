@@ -25,7 +25,7 @@ export default function Footer() {
                 to="/condo-market"
                 className="text-sm text-primary-foreground/70 hover:text-accent transition-colors"
               >
-                CondoMarket (Classificados & Ofertas)
+                viziGO (Classificados & Ofertas)
               </Link>
             </nav>
           </div>

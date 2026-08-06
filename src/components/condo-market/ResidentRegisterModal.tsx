@@ -229,7 +229,7 @@ export default function ResidentRegisterModal({
             {/* Opções de Seleção */}
             <div className={`p-6 space-y-4 ${isSeniorMode ? "space-y-6" : ""}`}>
               <p className={`text-muted-foreground text-center ${isSeniorMode ? "text-lg" : "text-sm"}`}>
-                Bem-vindo ao <strong>CondoMarket</strong>! Escolha uma das opções abaixo para acessar:
+                Bem-vindo ao <strong>viziGO</strong>! Escolha uma das opções abaixo para acessar:
               </p>
 
               {/* Botão 1: Primeira Vez */}

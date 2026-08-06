@@ -7,14 +7,14 @@ export default function FooterConsentBanner() {
 
   useEffect(() => {
     // Verificar se o usuário já aceitou anteriormente
-    const consent = localStorage.getItem("condomarket_consent_accepted");
+    const consent = localStorage.getItem("vizigo_consent_accepted") || localStorage.getItem("condomarket_consent_accepted");
     if (!consent) {
       setIsVisible(true);
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem("condomarket_consent_accepted", "true");
+    localStorage.setItem("vizigo_consent_accepted", "true");
     setIsVisible(false);
   };
 
@@ -33,10 +33,10 @@ export default function FooterConsentBanner() {
           </div>
           <div className="text-xs sm:text-sm max-w-4xl">
             <p className="font-bold text-foreground text-sm sm:text-base mb-1">
-              Informações Importantes – Termos de Uso do CondoMarket
+              Informações Importantes – Termos de Uso do viziGO
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              <strong>CondoMarket</strong> é uma ferramenta tecnológica independente, de caráter particular e sem fins lucrativos, voltada exclusivamente à economia circular entre moradores. A plataforma não possui vínculo oficial com a administração ou síndico(a) do condomínio, não gerando ônus para a gestão. Atuamos estritamente como intermediários tecnológicos de anúncios, não participando, endossando ou garantindo transações financeiras, entregas ou a qualidade dos produtos negociados entre os usuários.
+              <strong>viziGO</strong> é uma ferramenta tecnológica independente, de caráter particular e sem fins lucrativos, voltada exclusivamente à economia circular entre moradores. A plataforma não possui vínculo oficial com a administração ou síndico(a) do condomínio, não gerando ônus para a gestão. Atuamos estritamente como intermediários tecnológicos de anúncios, não participando, endossando ou garantindo transações financeiras, entregas ou a qualidade dos produtos negociados entre os usuários.
             </p>
           </div>
         </div>

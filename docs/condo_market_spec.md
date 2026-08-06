@@ -1,7 +1,7 @@
 # Sistema de Classificados e Cupons Hiperlocal para Condomínios (Vibe Coding Spec)
 
 ## Visão Geral do Produto
-O **CondoMarket** (nome provisório) é uma plataforma web hiperlocal desenvolvida para condomínios residenciais verticais e horizontais. Seu objetivo é resolver duas grandes dores:
+O **viziGO** é uma plataforma web hiperlocal desenvolvida para condomínios residenciais verticais e horizontais. Seu objetivo é resolver duas grandes dores:
 1. **Desapego rápido e seguro entre vizinhos:** Classificados de itens usados (móveis, eletrônicos, etc.) sem burocracia, sem frete e com segurança de transação entre moradores do mesmo condomínio.
 2. **Engajamento com o Comércio Local:** Vitrine de estabelecimentos locais (petshops, padarias, barbearias, lava-cars) com **cupons de desconto de tempo/quantidade limitados** (promoções relâmpago).
 

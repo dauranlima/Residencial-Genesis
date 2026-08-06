@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, PackageX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ClassifiedCard from "./ClassifiedCard";
+import MarketPagination from "./MarketPagination";
 import { ClassifiedItem } from "./types";
 
 interface ClassifiedsTabProps {
@@ -14,6 +15,7 @@ interface ClassifiedsTabProps {
 }
 
 const CATEGORIES = ["Todos", "Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
+const ITEMS_PER_PAGE = 9;
 
 export default function ClassifiedsTab({
   items,
@@ -24,6 +26,12 @@ export default function ClassifiedsTab({
 }: ClassifiedsTabProps) {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Resetar para a primeira página sempre que filtro ou busca mudarem
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
 
   const filteredItems = items.filter((item) => {
     // Cancelled and Sold/Finalized items disappear immediately from public classifieds tab
@@ -36,6 +44,17 @@ export default function ClassifiedsTab({
       item.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
+  const paginatedItems = filteredItems.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   return (
     <div className="space-y-6">
@@ -96,16 +115,28 @@ export default function ClassifiedsTab({
           <p className="text-muted-foreground font-semibold">Buscando desapegos no Supabase...</p>
         </div>
       ) : filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
-            <ClassifiedCard
-              key={item.id}
-              item={item}
-              isSeniorMode={isSeniorMode}
-              onSelectItem={onSelectItem}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedItems.map((item) => (
+              <ClassifiedCard
+                key={item.id}
+                item={item}
+                isSeniorMode={isSeniorMode}
+                onSelectItem={onSelectItem}
+              />
+            ))}
+          </div>
+
+          <MarketPagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalItems={filteredItems.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={handlePageChange}
+            isSeniorMode={isSeniorMode}
+            itemLabel="desapegos"
+          />
+        </>
       ) : (
         <div className="text-center py-16 bg-card rounded-xl border border-dashed border-border">
           <PackageX className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />

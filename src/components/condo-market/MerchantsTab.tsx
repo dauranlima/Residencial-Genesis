@@ -3,6 +3,7 @@ import { Store, Zap, Search, MapPin, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CouponCard from "./CouponCard";
+import MarketPagination from "./MarketPagination";
 import { Coupon, Merchant } from "./types";
 import { fetchTotalRedemptionsCountFromSupabase } from "@/lib/condoMarketService";
 
@@ -21,6 +22,8 @@ interface MerchantsTabProps {
   onOpenAdminAuth?: () => void;
 }
 
+const ITEMS_PER_PAGE = 9;
+
 export default function MerchantsTab({
   coupons,
   merchants,
@@ -38,6 +41,12 @@ export default function MerchantsTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"showcase" | "merchant_dashboard">("showcase");
   const [dbRedemptionsCount, setDbRedemptionsCount] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Resetar página quando a busca mudar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (currentMerchant) {
@@ -56,6 +65,13 @@ export default function MerchantsTab({
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.merchantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.merchantCategory.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredCoupons.length / ITEMS_PER_PAGE);
+  const safePage = Math.min(currentPage, Math.max(1, totalPages));
+  const paginatedCoupons = filteredCoupons.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE
   );
 
   const totalCouponsAvailable = coupons.reduce((acc, c) => acc + c.totalQuantity, 0);
@@ -293,19 +309,31 @@ export default function MerchantsTab({
             <p className="text-muted-foreground font-semibold">Buscando promoções no Supabase...</p>
           </div>
         ) : filteredCoupons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCoupons.map((coupon) => (
-              <CouponCard
-                key={coupon.id}
-                coupon={coupon}
-                isSeniorMode={isSeniorMode}
-                isRedeemed={redeemedCouponIds.includes(coupon.id)}
-                onRedeem={onRedeemCoupon}
-                onViewRedemptions={isOwnerOfCoupon(coupon) ? onViewRedemptions : undefined}
-                onDeleteCoupon={isOwnerOfCoupon(coupon) ? onDeleteCoupon : undefined}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedCoupons.map((coupon) => (
+                <CouponCard
+                  key={coupon.id}
+                  coupon={coupon}
+                  isSeniorMode={isSeniorMode}
+                  isRedeemed={redeemedCouponIds.includes(coupon.id)}
+                  onRedeem={onRedeemCoupon}
+                  onViewRedemptions={isOwnerOfCoupon(coupon) ? onViewRedemptions : undefined}
+                  onDeleteCoupon={isOwnerOfCoupon(coupon) ? onDeleteCoupon : undefined}
+                />
+              ))}
+            </div>
+
+            <MarketPagination
+              currentPage={safePage}
+              totalPages={totalPages}
+              totalItems={filteredCoupons.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={(p) => setCurrentPage(p)}
+              isSeniorMode={isSeniorMode}
+              itemLabel="promoções"
+            />
+          </>
         ) : (
           <div className="text-center py-12 bg-card rounded-xl border border-dashed border-border">
             <Store className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />

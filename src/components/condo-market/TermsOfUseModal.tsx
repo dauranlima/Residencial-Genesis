@@ -67,11 +67,11 @@ export default function TermsOfUseModal({
             <div className="border-b border-border pb-3">
               <h3 className="font-extrabold text-base text-primary uppercase tracking-wide flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary shrink-0" />
-                TERMOS E CONDIÇÕES DE USO – CONDOWARKET
+                TERMOS E CONDIÇÕES DE USO – VIZIGO
               </h3>
               <p className="mt-2 text-muted-foreground">
                 Estes Termos e Condições de Uso regulamentam o acesso e a utilização da plataforma{" "}
-                <strong>CondoMarket</strong> ("Plataforma"), um ambiente virtual independente voltado
+                <strong>viziGO</strong> ("Plataforma"), um ambiente virtual independente voltado
                 exclusivamente para facilitar o desapego de itens seminovos entre vizinhos e a divulgação de
                 cupons/benefícios do comércio local.
               </p>
@@ -85,7 +85,7 @@ export default function TermsOfUseModal({
             <div className="space-y-1.5">
               <h4 className="font-bold text-foreground text-sm sm:text-base">1. DA NATUREZA DA PLATAFORMA</h4>
               <p className="text-muted-foreground pl-2">
-                <strong>1.1.</strong> O CondoMarket é uma ferramenta tecnológica de classificados de caráter
+                <strong>1.1.</strong> O viziGO é uma ferramenta tecnológica de classificados de caráter
                 estritamente informal, particular e independente.
               </p>
               <p className="text-muted-foreground pl-2">
@@ -117,7 +117,7 @@ export default function TermsOfUseModal({
             <div className="space-y-1.5 border-t border-border/50 pt-3">
               <h4 className="font-bold text-foreground text-sm sm:text-base">3. DAS REGRAS PARA ANÚNCIOS (DESAPEGOS)</h4>
               <p className="text-muted-foreground pl-2">
-                <strong>3.1.</strong> O CondoMarket atua exclusivamente como intermediário tecnológico de anúncio,
+                <strong>3.1.</strong> O viziGO atua exclusivamente como intermediário tecnológico de anúncio,
                 não participando, endossando ou garantindo qualquer transação financeira, entrega, troca ou qualidade dos
                 produtos negociados entre os usuários.
               </p>
@@ -147,7 +147,7 @@ export default function TermsOfUseModal({
                   Prejuízos financeiros, calotes, desacordos comerciais ou danos materiais decorrentes das negociações
                   realizadas entre os moradores.
                 </li>
-                <li>Condutas inadequadas, fraudes ou má-fé praticadas por usuários cadastrados.</li>
+                <li>Condutas inadequados, fraudes ou má-fé praticadas por usuários cadastrados.</li>
               </ul>
               <p className="text-muted-foreground pl-2 pt-1">
                 <strong>4.2.</strong> A Plataforma reserva-se o direito de remover, a qualquer momento e sem aviso
@@ -159,7 +159,7 @@ export default function TermsOfUseModal({
             <div className="space-y-1.5 border-t border-border/50 pt-3">
               <h4 className="font-bold text-foreground text-sm sm:text-base">5. DA MODIFICAÇÃO DOS TERMOS</h4>
               <p className="text-muted-foreground pl-2">
-                <strong>5.1.</strong> Os administradores do CondoMarket poderão alterar estes Termos de Uso a qualquer
+                <strong>5.1.</strong> Os administradores do viziGO poderão alterar estes Termos de Uso a qualquer
                 momento, visando a melhoria contínua da ferramenta. As atualizações passarão a valer imediatamente após
                 sua publicação no sistema.
               </p>
@@ -185,7 +185,7 @@ export default function TermsOfUseModal({
               }`}
             >
               Declaro que li, compreendi e aceito integralmente os Termos e Condições de Uso para anunciar na
-              plataforma CondoMarket.
+              plataforma viziGO.
             </label>
           </div>
         </div>

@@ -71,7 +71,7 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
   // 2. Disparar Envio do WhatsApp
   let whatsappSent = false;
   let apiErrorMessage = '';
-  const messageText = `🔐 *CondoMarket - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
+  const messageText = `🔐 *viziGO - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
 
   // 2.1 Tentar Via Proxy do Vite Server (/api-evolution) para evitar CORS no ambiente local
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
