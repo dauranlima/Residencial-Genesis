@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import UnderDevelopmentModal from "./UnderDevelopmentModal";
+import FooterConsentBanner from "./FooterConsentBanner";
 
 interface LayoutProps {
   children: ReactNode;
@@ -22,6 +23,7 @@ export default function Layout({ children }: LayoutProps) {
       <main className="flex-1">{isUnderDevelopment ? null : children}</main>
       {!shouldHideLayout && <Footer />}
       <UnderDevelopmentModal />
+      {!shouldHideLayout && <FooterConsentBanner />}
     </div>
   );
 }

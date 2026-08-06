@@ -7,6 +7,8 @@ import { ClassifiedItem } from "./types";
 import { createClassifiedInSupabase } from "@/lib/condoMarketService";
 import { toast } from "sonner";
 
+import TermsOfUseModal from "./TermsOfUseModal";
+
 interface NewClassifiedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -38,6 +40,9 @@ export default function NewClassifiedModal({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Terms of Use modal
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,7 +100,7 @@ export default function NewClassifiedModal({
     setUploadError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setUploadError(null);
 
@@ -110,6 +115,11 @@ export default function NewClassifiedModal({
       return;
     }
 
+    // Passou das validações, abre o modal de Termos de Uso
+    setShowTermsModal(true);
+  };
+
+  const handleConfirmPublish = async () => {
     try {
       setIsUploading(true);
 
@@ -137,6 +147,7 @@ export default function NewClassifiedModal({
       setDescription("");
       setSelectedFiles([]);
       setPreviewUrls([]);
+      setShowTermsModal(false);
       onClose();
     } catch (err: any) {
       console.error(err);
@@ -400,6 +411,14 @@ export default function NewClassifiedModal({
           </div>
         </form>
       </div>
+
+      <TermsOfUseModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleConfirmPublish}
+        isSeniorMode={isSeniorMode}
+        isSubmitting={isUploading}
+      />
     </div>
   );
 }
