@@ -73,8 +73,16 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
   let apiErrorMessage = '';
   const messageText = `🔐 *viziGO - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
 
-  // 2.1 Tentar Via Proxy do Vite Server (/api-evolution) para evitar CORS no ambiente local
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  // 2.1 Tentar Via Proxy do Vite Server (/api-evolution) para evitar CORS no ambiente local ou rede IP (ex: 192.168.x.x)
+  const isLocalOrNetworkDev =
+    import.meta.env.DEV ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    /^192\.168\./.test(window.location.hostname) ||
+    /^10\./.test(window.location.hostname) ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname);
+
+  if (isLocalOrNetworkDev) {
     const proxyEndpoints = [
       `/api-evolution/send/text/${instance}`,
       `/api-evolution/send/text`,
