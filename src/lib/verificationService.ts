@@ -6,7 +6,6 @@ import { supabase } from './supabase';
 export function formatPhoneNumber(phone: string): string {
   const digits = phone.replace(/\D/g, '');
   if (!digits) return '';
-  // Se não começar com DDI 55 (Brasil) e tiver 10 ou 11 dígitos, adiciona 55
   if (!digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) {
     return `55${digits}`;
   }
@@ -14,7 +13,7 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * Sanitiza a URL base da Evolution API removendo caminhos do painel gerenciador
+ * Sanitiza a URL base da Evolution API
  */
 function getSanitizedApiUrl(rawUrl: string): string {
   let url = (rawUrl || '').trim().replace(/\/$/, '');
@@ -25,9 +24,9 @@ function getSanitizedApiUrl(rawUrl: string): string {
 }
 
 /**
- * 1. Gera um código aleatório de 4 dígitos (ex: 1000 a 9999)
- * 2. Salva o código temporariamente no Supabase (tabela verification_tokens) com expiração de 5 minutos
- * 3. Dispara o envio via Evolution API / Evolution GO WhatsApp
+ * 1. Gera código numérico de 4 dígitos
+ * 2. Salva no Supabase (verification_tokens) com expiração de 5 min
+ * 3. Dispara mensagem via WhatsApp (com proxy/backend para eliminar CORS)
  */
 export async function sendWhatsAppVerificationCode(phone: string): Promise<{
   success: boolean;
@@ -40,18 +39,13 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
     throw new Error('Número de WhatsApp inválido.');
   }
 
-  // Obter configurações da Evolution API
-  const rawApiUrl = import.meta.env.VITE_EVOLUTION_API_URL || '';
+  const rawApiUrl = import.meta.env.VITE_EVOLUTION_API_URL || 'https://evogo.dldigitalsolutions.cloud';
   const apiUrl = getSanitizedApiUrl(rawApiUrl);
-  const instance = (import.meta.env.VITE_EVOLUTION_INSTANCE || '').trim();
+  const instance = (import.meta.env.VITE_EVOLUTION_INSTANCE || 'teste-meuwhats').trim();
   const token = (import.meta.env.VITE_EVOLUTION_TOKEN || 'ff01fa86-4566-4ac0-9685-08cb627d25a6').trim();
 
-  const isConfigured = apiUrl && !apiUrl.includes('sua-evolution-api.com') && instance && !instance.includes('nome-da-sua-instancia');
-
-  // Gera código aleatório de 4 dígitos (1000 a 9999)
+  // Gera código aleatório de 4 dígitos
   const code = Math.floor(1000 + Math.random() * 9000).toString();
-
-  // Define expiração para daqui a 5 minutos
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
   // 1. Salvar no Supabase (Tabela verification_tokens)
@@ -74,14 +68,82 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
     console.error('Erro ao interagir com Supabase verification_tokens:', err);
   }
 
-  // 2. Disparar via Evolution API / Evolution GO
+  // 2. Disparar Envio do WhatsApp
   let whatsappSent = false;
   let apiErrorMessage = '';
+  const messageText = `🔐 *CondoMarket - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
 
-  if (isConfigured) {
-    const messageText = `🔐 *CondoMarket - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
+  // 2.1 Tentar Via Proxy do Vite Server (/api-evolution) para evitar CORS no ambiente local
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const proxyEndpoints = [
+      `/api-evolution/send/text/${instance}`,
+      `/api-evolution/send/text`,
+      `/api-evolution/message/sendText/${instance}`,
+      `/api-evolution/message/sendText`,
+    ];
 
-    // Lista de endpoints possíveis para Evolution API e Evolution GO
+    for (const endpoint of proxyEndpoints) {
+      try {
+        console.log(`[WhatsApp Proxy Local] Disparando para ${endpoint}...`);
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': token,
+            'instance': instance,
+          },
+          body: JSON.stringify({
+            number: cleanPhone,
+            text: messageText,
+            textMessage: { text: messageText },
+            options: { delay: 1200, presence: 'composing' },
+          }),
+        });
+
+        if (res.ok) {
+          whatsappSent = true;
+          console.log('[WhatsApp Proxy Local] Entregue com sucesso!');
+          break;
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`[WhatsApp Proxy Local] Erro em ${endpoint}:`, res.status, errData);
+          apiErrorMessage = errData?.message || `HTTP ${res.status}`;
+        }
+      } catch (err: any) {
+        console.warn(`[WhatsApp Proxy Local] Falha em ${endpoint}:`, err?.message);
+        apiErrorMessage = err?.message;
+      }
+    }
+  }
+
+  // 2.2 Tentar via Rota Serverless / Backend Proxy (/api/send-whatsapp)
+  if (!whatsappSent) {
+    try {
+      console.log('[WhatsApp Backend API] Tentando rota backend /api/send-whatsapp...');
+      const res = await fetch('/api/send-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          text: messageText,
+          apiUrl,
+          instance,
+          token,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          whatsappSent = true;
+          console.log('[WhatsApp Backend API] Entregue com sucesso!');
+        }
+      }
+    } catch (_err) {}
+  }
+
+  // 2.3 Fallback Direto (caso esteja rodando fora do local dev e sem serverless)
+  if (!whatsappSent) {
     const candidateEndpoints = [
       `${apiUrl}/send/text/${instance}`,
       `${apiUrl}/send/text`,
@@ -89,50 +151,30 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
       `${apiUrl}/message/sendText`,
     ];
 
-    const standardHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'apikey': token,
-      'instance': instance,
-      'instanceId': instance,
-    };
-
-    const payload = {
-      number: cleanPhone,
-      text: messageText,
-      textMessage: {
-        text: messageText,
-      },
-      options: {
-        delay: 1200,
-        presence: 'composing',
-      },
-    };
-
     for (const endpoint of candidateEndpoints) {
       try {
-        console.log(`[Evolution GO] Testando endpoint: ${endpoint}...`);
         const response = await fetch(endpoint, {
           method: 'POST',
-          headers: standardHeaders,
-          body: JSON.stringify(payload),
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': token,
+            'instance': instance,
+          },
+          body: JSON.stringify({
+            number: cleanPhone,
+            text: messageText,
+            textMessage: { text: messageText },
+          }),
         });
 
         if (response.ok) {
           whatsappSent = true;
-          console.log(`[Evolution GO] Mensagem enviada com sucesso via ${endpoint}!`);
           break;
-        } else {
-          const errBody = await response.json().catch(() => ({}));
-          console.warn(`[Evolution GO] Resposta de ${endpoint}: ${response.status}`, errBody);
-          apiErrorMessage = errBody?.message || errBody?.error || `HTTP ${response.status}`;
         }
       } catch (err: any) {
-        console.warn(`[Evolution GO] Erro ao conectar em ${endpoint}:`, err?.message);
-        apiErrorMessage = err?.message || 'Erro de rede';
+        apiErrorMessage = err?.message || 'CORS / Erro de rede';
       }
     }
-  } else {
-    console.warn('[Evolution API] Variáveis de ambiente não configuradas.');
   }
 
   if (whatsappSent) {
@@ -145,16 +187,14 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
 
   return {
     success: true,
-    message: isConfigured
-      ? `Falha no envio do WhatsApp (${apiErrorMessage}). Código de teste: ${code}`
-      : `Configure VITE_EVOLUTION_API_URL no .env. Código de teste: ${code}`,
+    message: `Falha no envio via WhatsApp (${apiErrorMessage}). Código de teste: ${code}`,
     codeForTesting: code,
     whatsappSent: false,
   };
 }
 
 /**
- * Valida o código digitado pelo usuário contra o Supabase
+ * Valida o código digitado pelo usuário no Supabase
  */
 export async function verifyWhatsAppCode(phone: string, inputCode: string): Promise<boolean> {
   const cleanPhone = formatPhoneNumber(phone);
@@ -177,7 +217,6 @@ export async function verifyWhatsAppCode(phone: string, inputCode: string): Prom
     }
 
     if (data && data.length > 0) {
-      // Marcar token como utilizado
       await supabase
         .from('verification_tokens')
         .update({ used: true })

@@ -7,6 +7,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api-evolution": {
+        target: "https://evogo.dldigitalsolutions.cloud",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api-evolution/, ""),
+      },
+    },
     hmr: {
       overlay: false,
     },
