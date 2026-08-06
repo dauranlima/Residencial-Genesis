@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Package, LogOut } from "lucide-react";
+import { ShoppingBag, Zap, ShoppingCart, UserCheck, Package, LogOut, Building2 } from "lucide-react";
 import ClassifiedsTab from "@/components/condo-market/ClassifiedsTab";
 import MerchantsTab from "@/components/condo-market/MerchantsTab";
 import MyClassifiedsTab from "@/components/condo-market/MyClassifiedsTab";
@@ -344,10 +344,10 @@ export default function CondoMarket() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-3 text-center md:text-left">
               <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                <Sparkles className="h-4 w-4 text-amber-300" /> Plataforma Hiperlocal do Condomínio
+                <Building2 className="h-4 w-4 text-amber-300" /> Condomínio
               </div>
               <h1 className={`font-black tracking-tight ${isSeniorMode ? "text-4xl md:text-5xl" : "text-3xl md:text-4xl"}`}>
-                viziGO <span className="text-gradient-gold">Morada do Sol II</span>
+                Residencial <span className="text-gradient-gold">Morada do Sol II</span>
               </h1>
               <p className={`text-primary-foreground/80 max-w-2xl ${isSeniorMode ? "text-xl leading-relaxed" : "text-base"}`}>
                 Desapegue de itens seminovos com vizinhos do mesmo prédio e aproveite cupons de desconto relâmpago no comércio local.
@@ -408,7 +408,7 @@ export default function CondoMarket() {
               } ${isSeniorMode ? "text-xl px-8 py-4" : "text-base"}`}
             >
               <ShoppingCart className={isSeniorMode ? "h-6 w-6" : "h-5 w-5"} />
-              <span>Desapegos de Vizinhos ({publicClassifiedsCount})</span>
+              <span>Marketplace ({publicClassifiedsCount})</span>
             </button>
 
             <button

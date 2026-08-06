@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle, Pencil, RotateCcw } from "lucide-react";
+import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle, Pencil, RotateCcw, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
@@ -26,6 +26,7 @@ export default function ClassifiedDetailModal({
 }: ClassifiedDetailModalProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
+  const [isFullScreenImage, setIsFullScreenImage] = useState(false);
 
   if (!isOpen || !item) return null;
 
@@ -164,26 +165,42 @@ export default function ClassifiedDetailModal({
         <div className="overflow-y-auto p-6 space-y-6 flex-1">
           {/* Galeria de Fotos */}
           <div className="space-y-3">
-            <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-900 shadow-inner group">
+            <div
+              onClick={() => setIsFullScreenImage(true)}
+              className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-900 shadow-inner group cursor-zoom-in"
+              title="Clique para expandir a foto em tela cheia"
+            >
               <img
                 src={images[activeImageIndex]}
                 alt={`${item.title} - Foto ${activeImageIndex + 1}`}
-                className="w-full h-full object-contain bg-black/40"
+                className="w-full h-full object-contain bg-black/40 transition-transform duration-300 group-hover:scale-[1.02]"
               />
+
+              {/* Ícone Indicador de Tela Cheia */}
+              <div className="absolute top-3 right-3 bg-black/70 hover:bg-black/90 text-white px-2.5 py-1.5 rounded-lg opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-semibold shadow-md pointer-events-none">
+                <Maximize2 className="h-4 w-4 text-amber-300" />
+                <span className="hidden sm:inline">Ver em tela cheia</span>
+              </div>
 
               {/* Botões de Navegação da Galeria */}
               {images.length > 1 && (
                 <>
                   <button
-                    onClick={prevImage}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-colors shadow-lg"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevImage();
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-colors shadow-lg cursor-pointer"
                     aria-label="Foto anterior"
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </button>
                   <button
-                    onClick={nextImage}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-colors shadow-lg"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextImage();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-colors shadow-lg cursor-pointer"
                     aria-label="Próxima foto"
                   >
                     <ChevronRight className="h-6 w-6" />
@@ -195,7 +212,7 @@ export default function ClassifiedDetailModal({
               )}
 
               {/* Preço em Destaque na Imagem */}
-              <div className="absolute bottom-3 right-3 bg-emerald-600 text-white font-extrabold px-4 py-2 rounded-xl shadow-lg text-xl sm:text-2xl">
+              <div className="absolute bottom-3 right-3 bg-emerald-600 text-white font-extrabold px-4 py-2 rounded-xl shadow-lg text-xl sm:text-2xl pointer-events-none">
                 {formatPrice(item.price)}
               </div>
             </div>
@@ -275,18 +292,7 @@ export default function ClassifiedDetailModal({
             Voltar para lista
           </Button>
 
-          {isOwner && (item.status === "sold" || item.status === "cancelled") && (
-            <Button
-              type="button"
-              onClick={() => onUpdateStatus && onUpdateStatus(item.id, "available")}
-              className={`w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-emerald-400 ${
-                isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-5 text-sm"
-              }`}
-            >
-              <RotateCcw className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
-              <span>Anunciar novamente</span>
-            </Button>
-          )}
+
 
           {isOwner && onEdit && (
             <Button
@@ -350,6 +356,79 @@ export default function ClassifiedDetailModal({
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal / Overlay de Foto em Tela Cheia */}
+      {isFullScreenImage && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setIsFullScreenImage(false)}
+        >
+          {/* Cabeçalho do Fullscreen */}
+          <div className="flex items-center justify-between text-white z-10" onClick={(e) => e.stopPropagation()}>
+            <span className="text-sm sm:text-base font-bold truncate max-w-[80%]">
+              {item.title} ({activeImageIndex + 1} / {images.length})
+            </span>
+            <button
+              onClick={() => setIsFullScreenImage(false)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              aria-label="Fechar tela cheia"
+            >
+              <X className="h-6 w-6 sm:h-8 sm:w-8" />
+            </button>
+          </div>
+
+          {/* Imagem Centralizada */}
+          <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={images[activeImageIndex]}
+              alt={item.title}
+              className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg shadow-2xl select-none"
+            />
+
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
+                  }}
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  aria-label="Próxima foto"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Rodapé / Miniaturas no Fullscreen */}
+          {images.length > 1 && (
+            <div className="flex justify-center gap-2 overflow-x-auto py-2 z-10" onClick={(e) => e.stopPropagation()}>
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                    activeImageIndex === idx ? "border-amber-400 scale-110" : "border-transparent opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

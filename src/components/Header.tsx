@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Building2, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
+import logoChp from "@/assets/LOGOchp.png";
 
 export default function Header() {
   return (
@@ -7,10 +8,7 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         {/* Logo */}
         <Link to="/condo-market" className="flex items-center gap-2">
-          <Building2 className="h-7 w-7 text-accent" />
-          <span className="text-lg font-bold text-primary-foreground tracking-tight">
-            Residencial <span className="text-gradient-gold">Morada do Sol II</span>
-          </span>
+          <img src={logoChp} alt="viziGO Logo" className="h-48  md:h-48 mt-2 w-auto object-contain" />
         </Link>
 
         {/* Navegação Focada no viziGO */}
