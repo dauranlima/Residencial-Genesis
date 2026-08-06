@@ -1,10 +1,5 @@
 import { supabase } from './supabase';
 
-// Configuração da Evolution API
-const EVOLUTION_API_URL = import.meta.env.VITE_EVOLUTION_API_URL || 'https://api.evolution-api.com'; // Altere para a URL do seu servidor Evolution
-const EVOLUTION_INSTANCE = import.meta.env.VITE_EVOLUTION_INSTANCE || 'sua-instancia'; // Nome da sua instância no Evolution API
-const EVOLUTION_TOKEN = import.meta.env.VITE_EVOLUTION_TOKEN || 'ff01fa86-4566-4ac0-9685-08cb627d25a6';
-
 /**
  * Limpa o número de telefone e garante formato internacional (ex: 5545999999999)
  */
@@ -19,15 +14,39 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * 1. Gera um código aleatório de 4 dígitos (ex: 1234 a 9999)
- * 2. Salva o código temporariamente no Supabase (tabela verification_tokens) com expiração de 5 minutos
- * 3. Dispara o envio via Evolution API WhatsApp
+ * Sanitiza a URL base da Evolution API removendo caminhos do painel gerenciador
  */
-export async function sendWhatsAppVerificationCode(phone: string): Promise<{ success: boolean; message: string; codeForTesting?: string }> {
+function getSanitizedApiUrl(rawUrl: string): string {
+  let url = (rawUrl || '').trim().replace(/\/$/, '');
+  url = url.replace(/\/manager\/.*$/i, '');
+  url = url.replace(/\/instances\/.*$/i, '');
+  url = url.replace(/\/instance\/.*$/i, '');
+  return url;
+}
+
+/**
+ * 1. Gera um código aleatório de 4 dígitos (ex: 1000 a 9999)
+ * 2. Salva o código temporariamente no Supabase (tabela verification_tokens) com expiração de 5 minutos
+ * 3. Dispara o envio via Evolution API / Evolution GO WhatsApp
+ */
+export async function sendWhatsAppVerificationCode(phone: string): Promise<{
+  success: boolean;
+  message: string;
+  codeForTesting?: string;
+  whatsappSent: boolean;
+}> {
   const cleanPhone = formatPhoneNumber(phone);
   if (!cleanPhone || cleanPhone.length < 10) {
     throw new Error('Número de WhatsApp inválido.');
   }
+
+  // Obter configurações da Evolution API
+  const rawApiUrl = import.meta.env.VITE_EVOLUTION_API_URL || '';
+  const apiUrl = getSanitizedApiUrl(rawApiUrl);
+  const instance = (import.meta.env.VITE_EVOLUTION_INSTANCE || '').trim();
+  const token = (import.meta.env.VITE_EVOLUTION_TOKEN || 'ff01fa86-4566-4ac0-9685-08cb627d25a6').trim();
+
+  const isConfigured = apiUrl && !apiUrl.includes('sua-evolution-api.com') && instance && !instance.includes('nome-da-sua-instancia');
 
   // Gera código aleatório de 4 dígitos (1000 a 9999)
   const code = Math.floor(1000 + Math.random() * 9000).toString();
@@ -49,52 +68,93 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{ suc
       ]);
 
     if (dbError) {
-      console.warn('Aviso ao salvar token no Supabase (verifique se criou a tabela verification_tokens):', dbError);
+      console.warn('Aviso ao salvar token no Supabase:', dbError);
     }
   } catch (err) {
     console.error('Erro ao interagir com Supabase verification_tokens:', err);
   }
 
-  // 2. Disparar via Evolution API
-  let sentViaWhatsApp = false;
-  try {
-    const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': EVOLUTION_TOKEN,
-      },
-      body: JSON.stringify({
-        number: cleanPhone,
-        text: `🔐 *CondoMarket - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código expira em 5 minutos. Não o compartilhe com ninguém.`,
-        options: {
-          delay: 1200,
-          presence: 'composing',
-        },
-      }),
-    });
+  // 2. Disparar via Evolution API / Evolution GO
+  let whatsappSent = false;
+  let apiErrorMessage = '';
 
-    if (response.ok) {
-      sentViaWhatsApp = true;
-    } else {
-      const errData = await response.json().catch(() => ({}));
-      console.warn('Instância Evolution API offline ou não configurada:', errData);
+  if (isConfigured) {
+    const messageText = `🔐 *CondoMarket - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
+
+    // Lista de endpoints possíveis para Evolution API e Evolution GO
+    const candidateEndpoints = [
+      `${apiUrl}/send/text/${instance}`,
+      `${apiUrl}/send/text`,
+      `${apiUrl}/message/sendText/${instance}`,
+      `${apiUrl}/message/sendText`,
+    ];
+
+    const standardHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'apikey': token,
+      'instance': instance,
+      'instanceId': instance,
+    };
+
+    const payload = {
+      number: cleanPhone,
+      text: messageText,
+      textMessage: {
+        text: messageText,
+      },
+      options: {
+        delay: 1200,
+        presence: 'composing',
+      },
+    };
+
+    for (const endpoint of candidateEndpoints) {
+      try {
+        console.log(`[Evolution GO] Testando endpoint: ${endpoint}...`);
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: standardHeaders,
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          whatsappSent = true;
+          console.log(`[Evolution GO] Mensagem enviada com sucesso via ${endpoint}!`);
+          break;
+        } else {
+          const errBody = await response.json().catch(() => ({}));
+          console.warn(`[Evolution GO] Resposta de ${endpoint}: ${response.status}`, errBody);
+          apiErrorMessage = errBody?.message || errBody?.error || `HTTP ${response.status}`;
+        }
+      } catch (err: any) {
+        console.warn(`[Evolution GO] Erro ao conectar em ${endpoint}:`, err?.message);
+        apiErrorMessage = err?.message || 'Erro de rede';
+      }
     }
-  } catch (apiError) {
-    console.warn('Erro na chamada HTTP da Evolution API:', apiError);
+  } else {
+    console.warn('[Evolution API] Variáveis de ambiente não configuradas.');
+  }
+
+  if (whatsappSent) {
+    return {
+      success: true,
+      message: `Código enviado com sucesso para seu WhatsApp!`,
+      whatsappSent: true,
+    };
   }
 
   return {
     success: true,
-    message: sentViaWhatsApp
-      ? `Código enviado via WhatsApp para ${phone}`
-      : `Código gerado (${code}). (Evolution API offline ou em teste)`,
+    message: isConfigured
+      ? `Falha no envio do WhatsApp (${apiErrorMessage}). Código de teste: ${code}`
+      : `Configure VITE_EVOLUTION_API_URL no .env. Código de teste: ${code}`,
     codeForTesting: code,
+    whatsappSent: false,
   };
 }
 
 /**
- * Valida o código digitado pelo usuário contra o Supabase ou sessão temporária
+ * Valida o código digitado pelo usuário contra o Supabase
  */
 export async function verifyWhatsAppCode(phone: string, inputCode: string): Promise<boolean> {
   const cleanPhone = formatPhoneNumber(phone);

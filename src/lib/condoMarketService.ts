@@ -274,7 +274,40 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
   const cleanPhone = phone.replace(/\D/g, '');
   if (!cleanPhone) return null;
 
-  // 1. Tenta buscar no localStorage primeiro
+  // 1. Tenta buscar na tabela 'users' do Supabase (prioridade principal)
+  try {
+    const { data: usersData, error } = await supabase
+      .from('users')
+      .select('*');
+
+    if (!error && usersData && usersData.length > 0) {
+      const match = usersData.find((u) => {
+        const uPhone = (u.phone || '').replace(/\D/g, '');
+        return uPhone === cleanPhone || uPhone.endsWith(cleanPhone) || cleanPhone.endsWith(uPhone);
+      });
+
+      if (match) {
+        const user: CurrentUser = {
+          name: match.name || match.full_name || 'Morador',
+          block: match.block || '',
+          unit: match.unit || 'Sem Apto',
+          phone: match.phone || phone,
+        };
+        // Atualiza cache local
+        try {
+          const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
+          const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
+          db[cleanPhone] = user;
+          localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
+        } catch (_e) {}
+        return user;
+      }
+    }
+  } catch (e) {
+    console.warn('Consulta na tabela users no Supabase ignorada:', e);
+  }
+
+  // 2. Tenta buscar no localStorage
   try {
     const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
     if (raw) {
@@ -287,9 +320,9 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
     console.error('Erro ao ler base de moradores local:', e);
   }
 
-  // 2. Tenta buscar na tabela 'classifieds' do Supabase (onde moradores postaram desapegos)
+  // 3. Tenta buscar na tabela 'classifieds' do Supabase (onde moradores postaram desapegos)
   try {
-    // 2.1 Busca exata pelo formato salvo
+    // 3.1 Busca exata pelo formato salvo
     const { data: exactClassifieds } = await supabase
       .from('classifieds')
       .select('seller_name, seller_block, seller_unit, whatsapp')
@@ -308,7 +341,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
       return user;
     }
 
-    // 2.2 Busca na tabela 'classifieds' comparando dígitos numéricos limpos em JS
+    // 3.2 Busca na tabela 'classifieds' comparando dígitos numéricos limpos em JS
     const { data: allClassifieds } = await supabase
       .from('classifieds')
       .select('seller_name, seller_block, seller_unit, whatsapp');
@@ -335,7 +368,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
     console.error('Erro ao buscar morador nos anúncios do Supabase:', e);
   }
 
-  // 3. Tenta buscar na tabela 'profiles' do Supabase
+  // 4. Tenta buscar na tabela 'profiles' do Supabase
   try {
     const { data: profiles } = await supabase
       .from('profiles')
@@ -368,6 +401,8 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
 export async function saveResidentProfile(resident: CurrentUser): Promise<void> {
   if (!resident.phone) return;
   const cleanPhone = resident.phone.replace(/\D/g, '');
+
+  // 1. Salvar no localStorage para acesso offline rápido
   try {
     const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
     const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
@@ -377,7 +412,33 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
     console.error('Erro ao salvar morador no localStorage:', e);
   }
 
-  // Tenta sincronizar também no Supabase (tabela profiles, se existir)
+  // 2. Salvar na tabela 'users' no Supabase
+  try {
+    const { error: userError } = await supabase
+      .from('users')
+      .upsert(
+        [
+          {
+            name: resident.name,
+            phone: resident.phone,
+            block: resident.block || null,
+            unit: resident.unit,
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        { onConflict: 'phone' }
+      );
+
+    if (userError) {
+      console.warn('Aviso ao salvar morador na tabela users no Supabase (verifique se executou o script schema_users.sql):', userError);
+    } else {
+      console.log('Morador salvo com sucesso na tabela users do Supabase!');
+    }
+  } catch (e) {
+    console.error('Erro ao salvar morador no Supabase:', e);
+  }
+
+  // 3. Fallback adicional para tabela 'profiles' caso configurada
   try {
     await supabase.from('profiles').upsert([
       {
@@ -388,9 +449,5 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
         updated_at: new Date().toISOString(),
       },
     ]);
-  } catch (e) {
-    // Falha graciosa caso a tabela profiles não esteja configurada com essas colunas
-    console.log('Sincronização no Supabase ignorada:', e);
-  }
+  } catch (_e) {}
 }
-
