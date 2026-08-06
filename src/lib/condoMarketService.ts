@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { ClassifiedItem, Coupon, ClassifiedStatus } from '@/components/condo-market/types';
+import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser } from '@/components/condo-market/types';
 import { compressImage } from './imageCompression';
 
 // ==========================================
@@ -262,3 +262,53 @@ export async function redeemPromotionInSupabase(id: string, currentRemaining: nu
   }
   return true;
 }
+
+// ==========================================
+// PERSISTÊNCIA DE MORADORES POR WHATSAPP
+// ==========================================
+
+const RESIDENTS_STORAGE_KEY = 'condo_market_residents_db';
+
+export function getResidentByPhone(phone: string): CurrentUser | null {
+  if (!phone) return null;
+  const cleanPhone = phone.replace(/\D/g, '');
+  try {
+    const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
+    if (!raw) return null;
+    const db: Record<string, CurrentUser> = JSON.parse(raw);
+    return db[cleanPhone] || null;
+  } catch (e) {
+    console.error('Erro ao ler base de moradores local:', e);
+    return null;
+  }
+}
+
+export async function saveResidentProfile(resident: CurrentUser): Promise<void> {
+  if (!resident.phone) return;
+  const cleanPhone = resident.phone.replace(/\D/g, '');
+  try {
+    const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
+    const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
+    db[cleanPhone] = resident;
+    localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
+  } catch (e) {
+    console.error('Erro ao salvar morador no localStorage:', e);
+  }
+
+  // Tenta sincronizar também no Supabase (tabela profiles, se existir)
+  try {
+    await supabase.from('profiles').upsert([
+      {
+        phone: resident.phone,
+        full_name: resident.name,
+        block: resident.block,
+        unit: resident.unit,
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+  } catch (e) {
+    // Falha graciosa caso a tabela profiles não esteja configurada com essas colunas
+    console.log('Sincronização no Supabase ignorada:', e);
+  }
+}
+
