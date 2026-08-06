@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2 } from "lucide-react";
+import { X, MessageCircle, MapPin, Tag, Calendar, ChevronLeft, ChevronRight, ShieldCheck, Eye, Share2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ClassifiedItem } from "./types";
+import { ClassifiedItem, ClassifiedStatus, CurrentUser } from "./types";
 
 interface ClassifiedDetailModalProps {
   item: ClassifiedItem | null;
   isOpen: boolean;
   onClose: () => void;
   isSeniorMode: boolean;
+  currentUser?: CurrentUser | null;
+  onUpdateStatus?: (itemId: string, newStatus: ClassifiedStatus) => void;
+  onFinalize?: () => void;
 }
 
 export default function ClassifiedDetailModal({
@@ -15,10 +18,22 @@ export default function ClassifiedDetailModal({
   isOpen,
   onClose,
   isSeniorMode,
+  currentUser,
+  onUpdateStatus,
+  onFinalize,
 }: ClassifiedDetailModalProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
 
   if (!isOpen || !item) return null;
+
+  const isOwner = !!(
+    currentUser &&
+    (
+      (currentUser.phone && item.whatsapp && currentUser.phone.replace(/\D/g, "") === item.whatsapp.replace(/\D/g, "")) ||
+      (currentUser.unit === item.sellerUnit && currentUser.name.toLowerCase() === item.sellerName.toLowerCase())
+    )
+  );
 
   const images = item.images && item.images.length > 0
     ? item.images
@@ -57,6 +72,11 @@ export default function ClassifiedDetailModal({
     setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  const handleConfirmFinalize = () => {
+    setShowFinalizeConfirm(false);
+    if (onFinalize) onFinalize();
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
       <div
@@ -65,7 +85,7 @@ export default function ClassifiedDetailModal({
         }`}
       >
         {/* Cabeçalho */}
-        <div className="bg-primary px-6 py-4 text-primary-foreground flex items-center justify-between sticky top-0 z-10 shadow-md">
+        <div className="bg-primary px-4 sm:px-6 py-4 text-primary-foreground flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 shadow-md">
           <div className="flex items-center gap-2">
             <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1">
               <Tag className="h-3 w-3" />
@@ -76,13 +96,64 @@ export default function ClassifiedDetailModal({
               {formatDate(item.createdAt)}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors text-primary-foreground/90 hover:text-primary-foreground"
-            aria-label="Fechar detalhes"
-          >
-            <X className={isSeniorMode ? "h-8 w-8" : "h-6 w-6"} />
-          </button>
+
+          {/* Botões de Ação para o Proprietário + Botão Fechar */}
+          <div className="flex items-center gap-2">
+            {isOwner && (
+              <div className="flex items-center gap-1.5 border border-red-500/80 p-1 rounded-lg bg-slate-900/60 backdrop-blur-sm">
+                {item.status === "sold" ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowFinalizeConfirm(true)}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white border border-amber-400 font-black text-xs uppercase tracking-wider rounded transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    FINALIZAR
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStatus && onUpdateStatus(item.id, "cancelled")}
+                      className="px-2.5 py-1 bg-red-700/90 hover:bg-red-800 text-white font-bold text-xs uppercase rounded transition-all border border-red-500/50 cursor-pointer"
+                    >
+                      CANCELAR
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextStatus = item.status === "reserved" ? "available" : "reserved";
+                        if (onUpdateStatus) onUpdateStatus(item.id, nextStatus);
+                      }}
+                      className={`px-2.5 py-1 font-bold text-xs uppercase rounded transition-all border cursor-pointer ${
+                        item.status === "reserved"
+                          ? "bg-amber-500 text-slate-950 border-amber-400 font-extrabold"
+                          : "bg-blue-600 hover:bg-blue-700 text-white border-blue-400"
+                      }`}
+                    >
+                      {item.status === "reserved" ? "REMOVER RESERVA" : "RESERVAR"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onUpdateStatus && onUpdateStatus(item.id, "sold")}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-emerald-300 font-bold text-xs uppercase rounded transition-all border border-emerald-500/50 cursor-pointer"
+                    >
+                      VENDIDO
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors text-primary-foreground/90 hover:text-primary-foreground"
+              aria-label="Fechar detalhes"
+            >
+              <X className={isSeniorMode ? "h-8 w-8" : "h-6 w-6"} />
+            </button>
+          </div>
         </div>
 
         {/* Conteúdo rolável */}
@@ -212,6 +283,44 @@ export default function ClassifiedDetailModal({
           </a>
         </div>
       </div>
+
+      {/* Modal de Confirmação para FINALIZAR */}
+      {showFinalizeConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-amber-500/40 p-6 text-center space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center border border-amber-500/30">
+              <AlertTriangle className="h-8 w-8 text-amber-400" />
+            </div>
+
+            <h3 className="text-xl font-bold text-foreground">
+              Finalizar este Anúncio?
+            </h3>
+
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Deseja realmente finalizar o anúncio <strong>"{item.title}"</strong>? Ele deixará de ser exibido na aba pública <strong>'Desapego dos Vizinhos'</strong> e ficará armazenado apenas na sua aba <strong>'Meus Anúncios'</strong>.
+            </p>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setShowFinalizeConfirm(false)}
+                className="font-bold flex-1"
+              >
+                Não, Voltar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleConfirmFinalize}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold flex-1 shadow-md cursor-pointer"
+              >
+                Sim, Finalizar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,88 +1,27 @@
-import { useState } from "react";
-import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Building } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Package } from "lucide-react";
 import SeniorModeToggle from "@/components/condo-market/SeniorModeToggle";
 import ClassifiedsTab from "@/components/condo-market/ClassifiedsTab";
 import MerchantsTab from "@/components/condo-market/MerchantsTab";
+import MyClassifiedsTab from "@/components/condo-market/MyClassifiedsTab";
 import NewClassifiedModal from "@/components/condo-market/NewClassifiedModal";
+import NewPromotionModal from "@/components/condo-market/NewPromotionModal";
 import RedeemCouponModal from "@/components/condo-market/RedeemCouponModal";
 import ResidentRegisterModal from "@/components/condo-market/ResidentRegisterModal";
 import ClassifiedDetailModal from "@/components/condo-market/ClassifiedDetailModal";
-import { ClassifiedItem, Coupon, Merchant } from "@/components/condo-market/types";
+import AdminAuthPinModal from "@/components/AdminAuthPinModal";
+import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus } from "@/components/condo-market/types";
 import { Button } from "@/components/ui/button";
+import {
+  fetchClassifiedsFromSupabase,
+  fetchPromotionsFromSupabase,
+  redeemPromotionInSupabase,
+  updateClassifiedStatusInSupabase,
+} from "@/lib/condoMarketService";
+import { toast } from "sonner";
 
-// Dados simulados iniciais para o MVP com múltiplas fotos para a tela de detalhes
-const INITIAL_CLASSIFIEDS: ClassifiedItem[] = [
-  {
-    id: "c-1",
-    title: "Sofá Retrátil 3 Lugares Verde",
-    description: "Sofá em ótimo estado de conservação, ideal para sala de estar. Sem manchas ou rasgos. Revestimento em tecido suede de alta durabilidade, estrutura em madeira de reflorestamento tratada. Motivo da venda: mudança de apartamento.",
-    price: 650.0,
-    category: "Móveis",
-    images: [
-      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&auto=format&fit=crop&q=80"
-    ],
-    status: "available",
-    createdAt: "2026-08-04T10:00:00Z",
-    sellerName: "Dona Vera",
-    sellerBlock: "A",
-    sellerUnit: "302",
-    whatsapp: "(45) 9934-3095",
-  },
-  {
-    id: "c-2",
-    title: "Smart TV Samsung 50'' 4K HDR",
-    description: "Funcionando perfeitamente. Acompanha controle remoto inteligente original e cabo de força. Tela sem riscos nem pixels queimados, suporte de mesa e aplicativo de streaming já instalados. Morador do bloco B.",
-    price: 1400.0,
-    category: "Eletrônicos",
-    images: [
-      "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1461151304267-38535e780c79?w=800&auto=format&fit=crop&q=80"
-    ],
-    status: "available",
-    createdAt: "2026-08-03T15:30:00Z",
-    sellerName: "Lucas",
-    sellerBlock: "B",
-    sellerUnit: "541",
-    whatsapp: "(45) 9988-1153",
-  },
-  {
-    id: "c-3",
-    title: "Bicicleta Caloi Aro 29 com 21 Marchas",
-    description: "Pouco usada, pneu seminovo e com revisão recente feita na oficina da rua. Freio a disco, suspensão dianteira. Ótima para andar no condomínio e no parque.",
-    price: 480.0,
-    category: "Esportes",
-    images: [
-      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=800&auto=format&fit=crop&q=80"
-    ],
-    status: "available",
-    createdAt: "2026-08-02T18:20:00Z",
-    sellerName: "Fernando",
-    sellerBlock: "A",
-    sellerUnit: "501",
-    whatsapp: "(45) 99777-1122",
-  },
-  {
-    id: "c-4",
-    title: "Airfryer Mondial 4L Digital 110v",
-    description: "Funcionando 100%. Comprei uma maior e estou desapegando desta. Acompanha cesto antiaderente e manual original. Retirada na portaria ou entrego na porta.",
-    price: 120.0,
-    category: "Eletrodomésticos",
-    images: [
-      "https://images.unsplash.com/photo-1585515320310-259814833e62?w=800&auto=format&fit=crop&q=80"
-    ],
-    status: "available",
-    createdAt: "2026-08-01T09:00:00Z",
-    sellerName: "Luciana",
-    sellerBlock: "B",
-    sellerUnit: "203",
-    whatsapp: "(45) 99654-3210",
-  },
-];
-
-const INITIAL_MERCHANTS: Merchant[] = [
+// Parceiros locais fixos do condomínio (exibidos na vitrine)
+const CONDOCENTER_MERCHANTS: Merchant[] = [
   {
     id: "m-1",
     businessName: "Padaria & Confeitaria Pão D'Oro",
@@ -106,74 +45,79 @@ const INITIAL_MERCHANTS: Merchant[] = [
   },
 ];
 
-const INITIAL_COUPONS: Coupon[] = [
-  {
-    id: "cp-1",
-    merchantId: "m-1",
-    merchantName: "Canário Bebidas & Convêniencia",
-    merchantCategory: "Mercado",
-    merchantWhatsapp: "(45) 99111-2233",
-    title: "20% Desconto em qualquer produto",
-    description: "Válido para compras na padaria hoje.",
-    discountValue: "10% OFF",
-    totalQuantity: 10,
-    remainingQuantity: 2, // Urgente!
-    expiresAt: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-  {
-    id: "cp-2",
-    merchantId: "m-2",
-    merchantName: "Petshop Amigo Fiel",
-    merchantCategory: "Petshop",
-    merchantWhatsapp: "(45) 99222-3344",
-    title: "R$ 20,00 de Desconto no Banho & Tosa",
-    description: "Válido para cães de pequeno e médio porte agendados esta semana.",
-    discountValue: "R$ 20 OFF",
-    totalQuantity: 8,
-    remainingQuantity: 5,
-    expiresAt: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-  {
-    id: "cp-3",
-    merchantId: "m-3",
-    merchantName: "Lava-Car DGD",
-    merchantCategory: "Lava-Car",
-    merchantWhatsapp: "(45) 99333-4455",
-    title: "Lavagem Completa com Cera Grátis",
-    description: "Traga seu carro e ganhe aplicação de cera protetora especial.",
-    discountValue: "Cera Grátis",
-    totalQuantity: 15,
-    remainingQuantity: 3,
-    expiresAt: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-];
-
 export default function CondoMarket() {
   const [isSeniorMode, setIsSeniorMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<"classifieds" | "merchants">("classifieds");
+  const [activeTab, setActiveTab] = useState<"classifieds" | "merchants" | "my_classifieds">("classifieds");
 
-  // Dados com estado para permitirem adição/atualização
-  const [classifieds, setClassifieds] = useState<ClassifiedItem[]>(INITIAL_CLASSIFIEDS);
-  const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
-  const [merchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
+  // Dados reais persistidos no Supabase (zero mock)
+  const [classifieds, setClassifieds] = useState<ClassifiedItem[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [merchants] = useState<Merchant[]>(CONDOCENTER_MERCHANTS);
+
+  // Estados de carregamento
+  const [isLoadingClassifieds, setIsLoadingClassifieds] = useState(true);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
 
   // Estados dos Modais
   const [isNewClassifiedOpen, setIsNewClassifiedOpen] = useState(false);
+  const [isAdminPinOpen, setIsAdminPinOpen] = useState(false);
+  const [isNewPromotionOpen, setIsNewPromotionOpen] = useState(false);
   const [selectedCouponToRedeem, setSelectedCouponToRedeem] = useState<Coupon | null>(null);
   const [selectedClassifiedItem, setSelectedClassifiedItem] = useState<ClassifiedItem | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string; block: string; unit: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
+    try {
+      const saved = localStorage.getItem("condo_market_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
-  const handleAddClassified = (newItem: ClassifiedItem) => {
-    setClassifieds([newItem, ...classifieds]);
+  // Carregar dados reais do Supabase na inicialização
+  useEffect(() => {
+    loadClassifieds();
+    loadPromotions();
+  }, []);
+
+  const loadClassifieds = async () => {
+    try {
+      setIsLoadingClassifieds(true);
+      const data = await fetchClassifiedsFromSupabase();
+      setClassifieds(data);
+    } catch (error) {
+      console.error("Erro ao carregar anúncios:", error);
+      toast.error("Erro ao carregar desapegos do Supabase.");
+    } finally {
+      setIsLoadingClassifieds(false);
+    }
   };
 
-  const handleRedeemCoupon = (coupon: Coupon) => {
+  const loadPromotions = async () => {
+    try {
+      setIsLoadingCoupons(true);
+      const data = await fetchPromotionsFromSupabase();
+      setCoupons(data);
+    } catch (error) {
+      console.error("Erro ao carregar promoções:", error);
+      toast.error("Erro ao carregar promoções do Supabase.");
+    } finally {
+      setIsLoadingCoupons(false);
+    }
+  };
+
+  const handleAddClassified = (newItem: ClassifiedItem) => {
+    setClassifieds((prev) => [newItem, ...prev]);
+  };
+
+  const handleAddPromotion = (newCoupon: Coupon) => {
+    setCoupons((prev) => [newCoupon, ...prev]);
+  };
+
+  const handleRedeemCoupon = async (coupon: Coupon) => {
     setSelectedCouponToRedeem(coupon);
-    // Diminuir a quantidade disponível no cupom
+    
+    // Atualizar local e sincronizar decremento no Supabase
     setCoupons((prev) =>
       prev.map((c) =>
         c.id === coupon.id
@@ -181,7 +125,69 @@ export default function CondoMarket() {
           : c
       )
     );
+
+    try {
+      await redeemPromotionInSupabase(coupon.id, coupon.remainingQuantity);
+    } catch (error) {
+      console.error("Erro ao resgatar cupom no Supabase:", error);
+    }
   };
+
+  const handleResidentSuccess = (name: string, block: string, unit: string, phone: string) => {
+    const user: CurrentUser = { name, block, unit, phone };
+    setCurrentUser(user);
+    try {
+      localStorage.setItem("condo_market_user", JSON.stringify(user));
+    } catch (e) {
+      console.error("Erro ao salvar dados no localStorage:", e);
+    }
+    toast.success(`Bem-vindo(a), ${name}! Morador identificado com sucesso.`);
+  };
+
+  const handleUpdateStatus = async (itemId: string, newStatus: ClassifiedStatus) => {
+    // Atualização otimista local
+    setClassifieds((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, status: newStatus } : item))
+    );
+    if (selectedClassifiedItem && selectedClassifiedItem.id === itemId) {
+      setSelectedClassifiedItem((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+
+    const labels: Record<ClassifiedStatus, string> = {
+      available: "Disponível",
+      reserved: "Reservado",
+      sold: "Vendido",
+      cancelled: "Cancelado",
+    };
+
+    toast.success(`Anúncio atualizado para "${labels[newStatus]}"`);
+    await updateClassifiedStatusInSupabase(itemId, newStatus);
+  };
+
+  const handleFinalize = async () => {
+    if (selectedClassifiedItem) {
+      await handleUpdateStatus(selectedClassifiedItem.id, "sold");
+    }
+    setSelectedClassifiedItem(null);
+    setActiveTab("my_classifieds");
+    toast.success("Anúncio finalizado com sucesso! Ele foi removido da aba pública e está salvo em 'Meus Anúncios'.");
+  };
+
+  // Contagem de anúncios do morador logado
+  const myClassifiedsCount = currentUser
+    ? classifieds.filter((item) => {
+        const isOwnerByPhone =
+          currentUser.phone &&
+          item.whatsapp &&
+          currentUser.phone.replace(/\D/g, "") === item.whatsapp.replace(/\D/g, "");
+        const isOwnerByUnit =
+          currentUser.unit === item.sellerUnit &&
+          currentUser.name.toLowerCase() === item.sellerName.toLowerCase();
+        return isOwnerByPhone || isOwnerByUnit;
+      }).length
+    : 0;
+
+  const publicClassifiedsCount = classifieds.filter((i) => i.status !== "cancelled" && i.status !== "sold").length;
 
   return (
     <div className={`min-h-screen bg-background pb-16 transition-all duration-300 ${isSeniorMode ? "text-lg" : ""}`}>
@@ -221,23 +227,23 @@ export default function CondoMarket() {
             </div>
           </div>
 
-          {/* Abas de Navegação (Desapegos vs Promoções) */}
-          <div className="flex items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6">
+          {/* Abas de Navegação (Desapegos vs Promoções vs Meus Anúncios) */}
+          <div className="flex items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6 overflow-x-auto">
             <button
               onClick={() => setActiveTab("classifieds")}
-              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all ${
+              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "classifieds"
                   ? "bg-accent text-accent-foreground shadow-luxury font-black"
                   : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
               } ${isSeniorMode ? "text-xl px-8 py-4" : "text-base"}`}
             >
               <ShoppingCart className={isSeniorMode ? "h-6 w-6" : "h-5 w-5"} />
-              <span>Desapegos de Vizinhos ({classifieds.length})</span>
+              <span>Desapegos de Vizinhos ({publicClassifiedsCount})</span>
             </button>
 
             <button
               onClick={() => setActiveTab("merchants")}
-              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all ${
+              className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "merchants"
                   ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
                   : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
@@ -246,6 +252,20 @@ export default function CondoMarket() {
               <Zap className={isSeniorMode ? "h-6 w-6 fill-slate-950" : "h-5 w-5 fill-current"} />
               <span>Promoções Relâmpago ({coupons.length})</span>
             </button>
+
+            {currentUser && (
+              <button
+                onClick={() => setActiveTab("my_classifieds")}
+                className={`flex items-center gap-2 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap cursor-pointer border border-amber-500/40 ${
+                  activeTab === "my_classifieds"
+                    ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
+                    : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
+                } ${isSeniorMode ? "text-xl px-8 py-4" : "text-base"}`}
+              >
+                <Package className={isSeniorMode ? "h-6 w-6" : "h-5 w-5"} />
+                <span>Meus Anúncios ({myClassifiedsCount})</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -255,6 +275,7 @@ export default function CondoMarket() {
         {activeTab === "classifieds" ? (
           <ClassifiedsTab
             items={classifieds}
+            isLoading={isLoadingClassifieds}
             isSeniorMode={isSeniorMode}
             onOpenNewModal={() => {
               if (!currentUser) {
@@ -265,14 +286,24 @@ export default function CondoMarket() {
             }}
             onSelectItem={(item) => setSelectedClassifiedItem(item)}
           />
-        ) : (
+        ) : activeTab === "merchants" ? (
           <MerchantsTab
             coupons={coupons}
             merchants={merchants}
+            isLoading={isLoadingCoupons}
             isSeniorMode={isSeniorMode}
             onRedeemCoupon={handleRedeemCoupon}
+            onOpenNewPromotionModal={() => setIsAdminPinOpen(true)}
           />
-        )}
+        ) : currentUser ? (
+          <MyClassifiedsTab
+            items={classifieds}
+            currentUser={currentUser}
+            isSeniorMode={isSeniorMode}
+            onOpenNewModal={() => setIsNewClassifiedOpen(true)}
+            onSelectItem={(item) => setSelectedClassifiedItem(item)}
+          />
+        ) : null}
       </main>
 
       {/* Modais */}
@@ -281,6 +312,9 @@ export default function CondoMarket() {
         isOpen={!!selectedClassifiedItem}
         onClose={() => setSelectedClassifiedItem(null)}
         isSeniorMode={isSeniorMode}
+        currentUser={currentUser}
+        onUpdateStatus={handleUpdateStatus}
+        onFinalize={handleFinalize}
       />
 
       <NewClassifiedModal
@@ -289,6 +323,20 @@ export default function CondoMarket() {
         onAddClassified={handleAddClassified}
         isSeniorMode={isSeniorMode}
         currentUser={currentUser}
+      />
+
+      <AdminAuthPinModal
+        isOpen={isAdminPinOpen}
+        onClose={() => setIsAdminPinOpen(false)}
+        onSuccess={() => setIsNewPromotionOpen(true)}
+        description="Digite o PIN de 8 dígitos para ativar o modo de gestão e anunciar uma oferta."
+      />
+
+      <NewPromotionModal
+        isOpen={isNewPromotionOpen}
+        onClose={() => setIsNewPromotionOpen(false)}
+        onAddPromotion={handleAddPromotion}
+        isSeniorMode={isSeniorMode}
       />
 
       <RedeemCouponModal
@@ -301,10 +349,9 @@ export default function CondoMarket() {
       <ResidentRegisterModal
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
-        onSuccess={(name, block, unit) => setCurrentUser({ name, block, unit })}
+        onSuccess={handleResidentSuccess}
         isSeniorMode={isSeniorMode}
       />
     </div>
   );
 }
-

@@ -2,24 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
-import Index from "./pages/Index";
-import Apartamentos from "./pages/Apartamentos";
-import Galeria from "./pages/Galeria";
-import Localizacao from "./pages/Localizacao";
-import OutrosImoveis from "./pages/OutrosImoveis";
-import Solicitacoes from "./pages/Solicitacoes";
-import Vistoria from "./pages/Vistoria";
-import FichaCadastral from "./pages/FichaCadastral";
-import FichaFiador from "./pages/FichaFiador";
-import Regimento from "./pages/Regimento";
-import Garagem from "./pages/Garagem";
 import CondoMarket from "./pages/CondoMarket";
-import Avisos from "./pages/Avisos";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -31,22 +16,10 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/" element={<Index />} />
-            <Route path="/apartamentos" element={<Apartamentos />} />
-            <Route path="/galeria" element={<Galeria />} />
-            <Route path="/localizacao" element={<Localizacao />} />
-            <Route path="/outros-imoveis" element={<OutrosImoveis />} />
-            <Route path="/solicitacoes" element={<Solicitacoes />} />
-            <Route path="/vistoria" element={<Vistoria />} />
-            <Route path="/ficha-cadastral" element={<FichaCadastral />} />
-            <Route path="/ficha-fiador" element={<FichaFiador />} />
-            <Route path="/regimento" element={<Regimento />} />
-            <Route path="/garagem" element={<Garagem />} />
+            {/* Redirecionar todas as rotas diretamente para o /condo-market por enquanto */}
+            <Route path="/" element={<Navigate to="/condo-market" replace />} />
             <Route path="/condo-market" element={<CondoMarket />} />
-            <Route path="/avisos" element={<Avisos />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/condo-market" replace />} />
           </Routes>
         </Layout>
       </BrowserRouter>

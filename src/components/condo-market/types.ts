@@ -15,7 +15,14 @@ export interface Category {
   icon: string;
 }
 
-export type ClassifiedStatus = 'available' | 'reserved' | 'sold';
+export type ClassifiedStatus = 'available' | 'reserved' | 'sold' | 'cancelled';
+
+export interface CurrentUser {
+  name: string;
+  block: string;
+  unit: string;
+  phone: string;
+}
 
 export interface ClassifiedItem {
   id: string;
@@ -55,6 +62,7 @@ export interface Coupon {
   totalQuantity: number;
   remainingQuantity: number;
   expiresAt: string; // ISO string
+  imageUrl?: string;
   isActive: boolean;
 }
 

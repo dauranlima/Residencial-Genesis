@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Store, Zap, Search, MapPin } from "lucide-react";
+import { Store, Zap, Search, MapPin, Plus, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import CouponCard from "./CouponCard";
 import { Coupon, Merchant } from "./types";
@@ -7,15 +8,19 @@ import { Coupon, Merchant } from "./types";
 interface MerchantsTabProps {
   coupons: Coupon[];
   merchants: Merchant[];
+  isLoading?: boolean;
   isSeniorMode: boolean;
   onRedeemCoupon: (coupon: Coupon) => void;
+  onOpenNewPromotionModal?: () => void;
 }
 
 export default function MerchantsTab({
   coupons,
   merchants,
+  isLoading = false,
   isSeniorMode,
   onRedeemCoupon,
+  onOpenNewPromotionModal,
 }: MerchantsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -42,6 +47,16 @@ export default function MerchantsTab({
             Pegue o seu e apresente no estabelecimento!
           </p>
         </div>
+
+        {onOpenNewPromotionModal && (
+          <Button
+            onClick={onOpenNewPromotionModal}
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold flex items-center gap-2 shadow-lg"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Anunciar Oferta</span>
+          </Button>
+        )}
       </div>
 
       {/* Barra de Busca de Cupons */}
@@ -58,10 +73,30 @@ export default function MerchantsTab({
 
       {/* Grid de Cupons */}
       <div>
-        <h3 className={`font-bold text-foreground mb-4 flex items-center gap-2 ${isSeniorMode ? "text-2xl" : "text-lg"}`}>
-          <Zap className="h-5 w-5 text-amber-500 fill-amber-500" /> Cupons Ativos no Momento
-        </h3>
-        {filteredCoupons.length > 0 ? (
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`font-bold text-foreground flex items-center gap-2 ${isSeniorMode ? "text-2xl" : "text-lg"}`}>
+            <Zap className="h-5 w-5 text-amber-500 fill-amber-500" /> Cupons Ativos no Momento
+          </h3>
+
+          {onOpenNewPromotionModal && (
+            <Button
+              onClick={onOpenNewPromotionModal}
+              variant="outline"
+              size="sm"
+              className="text-xs font-bold flex items-center gap-1 border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Nova Oferta</span>
+            </Button>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="text-center py-16 bg-card rounded-xl border border-border flex flex-col items-center justify-center gap-3">
+            <Loader2 className="h-9 w-9 animate-spin text-amber-500" />
+            <p className="text-muted-foreground font-semibold">Buscando promoções no Supabase...</p>
+          </div>
+        ) : filteredCoupons.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCoupons.map((coupon) => (
               <CouponCard
@@ -75,7 +110,12 @@ export default function MerchantsTab({
         ) : (
           <div className="text-center py-12 bg-card rounded-xl border border-dashed border-border">
             <Store className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-            <p className="text-muted-foreground">Nenhuma promoção relâmpago encontrada para esta busca.</p>
+            <p className="text-muted-foreground">Nenhuma promoção relâmpago cadastrada ainda.</p>
+            {onOpenNewPromotionModal && (
+              <Button onClick={onOpenNewPromotionModal} className="mt-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold">
+                Cadastrar Primeira Oferta
+              </Button>
+            )}
           </div>
         )}
       </div>

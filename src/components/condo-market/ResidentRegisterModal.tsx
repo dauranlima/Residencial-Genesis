@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 interface ResidentRegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (fullName: string, block: string, unit: string) => void;
+  onSuccess: (fullName: string, block: string, unit: string, phone: string) => void;
   isSeniorMode: boolean;
 }
 
@@ -42,7 +42,7 @@ export default function ResidentRegisterModal({
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length >= 4) {
-      onSuccess(fullName || "Morador", block, unit);
+      onSuccess(fullName || "Morador", block, unit, phone);
       onClose();
     }
   };

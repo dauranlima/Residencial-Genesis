@@ -38,10 +38,27 @@ export default function ClassifiedCard({ item, isSeniorMode, onSelectItem }: Cla
           alt={item.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <span className="absolute top-3 left-3 bg-primary/90 text-primary-foreground backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow">
-          <Tag className="h-3 w-3" />
-          {item.category}
-        </span>
+        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 z-10">
+          <span className="bg-primary/90 text-primary-foreground backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow">
+            <Tag className="h-3 w-3" />
+            {item.category}
+          </span>
+          {item.status === "reserved" && (
+            <span className="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded-full text-xs uppercase tracking-wide shadow-md animate-pulse">
+              (RESERVADO)
+            </span>
+          )}
+          {item.status === "sold" && (
+            <span className="bg-slate-900/90 text-emerald-400 border border-emerald-500/40 font-black px-3 py-1 rounded-full text-xs uppercase tracking-wide shadow-md">
+              (VENDIDO)
+            </span>
+          )}
+          {item.status === "cancelled" && (
+            <span className="bg-red-600 text-white font-black px-3 py-1 rounded-full text-xs uppercase tracking-wide shadow-md">
+              (CANCELADO)
+            </span>
+          )}
+        </div>
         {item.images && item.images.length > 1 && (
           <span className="absolute top-3 right-3 bg-black/70 text-white backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
             <Eye className="h-3 w-3" />

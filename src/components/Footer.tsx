@@ -13,7 +13,7 @@ export default function Footer() {
               <span className="text-lg font-bold">Residencial Morada do Sol II</span>
             </div>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
-              Seu condomínio com gestão moderna e eficiente.
+              Plataforma hiperlocal do condomínio Morada do Sol II.
             </p>
           </div>
 
@@ -21,20 +21,12 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4 text-accent">Links Rápidos</h3>
             <nav className="flex flex-col gap-2">
-              {[
-                { title: "Apartamentos", path: "/apartamentos" },
-                { title: "Galeria", path: "/galeria" },
-                { title: "Regimento Interno", path: "/regimento" },
-                { title: "Outros Imóveis", path: "/outros-imoveis" },
-              ].map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="text-sm text-primary-foreground/70 hover:text-accent transition-colors"
-                >
-                  {item.title}
-                </Link>
-              ))}
+              <Link
+                to="/condo-market"
+                className="text-sm text-primary-foreground/70 hover:text-accent transition-colors"
+              >
+                CondoMarket (Classificados & Ofertas)
+              </Link>
             </nav>
           </div>
 
@@ -42,16 +34,14 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold mb-4 text-accent">Contato</h3>
             <div className="flex flex-col gap-3 text-sm text-primary-foreground/70">
-              <a href="tel:+5511999999999" className="flex items-center gap-2 hover:text-accent transition-colors">
+              <a href="tel:+554598470171" className="flex items-center gap-2 hover:text-accent transition-colors">
                 <Phone className="h-4 w-4" /> (45) 9847-0171
               </a>
               <a href="mailto:contato@moradadosol2.com" className="flex items-center gap-2 hover:text-accent transition-colors">
                 <Mail className="h-4 w-4" /> contato@moradao2.com
               </a>
               <span className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> Rua Jorge Lacerda, 855
-Bairro Centro
-Cascavel - PR - 85810-220
+                <MapPin className="h-4 w-4 text-accent shrink-0" /> Rua Jorge Lacerda, 855 - Bairro Centro - Cascavel - PR - 85810-220
               </span>
             </div>
           </div>
