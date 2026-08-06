@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Package } from "lucide-react";
+import { ShoppingBag, Zap, ShoppingCart, UserCheck, Sparkles, Package, LogOut } from "lucide-react";
 import SeniorModeToggle from "@/components/condo-market/SeniorModeToggle";
 import ClassifiedsTab from "@/components/condo-market/ClassifiedsTab";
 import MerchantsTab from "@/components/condo-market/MerchantsTab";
@@ -144,6 +144,16 @@ export default function CondoMarket() {
     toast.success(`Bem-vindo(a), ${name}! Morador identificado com sucesso.`);
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem("condo_market_user");
+    } catch (e) {
+      console.error("Erro ao remover dados do morador no localStorage:", e);
+    }
+    toast.info("Você deslogou da sua conta de morador.");
+  };
+
   const handleUpdateStatus = async (itemId: string, newStatus: ClassifiedStatus) => {
     // Atualização otimista local
     setClassifieds((prev) =>
@@ -214,16 +224,44 @@ export default function CondoMarket() {
                 onToggle={() => setIsSeniorMode(!isSeniorMode)}
               />
 
-              <Button
-                variant="outline"
-                onClick={() => setIsRegisterOpen(true)}
-                className={`w-full sm:w-auto bg-primary-foreground/10 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/20 font-bold ${
-                  isSeniorMode ? "h-14 px-6 text-lg" : "h-10"
-                }`}
-              >
-                <UserCheck className="h-5 w-5 mr-2" />
-                {currentUser ? `${currentUser.name} (Apto ${currentUser.unit})` : "Identificar Morador"}
-              </Button>
+              {currentUser ? (
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsRegisterOpen(true)}
+                    className={`bg-primary-foreground/10 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/20 font-bold ${
+                      isSeniorMode ? "h-14 px-6 text-lg" : "h-10"
+                    }`}
+                    title="Clique para alternar perfil de morador"
+                  >
+                    <UserCheck className="h-5 w-5 mr-2 text-amber-400" />
+                    <span>{currentUser.name} (Apto {currentUser.unit})</span>
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    onClick={handleLogout}
+                    className={`font-bold flex items-center gap-1.5 shadow-sm transition-all hover:bg-red-600 ${
+                      isSeniorMode ? "h-14 px-6 text-lg rounded-xl" : "h-10 px-3.5 text-sm"
+                    }`}
+                    title="Sair da conta"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsRegisterOpen(true)}
+                  className={`w-full sm:w-auto bg-primary-foreground/10 text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/20 font-bold ${
+                    isSeniorMode ? "h-14 px-6 text-lg" : "h-10"
+                  }`}
+                >
+                  <UserCheck className="h-5 w-5 mr-2 text-amber-400" />
+                  <span>Identificar Morador</span>
+                </Button>
+              )}
             </div>
           </div>
 

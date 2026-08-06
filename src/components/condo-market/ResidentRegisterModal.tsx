@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { X, Smartphone, ShieldCheck, ArrowRight, UserPlus, LogIn, ArrowLeft, UserCheck } from "lucide-react";
+import { X, Smartphone, ShieldCheck, ArrowRight, UserPlus, LogIn, ArrowLeft, UserCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getResidentByPhone, saveResidentProfile } from "@/lib/condoMarketService";
+import { sendWhatsAppVerificationCode, verifyWhatsAppCode } from "@/lib/verificationService";
 import { toast } from "sonner";
 
 interface ResidentRegisterModalProps {
@@ -36,6 +37,10 @@ export default function ResidentRegisterModal({
   const [unit, setUnit] = useState("");
   const [otp, setOtp] = useState("");
   const [foundExistingUser, setFoundExistingUser] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
   // Resetar estados quando o modal for fechado/aberto
   useEffect(() => {
@@ -49,6 +54,10 @@ export default function ResidentRegisterModal({
         setUnit("");
         setOtp("");
         setFoundExistingUser(false);
+        setIsSearching(false);
+        setIsSendingCode(false);
+        setIsVerifying(false);
+        setGeneratedCode(null);
       }, 300);
     }
   }, [isOpen]);
@@ -73,44 +82,89 @@ export default function ResidentRegisterModal({
     setTimeout(() => {
       setMode("selection");
       setFoundExistingUser(false);
+      setIsSearching(false);
     }, 300);
   };
 
   // Submeter envio do código de WhatsApp
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!phone || phone.replace(/\D/g, "").length < 10) {
+      toast.error("Por favor, digite um número de celular válido com DDD.");
+      return;
+    }
+
     if (mode === "login") {
-      // Buscar perfil cadastrado previamente por este WhatsApp
-      const existing = getResidentByPhone(phone);
-      if (existing) {
-        setFullName(existing.name);
-        setBlock(existing.block || "");
-        setUnit(existing.unit);
-        setFoundExistingUser(true);
-        toast.info(`Perfil encontrado: ${existing.name} (${existing.unit})`);
-      } else {
-        toast.warning("Nenhum cadastro prévio encontrado para este WhatsApp. Por favor, preencha os dados do primeiro acesso.");
-        setMode("register");
-        return;
+      setIsSearching(true);
+      try {
+        // Buscar perfil cadastrado previamente por este WhatsApp (no localStorage ou Supabase)
+        const existing = await getResidentByPhone(phone);
+        if (existing) {
+          setFullName(existing.name);
+          setBlock(existing.block || "");
+          setUnit(existing.unit);
+          setFoundExistingUser(true);
+          toast.success(`Perfil encontrado: ${existing.name} (${existing.unit})`);
+        } else {
+          toast.warning("Nenhum cadastro prévio encontrado para este WhatsApp. Por favor, preencha os dados do primeiro acesso.");
+          setMode("register");
+          setIsSearching(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Erro ao buscar morador:", err);
+      } finally {
+        setIsSearching(false);
       }
     }
 
-    if (phone) {
+    // Disparar código de verificação backend / Supabase / Evolution API
+    setIsSendingCode(true);
+    try {
+      const res = await sendWhatsAppVerificationCode(phone);
+      if (res.codeForTesting) {
+        setGeneratedCode(res.codeForTesting);
+      }
+      toast.info(res.message);
       setMode("otp");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar código de verificação.");
+    } finally {
+      setIsSendingCode(false);
     }
   };
 
   // Confirmar OTP de 4 dígitos
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length >= 4) {
+    if (otp.length < 4) {
+      toast.error("O código de verificação deve ter 4 dígitos.");
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      // 1. Validar no Supabase / Tabela verification_tokens
+      const isValidDb = await verifyWhatsAppCode(phone, otp);
+      
+      // Fallback local de teste caso offline ou token gerado recentemente no front
+      const isValidFallback = generatedCode === otp;
+
+      if (!isValidDb && !isValidFallback) {
+        toast.error("Código incorreto ou expirado (válido por 5 min). Solicite um novo código.");
+        setIsVerifying(false);
+        return;
+      }
+
+      toast.success("Código confirmado com sucesso!");
+
       const finalName = fullName || "Morador";
       const finalBlock = block || "";
       const finalUnit = unit || "Sem Apto";
 
       // Salvar na base de moradores vinculando ao WhatsApp
-      saveResidentProfile({
+      await saveResidentProfile({
         name: finalName,
         block: finalBlock,
         unit: finalUnit,
@@ -119,6 +173,10 @@ export default function ResidentRegisterModal({
 
       onSuccess(finalName, finalBlock, finalUnit, phone);
       onClose();
+    } catch (err: any) {
+      toast.error("Erro ao verificar código. Tente novamente.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -322,12 +380,22 @@ export default function ResidentRegisterModal({
                   <Button
                     type="submit"
                     variant="hero"
+                    disabled={isSendingCode}
                     className={`w-full font-bold flex items-center justify-center gap-2 mt-2 ${
                       isSeniorMode ? "h-14 text-xl rounded-xl" : "h-11"
                     }`}
                   >
-                    <span>Receber Código de Acesso</span>
-                    <ArrowRight className="h-5 w-5" />
+                    {isSendingCode ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Gerando Código...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Receber Código de Acesso</span>
+                        <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
                   </Button>
                 </form>
               )}
@@ -362,12 +430,24 @@ export default function ResidentRegisterModal({
                   <Button
                     type="submit"
                     variant="hero"
+                    disabled={isSearching || isSendingCode}
                     className={`w-full font-bold flex items-center justify-center gap-2 ${
                       isSeniorMode ? "h-14 text-xl rounded-xl" : "h-11"
                     }`}
                   >
-                    <span>Enviar Código WhatsApp</span>
-                    <ArrowRight className="h-5 w-5" />
+                    {isSearching ? (
+                      <span>Buscando cadastro...</span>
+                    ) : isSendingCode ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Enviando WhatsApp...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Enviar Código WhatsApp</span>
+                        <ArrowRight className="h-5 w-5" />
+                      </>
+                    )}
                   </Button>
                 </form>
               )}
@@ -406,9 +486,17 @@ export default function ResidentRegisterModal({
                   <Button
                     type="submit"
                     variant="hero"
+                    disabled={isVerifying}
                     className={`w-full font-bold ${isSeniorMode ? "h-14 text-xl rounded-xl" : "h-11"}`}
                   >
-                    Confirmar e Entrar
+                    {isVerifying ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>Verificando...</span>
+                      </div>
+                    ) : (
+                      "Confirmar e Entrar"
+                    )}
                   </Button>
                 </form>
               )}

@@ -269,18 +269,100 @@ export async function redeemPromotionInSupabase(id: string, currentRemaining: nu
 
 const RESIDENTS_STORAGE_KEY = 'condo_market_residents_db';
 
-export function getResidentByPhone(phone: string): CurrentUser | null {
+export async function getResidentByPhone(phone: string): Promise<CurrentUser | null> {
   if (!phone) return null;
   const cleanPhone = phone.replace(/\D/g, '');
+  if (!cleanPhone) return null;
+
+  // 1. Tenta buscar no localStorage primeiro
   try {
     const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-    if (!raw) return null;
-    const db: Record<string, CurrentUser> = JSON.parse(raw);
-    return db[cleanPhone] || null;
+    if (raw) {
+      const db: Record<string, CurrentUser> = JSON.parse(raw);
+      if (db[cleanPhone]) {
+        return db[cleanPhone];
+      }
+    }
   } catch (e) {
     console.error('Erro ao ler base de moradores local:', e);
-    return null;
   }
+
+  // 2. Tenta buscar na tabela 'classifieds' do Supabase (onde moradores postaram desapegos)
+  try {
+    // 2.1 Busca exata pelo formato salvo
+    const { data: exactClassifieds } = await supabase
+      .from('classifieds')
+      .select('seller_name, seller_block, seller_unit, whatsapp')
+      .eq('whatsapp', phone)
+      .limit(1);
+
+    if (exactClassifieds && exactClassifieds.length > 0) {
+      const c = exactClassifieds[0];
+      const user: CurrentUser = {
+        name: c.seller_name || 'Morador',
+        block: c.seller_block || '',
+        unit: c.seller_unit || 'Sem Apto',
+        phone: c.whatsapp || phone,
+      };
+      await saveResidentProfile(user);
+      return user;
+    }
+
+    // 2.2 Busca na tabela 'classifieds' comparando dígitos numéricos limpos em JS
+    const { data: allClassifieds } = await supabase
+      .from('classifieds')
+      .select('seller_name, seller_block, seller_unit, whatsapp');
+
+    if (allClassifieds && allClassifieds.length > 0) {
+      const match = allClassifieds.find((row) => {
+        if (!row.whatsapp) return false;
+        const rowClean = row.whatsapp.replace(/\D/g, '');
+        return rowClean === cleanPhone;
+      });
+
+      if (match) {
+        const user: CurrentUser = {
+          name: match.seller_name || 'Morador',
+          block: match.seller_block || '',
+          unit: match.seller_unit || 'Sem Apto',
+          phone: match.whatsapp || phone,
+        };
+        await saveResidentProfile(user);
+        return user;
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao buscar morador nos anúncios do Supabase:', e);
+  }
+
+  // 3. Tenta buscar na tabela 'profiles' do Supabase
+  try {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (profiles && profiles.length > 0) {
+      const match = profiles.find((p) => {
+        const pPhone = p.phone || p.whatsapp || '';
+        return pPhone.replace(/\D/g, '') === cleanPhone;
+      });
+
+      if (match) {
+        const user: CurrentUser = {
+          name: match.full_name || match.fullName || match.name || 'Morador',
+          block: match.block || '',
+          unit: match.unit || 'Sem Apto',
+          phone: match.phone || phone,
+        };
+        await saveResidentProfile(user);
+        return user;
+      }
+    }
+  } catch (e) {
+    console.log('Consulta na tabela profiles no Supabase ignorada:', e);
+  }
+
+  return null;
 }
 
 export async function saveResidentProfile(resident: CurrentUser): Promise<void> {
