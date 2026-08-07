@@ -662,69 +662,146 @@ export async function redeemPromotionInSupabase(
 
 const RESIDENTS_STORAGE_KEY = 'condo_market_residents_db';
 
-export async function getResidentByPhone(phone: string): Promise<CurrentUser | null> {
-  if (!phone) return null;
-  const cleanPhone = phone.replace(/\D/g, '');
-  if (!cleanPhone) return null;
+/**
+ * Gera todas as variações possíveis de formato para um número de telefone
+ */
+function getPhoneSearchVariations(phone: string): { phoneWithout55: string; cleanDigits: string; variations: string[] } {
+  const cleanDigits = (phone || '').replace(/\D/g, '');
+  if (!cleanDigits) return { phoneWithout55: '', cleanDigits: '', variations: [] };
 
-  // 1. Tenta buscar na tabela 'users' do Supabase apenas o perfil correspondente
-  try {
-    const { data: usersData, error } = await supabase
-      .from('users')
-      .select('name, block, unit, phone')
-      .or(`phone.eq.${phone},phone.eq.${cleanPhone},phone.eq.+55${cleanPhone}`);
+  const phoneWithout55 = cleanDigits.startsWith('55') && cleanDigits.length > 11
+    ? cleanDigits.slice(2)
+    : cleanDigits;
 
-    if (!error && usersData && usersData.length > 0) {
-      const match = usersData[0];
-      const user: CurrentUser = {
-        name: match.name || 'Morador',
-        block: match.block || '',
-        unit: match.unit || 'Sem Apto',
-        phone: match.phone || phone,
-      };
-      // Atualiza cache local
-      try {
-        const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-        const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
-        db[cleanPhone] = user;
-        localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
-      } catch (_e) {}
-      return user;
-    }
-  } catch (e) {
-    console.warn('Consulta na tabela users no Supabase ignorada:', e);
+  const phoneWith55 = `55${phoneWithout55}`;
+  const phoneWithPlus55 = `+55${phoneWithout55}`;
+
+  let formatted = phoneWithout55;
+  if (phoneWithout55.length === 11) {
+    formatted = `(${phoneWithout55.slice(0, 2)}) ${phoneWithout55.slice(2, 7)}-${phoneWithout55.slice(7)}`;
+  } else if (phoneWithout55.length === 10) {
+    formatted = `(${phoneWithout55.slice(0, 2)}) ${phoneWithout55.slice(2, 6)}-${phoneWithout55.slice(6)}`;
   }
 
-  // 2. Tenta buscar no localStorage
+  const list = [
+    phone.trim(),
+    cleanDigits,
+    phoneWithout55,
+    phoneWith55,
+    phoneWithPlus55,
+    formatted,
+    `+55 ${formatted}`,
+  ];
+
+  return {
+    phoneWithout55,
+    cleanDigits,
+    variations: Array.from(new Set(list)).filter(Boolean),
+  };
+}
+
+export async function getResidentByPhone(phone: string): Promise<CurrentUser | null> {
+  if (!phone) return null;
+  const { phoneWithout55, cleanDigits, variations } = getPhoneSearchVariations(phone);
+  if (!phoneWithout55) return null;
+
+  // Helper para verificar se um telefone no DB corresponde ao informado
+  const isMatch = (dbPhone?: string | null): boolean => {
+    if (!dbPhone) return false;
+    const dbClean = dbPhone.replace(/\D/g, '');
+    return dbClean.endsWith(phoneWithout55) || phoneWithout55.endsWith(dbClean);
+  };
+
+  // Helper para atualizar o cache local
+  const cacheLocally = (user: CurrentUser) => {
+    try {
+      const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
+      const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
+      db[cleanDigits] = user;
+      db[phoneWithout55] = user;
+      db[`55${phoneWithout55}`] = user;
+      localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
+    } catch (_e) {}
+  };
+
+  // 1. Tenta buscar no localStorage do dispositivo atual primeiro
   try {
     const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
     if (raw) {
       const db: Record<string, CurrentUser> = JSON.parse(raw);
-      if (db[cleanPhone]) {
-        return db[cleanPhone];
+      if (db[cleanDigits] || db[phoneWithout55] || db[`55${phoneWithout55}`]) {
+        const found = db[cleanDigits] || db[phoneWithout55] || db[`55${phoneWithout55}`];
+        console.log('[ResidentDB] Encontrado no localStorage:', found.name);
+        return found;
       }
     }
   } catch (e) {
     console.error('Erro ao ler base de moradores local:', e);
   }
 
-  // 3. Tenta buscar na tabela 'classifieds' do Supabase (onde o morador postou anúncio)
+  // 2. Tenta buscar na tabela 'users' do Supabase
   try {
-    const { data: exactClassifieds } = await supabase
+    // 2a. Busca por igualdade exata de variações
+    const orCondition = variations.map((v) => `phone.eq.${v}`).join(',');
+    let { data: usersData } = await supabase
+      .from('users')
+      .select('name, block, unit, phone')
+      .or(orCondition);
+
+    // 2b. Fallback com ilike se a busca exata não retornar nada
+    if (!usersData || usersData.length === 0) {
+      const { data: ilikeUsers } = await supabase
+        .from('users')
+        .select('name, block, unit, phone')
+        .ilike('phone', `%${phoneWithout55}%`)
+        .limit(5);
+      usersData = ilikeUsers;
+    }
+
+    if (usersData && usersData.length > 0) {
+      const match = usersData.find((u) => isMatch(u.phone)) || usersData[0];
+      const user: CurrentUser = {
+        name: match.name || 'Morador',
+        block: match.block || '',
+        unit: match.unit || 'Sem Apto',
+        phone: match.phone || phone,
+      };
+      console.log('[ResidentDB] Encontrado na tabela users:', user.name);
+      cacheLocally(user);
+      return user;
+    }
+  } catch (e) {
+    console.warn('Consulta na tabela users no Supabase ignorada:', e);
+  }
+
+  // 3. Tenta buscar na tabela 'classifieds' do Supabase
+  try {
+    const orClassifieds = variations.map((v) => `whatsapp.eq.${v}`).join(',');
+    let { data: exactClassifieds } = await supabase
       .from('classifieds')
       .select('seller_name, seller_block, seller_unit, whatsapp')
-      .or(`whatsapp.eq.${phone},whatsapp.eq.${cleanPhone}`)
-      .limit(1);
+      .or(orClassifieds)
+      .limit(5);
+
+    if (!exactClassifieds || exactClassifieds.length === 0) {
+      const { data: ilikeClassifieds } = await supabase
+        .from('classifieds')
+        .select('seller_name, seller_block, seller_unit, whatsapp')
+        .ilike('whatsapp', `%${phoneWithout55}%`)
+        .limit(5);
+      exactClassifieds = ilikeClassifieds;
+    }
 
     if (exactClassifieds && exactClassifieds.length > 0) {
-      const c = exactClassifieds[0];
+      const c = exactClassifieds.find((item) => isMatch(item.whatsapp)) || exactClassifieds[0];
       const user: CurrentUser = {
         name: c.seller_name || 'Morador',
         block: c.seller_block || '',
         unit: c.seller_unit || 'Sem Apto',
         phone: c.whatsapp || phone,
       };
-      await saveResidentProfile(user);
+      console.log('[ResidentDB] Encontrado na tabela classifieds:', user.name);
+      cacheLocally(user);
       return user;
     }
   } catch (e) {
@@ -733,21 +810,32 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
 
   // 4. Tenta buscar na tabela 'profiles' do Supabase
   try {
-    const { data: profiles } = await supabase
+    const orProfiles = variations.map((v) => `phone.eq.${v}`).join(',');
+    let { data: profiles } = await supabase
       .from('profiles')
       .select('full_name, block, unit, phone')
-      .or(`phone.eq.${phone},phone.eq.${cleanPhone}`)
-      .limit(1);
+      .or(orProfiles)
+      .limit(5);
+
+    if (!profiles || profiles.length === 0) {
+      const { data: ilikeProfiles } = await supabase
+        .from('profiles')
+        .select('full_name, block, unit, phone')
+        .ilike('phone', `%${phoneWithout55}%`)
+        .limit(5);
+      profiles = ilikeProfiles;
+    }
 
     if (profiles && profiles.length > 0) {
-      const match = profiles[0];
+      const match = profiles.find((p) => isMatch(p.phone)) || profiles[0];
       const user: CurrentUser = {
         name: match.full_name || 'Morador',
         block: match.block || '',
         unit: match.unit || 'Sem Apto',
         phone: match.phone || phone,
       };
-      await saveResidentProfile(user);
+      console.log('[ResidentDB] Encontrado na tabela profiles:', user.name);
+      cacheLocally(user);
       return user;
     }
   } catch (e) {
@@ -759,13 +847,18 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
 
 export async function saveResidentProfile(resident: CurrentUser): Promise<void> {
   if (!resident.phone) return;
-  const cleanPhone = resident.phone.replace(/\D/g, '');
+  const { phoneWithout55, cleanDigits } = getPhoneSearchVariations(resident.phone);
+  if (!phoneWithout55) return;
 
-  // 1. Salvar no localStorage para acesso offline rápido
+  const phoneWith55 = `55${phoneWithout55}`;
+
+  // 1. Salvar no localStorage local sob todas as chaves
   try {
     const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
     const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
-    db[cleanPhone] = resident;
+    db[cleanDigits] = resident;
+    db[phoneWithout55] = resident;
+    db[phoneWith55] = resident;
     localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
   } catch (e) {
     console.error('Erro ao salvar morador no localStorage:', e);
@@ -789,7 +882,17 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
       );
 
     if (userError) {
-      console.warn('Aviso ao salvar morador na tabela users no Supabase (verifique se executou o script schema_users.sql):', userError);
+      console.warn('Aviso ao salvar morador na tabela users no Supabase:', userError);
+      // Tentar salvar com formato DDI 55
+      await supabase.from('users').upsert([
+        {
+          name: resident.name,
+          phone: phoneWith55,
+          block: resident.block || null,
+          unit: resident.unit,
+          updated_at: new Date().toISOString(),
+        },
+      ]);
     } else {
       console.log('Morador salvo com sucesso na tabela users do Supabase!');
     }
@@ -797,7 +900,7 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
     console.error('Erro ao salvar morador no Supabase:', e);
   }
 
-  // 3. Fallback adicional para tabela 'profiles' caso configurada
+  // 3. Salvar na tabela 'profiles' caso configurada
   try {
     await supabase.from('profiles').upsert([
       {
