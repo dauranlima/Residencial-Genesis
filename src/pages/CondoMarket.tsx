@@ -9,7 +9,7 @@ import RedeemCouponModal from "@/components/condo-market/RedeemCouponModal";
 import ResidentRegisterModal from "@/components/condo-market/ResidentRegisterModal";
 import ClassifiedDetailModal from "@/components/condo-market/ClassifiedDetailModal";
 import MerchantRedemptionsModal from "@/components/condo-market/MerchantRedemptionsModal";
-import SuperAdminRegisterMerchantModal from "@/components/condo-market/SuperAdminRegisterMerchantModal";
+import SuperAdminMerchantsModal from "@/components/condo-market/SuperAdminMerchantsModal";
 import EditClassifiedModal from "@/components/condo-market/EditClassifiedModal";
 import AdminAuthPinModal from "@/components/AdminAuthPinModal";
 import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus } from "@/components/condo-market/types";
@@ -522,13 +522,16 @@ export default function CondoMarket() {
         }}
       />
 
-      <SuperAdminRegisterMerchantModal
+      <SuperAdminMerchantsModal
         isOpen={isSuperAdminRegisterOpen}
         onClose={() => setIsSuperAdminRegisterOpen(false)}
-        onSuccess={(newMerchant) => {
-          setCurrentMerchant(newMerchant);
+        onSelectMerchantToAuthenticate={(merchant) => {
+          setCurrentMerchant(merchant);
           loadMerchants();
           setIsNewPromotionOpen(true);
+        }}
+        onMerchantListUpdated={() => {
+          loadMerchants();
         }}
         isSeniorMode={isSeniorMode}
       />

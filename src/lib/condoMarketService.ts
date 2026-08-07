@@ -613,6 +613,134 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
   return resultMerchants;
 }
 
+/**
+ * Busca TODOS os parceiros com detalhes de PIN para a Central do Super Admin
+ */
+export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
+  const resultMerchants: Merchant[] = [];
+  const addedIds = new Set<string>();
+
+  // 1. Tentar buscar da tabela 'merchants' no Supabase INCLUINDO access_code
+  try {
+    const { data: merchantsData, error: merchantsErr } = await supabase
+      .from('merchants')
+      .select('id, business_name, category, responsible_name, description, address, phone, access_code, logo_url')
+      .order('created_at', { ascending: false });
+
+    if (!merchantsErr && merchantsData && merchantsData.length > 0) {
+      merchantsData.forEach((m: any) => {
+        if (!addedIds.has(m.id)) {
+          addedIds.add(m.id);
+          resultMerchants.push({
+            id: m.id,
+            businessName: m.business_name || m.businessName,
+            category: m.category,
+            responsibleName: m.responsible_name || '',
+            description: m.description || '',
+            address: m.address || '',
+            whatsapp: m.phone || m.whatsapp || '',
+            accessCode: m.access_code || '',
+            logoUrl: m.logo_url || '',
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Erro ao buscar comerciantes para Super Admin:', e);
+  }
+
+  // 2. Carregar do localStorage fallback caso haja itens locais
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      const localList: Merchant[] = JSON.parse(raw);
+      localList.forEach((m) => {
+        if (!addedIds.has(m.id)) {
+          addedIds.add(m.id);
+          resultMerchants.push(m);
+        }
+      });
+    }
+  } catch (_e) {}
+
+  return resultMerchants;
+}
+
+export async function updateMerchantInSupabase(
+  id: string,
+  updates: Partial<Merchant>
+): Promise<boolean> {
+  // 1. Atualizar no Supabase
+  try {
+    const payload: any = {};
+    if (updates.businessName !== undefined) payload.business_name = updates.businessName;
+    if (updates.category !== undefined) payload.category = updates.category;
+    if (updates.responsibleName !== undefined) payload.responsible_name = updates.responsibleName;
+    if (updates.whatsapp !== undefined) payload.phone = updates.whatsapp;
+    if (updates.address !== undefined) payload.address = updates.address;
+    if (updates.accessCode !== undefined) payload.access_code = updates.accessCode;
+    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.logoUrl !== undefined) payload.logo_url = updates.logoUrl;
+
+    const { error } = await supabase
+      .from('merchants')
+      .update(payload)
+      .eq('id', id);
+
+    if (error) {
+      console.warn('Aviso ao atualizar merchant no Supabase:', error);
+    }
+  } catch (e) {
+    console.error('Erro ao conectar com Supabase ao atualizar merchant:', e);
+  }
+
+  // 2. Atualizar no localStorage fallback
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      let localList: Merchant[] = JSON.parse(raw);
+      localList = localList.map((m) => (m.id === id ? { ...m, ...updates } : m));
+      localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(localList));
+    }
+  } catch (_e) {}
+
+  return true;
+}
+
+export async function deleteMerchantFromSupabase(id: string): Promise<boolean> {
+  // 1. Deletar do Supabase
+  try {
+    const { error } = await supabase
+      .from('merchants')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.warn('Aviso ao deletar merchant do Supabase:', error);
+    }
+  } catch (e) {
+    console.error('Erro ao conectar com Supabase ao deletar merchant:', e);
+  }
+
+  // 2. Deletar do localStorage fallback
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      let localList: Merchant[] = JSON.parse(raw);
+      localList = localList.filter((m) => m.id !== id);
+      localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(localList));
+    }
+  } catch (_e) {}
+
+  return true;
+}
+
+export async function regenerateMerchantAccessCode(id: string): Promise<string> {
+  const newCode = Math.floor(10000000 + Math.random() * 90000000).toString();
+  await updateMerchantInSupabase(id, { accessCode: newCode });
+  return newCode;
+}
+
 export async function redeemPromotionInSupabase(
   id: string,
   currentRemaining: number,
