@@ -11,11 +11,11 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
-  const isAdminPage = location.pathname.startsWith("/admin");
+  const isLoginPage = location.pathname === "/login" || location.pathname === "/adm-login";
+  const isAdminPage = location.pathname.startsWith("/admin") || location.pathname.startsWith("/super-admin") || location.pathname.startsWith("/adm-");
   const shouldHideLayout = isLoginPage || isAdminPage;
 
-  const isUnderDevelopment = !["/", "/condo-market", "/localizacao"].includes(location.pathname);
+  const isUnderDevelopment = !["/", "/condo-market", "/localizacao", "/adm-login", "/super-admin"].includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">

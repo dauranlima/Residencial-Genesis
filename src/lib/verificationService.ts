@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getWhatsAppConfig } from './whatsappConfigService';
 
 /**
  * Limpa o número de telefone e garante formato internacional (ex: 5545999999999)
@@ -39,10 +40,11 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
     throw new Error('Número de WhatsApp inválido.');
   }
 
-  const rawApiUrl = import.meta.env.VITE_EVOLUTION_API_URL || 'https://evogo.dldigitalsolutions.cloud';
-  const apiUrl = getSanitizedApiUrl(rawApiUrl);
-  const instance = (import.meta.env.VITE_EVOLUTION_INSTANCE || 'teste-meuwhats').trim();
-  const token = (import.meta.env.VITE_EVOLUTION_TOKEN || 'ff01fa86-4566-4ac0-9685-08cb627d25a6').trim();
+  // Carrega configurações dinâmicas (Supabase / localStorage / .env)
+  const config = await getWhatsAppConfig();
+  const apiUrl = getSanitizedApiUrl(config.apiUrl);
+  const instance = config.instance.trim();
+  const token = config.token.trim();
 
   // Gera código aleatório de 4 dígitos
   const code = Math.floor(1000 + Math.random() * 9000).toString();

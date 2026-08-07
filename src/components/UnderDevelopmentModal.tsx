@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Construction, Store, ArrowLeft } from "lucide-react";
 
-const ALLOWED_PATHS = ["/", "/condo-market", "/localizacao"];
+const ALLOWED_PATHS = ["/", "/condo-market", "/localizacao", "/adm-login", "/super-admin"];
 
 export default function UnderDevelopmentModal() {
   const location = useLocation();

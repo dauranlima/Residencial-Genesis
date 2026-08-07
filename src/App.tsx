@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import CondoMarket from "./pages/CondoMarket";
+import SuperAdminLogin from "./pages/SuperAdminLogin";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -16,9 +19,11 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            {/* Redirecionar todas as rotas diretamente para o /condo-market por enquanto */}
             <Route path="/" element={<Navigate to="/condo-market" replace />} />
             <Route path="/condo-market" element={<CondoMarket />} />
+            <Route path="/adm-login" element={<SuperAdminLogin />} />
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<Navigate to="/condo-market" replace />} />
           </Routes>
         </Layout>
