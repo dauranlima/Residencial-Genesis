@@ -28,7 +28,35 @@ export default function ClassifiedDetailModal({
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
   const [isFullScreenImage, setIsFullScreenImage] = useState(false);
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
   if (!isOpen || !item) return null;
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    const shareTitle = `viziGO - ${item.title}`;
+    const shareText = `Confira este anúncio no viziGO: "${item.title}" por ${formatPrice(item.price)}.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log("Compartilhamento cancelado", err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 3000);
+      } catch (err) {
+        console.error("Erro ao copiar link", err);
+      }
+    }
+  };
 
   const isOwner = !!(
     currentUser &&
@@ -292,7 +320,17 @@ export default function ClassifiedDetailModal({
             Voltar para lista
           </Button>
 
-
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleShare}
+            className={`w-full sm:w-auto font-bold flex items-center justify-center gap-2 border border-border shadow-sm cursor-pointer ${
+              isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-4 text-sm"
+            }`}
+          >
+            <Share2 className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
+            <span>{copiedLink ? "Link Copiado!" : "Compartilhar"}</span>
+          </Button>
 
           {isOwner && onEdit && (
             <Button
