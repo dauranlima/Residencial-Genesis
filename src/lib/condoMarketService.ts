@@ -657,10 +657,8 @@ export async function redeemPromotionInSupabase(
 }
 
 // ==========================================
-// PERSISTÊNCIA DE MORADORES POR WHATSAPP
+// PERSISTÊNCIA DE MORADORES POR WHATSAPP (100% SUPABASE LIVE)
 // ==========================================
-
-const RESIDENTS_STORAGE_KEY = 'condo_market_residents_db';
 
 /**
  * Gera todas as variações possíveis de formato para um número de telefone
@@ -676,11 +674,23 @@ function getPhoneSearchVariations(phone: string): { phoneWithout55: string; clea
   const phoneWith55 = `55${phoneWithout55}`;
   const phoneWithPlus55 = `+55${phoneWithout55}`;
 
-  let formatted = phoneWithout55;
+  let f1 = phoneWithout55;
+  let f2 = phoneWithout55;
+  let f3 = phoneWithout55;
   if (phoneWithout55.length === 11) {
-    formatted = `(${phoneWithout55.slice(0, 2)}) ${phoneWithout55.slice(2, 7)}-${phoneWithout55.slice(7)}`;
+    const ddd = phoneWithout55.slice(0, 2);
+    const part1 = phoneWithout55.slice(2, 7);
+    const part2 = phoneWithout55.slice(7);
+    f1 = `(${ddd}) ${part1}-${part2}`; // (45) 99984-8841
+    f2 = `(${ddd}) ${part1}${part2}`;  // (45) 999848841
+    f3 = `${ddd} ${part1}-${part2}`;   // 45 99984-8841
   } else if (phoneWithout55.length === 10) {
-    formatted = `(${phoneWithout55.slice(0, 2)}) ${phoneWithout55.slice(2, 6)}-${phoneWithout55.slice(6)}`;
+    const ddd = phoneWithout55.slice(0, 2);
+    const part1 = phoneWithout55.slice(2, 6);
+    const part2 = phoneWithout55.slice(6);
+    f1 = `(${ddd}) ${part1}-${part2}`;
+    f2 = `(${ddd}) ${part1}${part2}`;
+    f3 = `${ddd} ${part1}-${part2}`;
   }
 
   const list = [
@@ -689,8 +699,11 @@ function getPhoneSearchVariations(phone: string): { phoneWithout55: string; clea
     phoneWithout55,
     phoneWith55,
     phoneWithPlus55,
-    formatted,
-    `+55 ${formatted}`,
+    f1,
+    f2,
+    f3,
+    `+55 ${f1}`,
+    `+55${f1}`,
   ];
 
   return {
@@ -702,7 +715,7 @@ function getPhoneSearchVariations(phone: string): { phoneWithout55: string; clea
 
 export async function getResidentByPhone(phone: string): Promise<CurrentUser | null> {
   if (!phone) return null;
-  const { phoneWithout55, cleanDigits, variations } = getPhoneSearchVariations(phone);
+  const { phoneWithout55, variations } = getPhoneSearchVariations(phone);
   if (!phoneWithout55) return null;
 
   // Helper para verificar se um telefone no DB corresponde ao informado
@@ -712,131 +725,124 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
     return dbClean.endsWith(phoneWithout55) || phoneWithout55.endsWith(dbClean);
   };
 
-  // Helper para atualizar o cache local
-  const cacheLocally = (user: CurrentUser) => {
-    try {
-      const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-      const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
-      db[cleanDigits] = user;
-      db[phoneWithout55] = user;
-      db[`55${phoneWithout55}`] = user;
-      localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
-    } catch (_e) {}
-  };
-
-  // 1. Tenta buscar no localStorage do dispositivo atual primeiro
+  // 1. Busca DIRETA na tabela 'users' do Supabase
   try {
-    const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-    if (raw) {
-      const db: Record<string, CurrentUser> = JSON.parse(raw);
-      if (db[cleanDigits] || db[phoneWithout55] || db[`55${phoneWithout55}`]) {
-        const found = db[cleanDigits] || db[phoneWithout55] || db[`55${phoneWithout55}`];
-        console.log('[ResidentDB] Encontrado no localStorage:', found.name);
-        return found;
-      }
-    }
-  } catch (e) {
-    console.error('Erro ao ler base de moradores local:', e);
-  }
-
-  // 2. Tenta buscar na tabela 'users' do Supabase
-  try {
-    // 2a. Busca por igualdade exata de variações
-    const orCondition = variations.map((v) => `phone.eq.${v}`).join(',');
-    let { data: usersData } = await supabase
+    let { data: usersData, error: uErr } = await supabase
       .from('users')
       .select('name, block, unit, phone')
-      .or(orCondition);
+      .in('phone', variations);
 
-    // 2b. Fallback com ilike se a busca exata não retornar nada
+    if (uErr) {
+      console.warn('Aviso na busca por .in em users:', uErr);
+    }
+
+    // 1b. Fallback ilike com os últimos 4 dígitos
     if (!usersData || usersData.length === 0) {
+      const last4 = phoneWithout55.slice(-4);
       const { data: ilikeUsers } = await supabase
         .from('users')
         .select('name, block, unit, phone')
-        .ilike('phone', `%${phoneWithout55}%`)
-        .limit(5);
+        .ilike('phone', `%${last4}%`);
       usersData = ilikeUsers;
     }
 
+    // 1c. Fallback universal: leitura completa da tabela users para normalização de dígitos em JS
+    if (!usersData || usersData.length === 0) {
+      const { data: allUsers } = await supabase
+        .from('users')
+        .select('name, block, unit, phone');
+      usersData = allUsers;
+    }
+
     if (usersData && usersData.length > 0) {
-      const match = usersData.find((u) => isMatch(u.phone)) || usersData[0];
-      const user: CurrentUser = {
-        name: match.name || 'Morador',
-        block: match.block || '',
-        unit: match.unit || 'Sem Apto',
-        phone: match.phone || phone,
-      };
-      console.log('[ResidentDB] Encontrado na tabela users:', user.name);
-      cacheLocally(user);
-      return user;
+      const match = usersData.find((u) => isMatch(u.phone));
+      if (match) {
+        console.log('[ResidentDB - Supabase Live] Encontrado na tabela users:', match.name);
+        return {
+          name: match.name || 'Morador',
+          block: match.block || '',
+          unit: match.unit || 'Sem Apto',
+          phone: match.phone || phone,
+        };
+      }
     }
   } catch (e) {
     console.warn('Consulta na tabela users no Supabase ignorada:', e);
   }
 
-  // 3. Tenta buscar na tabela 'classifieds' do Supabase
+  // 2. Busca DIRETA na tabela 'classifieds' do Supabase
   try {
-    const orClassifieds = variations.map((v) => `whatsapp.eq.${v}`).join(',');
     let { data: exactClassifieds } = await supabase
       .from('classifieds')
       .select('seller_name, seller_block, seller_unit, whatsapp')
-      .or(orClassifieds)
-      .limit(5);
+      .in('whatsapp', variations);
 
     if (!exactClassifieds || exactClassifieds.length === 0) {
+      const last4 = phoneWithout55.slice(-4);
       const { data: ilikeClassifieds } = await supabase
         .from('classifieds')
         .select('seller_name, seller_block, seller_unit, whatsapp')
-        .ilike('whatsapp', `%${phoneWithout55}%`)
-        .limit(5);
+        .ilike('whatsapp', `%${last4}%`);
       exactClassifieds = ilikeClassifieds;
     }
 
+    if (!exactClassifieds || exactClassifieds.length === 0) {
+      const { data: allClassifieds } = await supabase
+        .from('classifieds')
+        .select('seller_name, seller_block, seller_unit, whatsapp');
+      exactClassifieds = allClassifieds;
+    }
+
     if (exactClassifieds && exactClassifieds.length > 0) {
-      const c = exactClassifieds.find((item) => isMatch(item.whatsapp)) || exactClassifieds[0];
-      const user: CurrentUser = {
-        name: c.seller_name || 'Morador',
-        block: c.seller_block || '',
-        unit: c.seller_unit || 'Sem Apto',
-        phone: c.whatsapp || phone,
-      };
-      console.log('[ResidentDB] Encontrado na tabela classifieds:', user.name);
-      cacheLocally(user);
-      return user;
+      const c = exactClassifieds.find((item) => isMatch(item.whatsapp));
+      if (c) {
+        console.log('[ResidentDB - Supabase Live] Encontrado na tabela classifieds:', c.seller_name);
+        return {
+          name: c.seller_name || 'Morador',
+          block: c.seller_block || '',
+          unit: c.seller_unit || 'Sem Apto',
+          phone: c.whatsapp || phone,
+        };
+      }
     }
   } catch (e) {
     console.error('Erro ao buscar morador nos anúncios do Supabase:', e);
   }
 
-  // 4. Tenta buscar na tabela 'profiles' do Supabase
+  // 3. Busca DIRETA na tabela 'profiles' do Supabase
   try {
-    const orProfiles = variations.map((v) => `phone.eq.${v}`).join(',');
     let { data: profiles } = await supabase
       .from('profiles')
       .select('full_name, block, unit, phone')
-      .or(orProfiles)
-      .limit(5);
+      .in('phone', variations);
 
     if (!profiles || profiles.length === 0) {
+      const last4 = phoneWithout55.slice(-4);
       const { data: ilikeProfiles } = await supabase
         .from('profiles')
         .select('full_name, block, unit, phone')
-        .ilike('phone', `%${phoneWithout55}%`)
-        .limit(5);
+        .ilike('phone', `%${last4}%`);
       profiles = ilikeProfiles;
     }
 
+    if (!profiles || profiles.length === 0) {
+      const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('full_name, block, unit, phone');
+      profiles = allProfiles;
+    }
+
     if (profiles && profiles.length > 0) {
-      const match = profiles.find((p) => isMatch(p.phone)) || profiles[0];
-      const user: CurrentUser = {
-        name: match.full_name || 'Morador',
-        block: match.block || '',
-        unit: match.unit || 'Sem Apto',
-        phone: match.phone || phone,
-      };
-      console.log('[ResidentDB] Encontrado na tabela profiles:', user.name);
-      cacheLocally(user);
-      return user;
+      const match = profiles.find((p) => isMatch(p.phone));
+      if (match) {
+        console.log('[ResidentDB - Supabase Live] Encontrado na tabela profiles:', match.full_name);
+        return {
+          name: match.full_name || 'Morador',
+          block: match.block || '',
+          unit: match.unit || 'Sem Apto',
+          phone: match.phone || phone,
+        };
+      }
     }
   } catch (e) {
     console.log('Consulta na tabela profiles no Supabase ignorada:', e);
@@ -847,24 +853,12 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
 
 export async function saveResidentProfile(resident: CurrentUser): Promise<void> {
   if (!resident.phone) return;
-  const { phoneWithout55, cleanDigits } = getPhoneSearchVariations(resident.phone);
+  const { phoneWithout55 } = getPhoneSearchVariations(resident.phone);
   if (!phoneWithout55) return;
 
   const phoneWith55 = `55${phoneWithout55}`;
 
-  // 1. Salvar no localStorage local sob todas as chaves
-  try {
-    const raw = localStorage.getItem(RESIDENTS_STORAGE_KEY);
-    const db: Record<string, CurrentUser> = raw ? JSON.parse(raw) : {};
-    db[cleanDigits] = resident;
-    db[phoneWithout55] = resident;
-    db[phoneWith55] = resident;
-    localStorage.setItem(RESIDENTS_STORAGE_KEY, JSON.stringify(db));
-  } catch (e) {
-    console.error('Erro ao salvar morador no localStorage:', e);
-  }
-
-  // 2. Salvar na tabela 'users' no Supabase
+  // 1. Salvar DIRETO na tabela 'users' no Supabase
   try {
     const { error: userError } = await supabase
       .from('users')
@@ -900,7 +894,7 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
     console.error('Erro ao salvar morador no Supabase:', e);
   }
 
-  // 3. Salvar na tabela 'profiles' caso configurada
+  // 2. Salvar DIRETO na tabela 'profiles' caso configurada
   try {
     await supabase.from('profiles').upsert([
       {
