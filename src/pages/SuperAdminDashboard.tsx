@@ -20,18 +20,22 @@ import {
   Sliders,
   Eye,
   EyeOff,
+  Phone,
+  Terminal,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase';
 import {
   getWhatsAppConfig,
   saveWhatsAppConfig,
   testWhatsAppConnection,
+  sendTestWhatsAppMessage,
+  pingWebhookEdgeFunction,
   getDefaultWhatsAppConfig,
   WhatsAppConfig,
 } from '@/lib/whatsappConfigService';
@@ -61,6 +65,9 @@ export default function SuperAdminDashboard() {
   // Test Message State
   const [testPhone, setTestPhone] = useState('');
   const [sendingTestMsg, setSendingTestMsg] = useState(false);
+
+  // Edge Function Ping State
+  const [pingingWebhook, setPingingWebhook] = useState(false);
 
   useEffect(() => {
     // 1. Verificar autenticação Super Admin
@@ -152,6 +159,44 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const handleSendTestMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testPhone) {
+      toast.error('Informe um número de telefone/WhatsApp com DDD (ex: 45988328499).');
+      return;
+    }
+
+    setSendingTestMsg(true);
+    try {
+      const res = await sendTestWhatsAppMessage(testPhone, config);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao enviar mensagem de teste: ' + err.message);
+    } finally {
+      setSendingTestMsg(false);
+    }
+  };
+
+  const handlePingWebhook = async () => {
+    setPingingWebhook(true);
+    try {
+      const res = await pingWebhookEdgeFunction(config.webhookUrl);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.warning(res.message);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao pinguar Webhook: ' + err.message);
+    } finally {
+      setPingingWebhook(false);
+    }
+  };
+
   const handleRestoreDefaults = () => {
     const defaults = getDefaultWhatsAppConfig();
     setConfig(defaults);
@@ -232,7 +277,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        {/* Dashboard Tabs / Content */}
+        {/* Dashboard Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Config Card (Spans 2 columns) */}
           <div className="lg:col-span-2 space-y-6">
@@ -299,7 +344,7 @@ export default function SuperAdminDashboard() {
                       <Input
                         id="instance"
                         type="text"
-                        placeholder="moto-whats-t"
+                        placeholder="whats-moto"
                         value={config.instance}
                         onChange={(e) => setConfig({ ...config, instance: e.target.value })}
                         className="bg-slate-950/70 border-slate-800 text-slate-100 placeholder:text-slate-600 focus:border-amber-500/50 font-mono text-sm h-10"
@@ -389,25 +434,45 @@ export default function SuperAdminDashboard() {
               </CardContent>
 
               <CardFooter className="border-t border-slate-800/80 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleTestConnection}
-                  disabled={testing}
-                  className="w-full sm:w-auto border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-10"
-                >
-                  {testing ? (
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleTestConnection}
+                    disabled={testing}
+                    className="border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-10"
+                  >
+                    {testing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-3.5 h-3.5 border-2 border-slate-200 border-t-transparent rounded-full animate-spin" />
+                        <span>Testando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Radio className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Testar Conexão API</span>
+                      </div>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePingWebhook}
+                    disabled={pingingWebhook}
+                    className="border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-10"
+                    title="Pinguar a Edge Function do Webhook no Supabase"
+                  >
+                    {pingingWebhook ? (
                       <div className="w-3.5 h-3.5 border-2 border-slate-200 border-t-transparent rounded-full animate-spin" />
-                      <span>Testando...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5">
-                      <Radio className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Testar Conexão Evolution API</span>
-                    </div>
-                  )}
-                </Button>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Pinguar Webhook Edge</span>
+                      </div>
+                    )}
+                  </Button>
+                </div>
 
                 <Button
                   type="submit"
@@ -428,6 +493,56 @@ export default function SuperAdminDashboard() {
                   )}
                 </Button>
               </CardFooter>
+            </Card>
+
+            {/* Test WhatsApp Message Sender Card */}
+            <Card className="bg-slate-900/90 border-slate-800 shadow-xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <Send className="w-4 h-4 text-emerald-400" />
+                  Disparar Mensagem de Teste por WhatsApp
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-400">
+                  Envie uma mensagem de verificação em tempo real para qualquer número e valide o funcionamento da instância <span className="text-amber-400 font-mono font-semibold">{config.instance}</span>.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <form onSubmit={handleSendTestMessage} className="flex flex-col sm:flex-row items-end gap-3">
+                  <div className="space-y-1.5 flex-1 w-full">
+                    <Label htmlFor="testPhone" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                      Número de WhatsApp (DDD + Número)
+                    </Label>
+                    <Input
+                      id="testPhone"
+                      type="text"
+                      placeholder="45988328499"
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      className="bg-slate-950/70 border-slate-800 text-slate-100 placeholder:text-slate-600 focus:border-emerald-500/50 font-mono text-sm h-10"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={sendingTestMsg}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-slate-100 font-bold text-xs h-10 px-5 shadow-lg shadow-emerald-600/20 whitespace-nowrap w-full sm:w-auto"
+                  >
+                    {sendingTestMsg ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-3.5 h-3.5 border-2 border-slate-100 border-t-transparent rounded-full animate-spin" />
+                        <span>Enviando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Enviar Mensagem Teste</span>
+                      </div>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
             </Card>
           </div>
 

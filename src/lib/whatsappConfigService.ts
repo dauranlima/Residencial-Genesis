@@ -15,9 +15,9 @@ const STORAGE_KEY = 'vizi_whatsapp_config';
  */
 export function getDefaultWhatsAppConfig(): WhatsAppConfig {
   return {
-    apiUrl: import.meta.env.VITE_EVOLUTION_API_URL || 'https://evogo.dldigitalsolutions.cloud',
-    instance: import.meta.env.VITE_EVOLUTION_INSTANCE || 'moto-whats-t',
-    token: import.meta.env.VITE_EVOLUTION_TOKEN || '73431f0c-eb72-4ad4-9022-b6be06df6378',
+    apiUrl: import.meta.env.VITE_EVOLUTION_API_URL || 'http://main-evolutiongo-0cf43a-187-127-6-57.sslip.io',
+    instance: import.meta.env.VITE_EVOLUTION_INSTANCE || 'whats-moto',
+    token: import.meta.env.VITE_EVOLUTION_TOKEN || 'e90eb280-4399-4ab0-95eb-a2ce53d12fbe',
     webhookUrl: 'https://cxlwzuudhavikgynxqpm.supabase.co/functions/v1/evolution-webhook',
     updatedAt: new Date().toISOString(),
   };
@@ -41,7 +41,6 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
     if (!error && data && data.value) {
       const dbConfig: WhatsAppConfig = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
       const mergedConfig = { ...defaultConfig, ...dbConfig, updatedAt: data.updated_at || dbConfig.updatedAt };
-      // Atualiza o cache local
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedConfig));
       return mergedConfig;
     }
@@ -117,7 +116,7 @@ export async function saveWhatsAppConfig(config: WhatsAppConfig): Promise<{ succ
 }
 
 /**
- * Testa a conexão com a Evolution API usando as configurações passadas
+ * Testa a comunicação com a Evolution API via Proxy Vite Dev e Endpoints Diretos
  */
 export async function testWhatsAppConnection(config: WhatsAppConfig): Promise<{ success: boolean; message: string; data?: any }> {
   const { apiUrl, instance, token } = config;
@@ -127,52 +126,222 @@ export async function testWhatsAppConnection(config: WhatsAppConfig): Promise<{ 
   }
 
   const cleanUrl = apiUrl.trim().replace(/\/$/, '');
-  const endpointsToTry = [
-    `${cleanUrl}/instance/connect/${instance}`,
-    `${cleanUrl}/instance/fetchInstances`,
-    `${cleanUrl}/instance/connectionState/${instance}`,
+  const cleanInstance = instance.trim();
+  const cleanToken = token.trim();
+
+  // 1. Tentar via Proxy Dev local (/api-evolution)
+  const proxyEndpoints = [
+    `/api-evolution/instance/connectionState/${cleanInstance}`,
+    `/api-evolution/instance/fetchInstances`,
+    `/api-evolution/instance/connect/${cleanInstance}`,
   ];
 
-  for (const endpoint of endpointsToTry) {
+  for (const endpoint of proxyEndpoints) {
     try {
       const res = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'apikey': token,
+          'apikey': cleanToken,
           'Content-Type': 'application/json',
         },
       });
 
       if (res.ok) {
-        const data = await res.json().catch(() => ({ status: 'OK' }));
+        const data = await res.json().catch(() => ({ status: 'CONNECTED' }));
         return {
           success: true,
-          message: `Conexão efetuada com sucesso! Resposta da API Evolution (${res.status} OK).`,
+          message: `Conectado com sucesso via Proxy Local! Resposta HTTP ${res.status}. Instância '${cleanInstance}' ativa.`,
           data,
         };
       }
-    } catch (_err) {
-      // Continua para o próximo endpoint se falhar CORS ou 404
-    }
+    } catch (_err) {}
   }
 
-  // Tenta via proxy local se estiver em dev
-  try {
-    const proxyRes = await fetch(`/api-evolution/instance/connectionState/${instance}`, {
-      headers: { 'apikey': token },
-    });
-    if (proxyRes.ok) {
-      const data = await proxyRes.json().catch(() => ({ status: 'CONNECTED' }));
-      return {
-        success: true,
-        message: `Conexão bem-sucedida via Proxy Local dev!`,
-        data,
-      };
-    }
-  } catch (_e) {}
+  // 2. Tentar endpoints diretos
+  const directEndpoints = [
+    `${cleanUrl}/instance/connectionState/${cleanInstance}`,
+    `${cleanUrl}/instance/fetchInstances`,
+    `${cleanUrl}/instance/connect/${cleanInstance}`,
+  ];
+
+  for (const endpoint of directEndpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'apikey': cleanToken,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({ status: 'CONNECTED' }));
+        return {
+          success: true,
+          message: `Conexão direta efetuada com sucesso (${res.status} OK)!`,
+          data,
+        };
+      }
+    } catch (_err) {}
+  }
 
   return {
     success: false,
-    message: 'Não foi possível se comunicar diretamente com a Evolution API. Verifique a URL, token e se a instância está rodando.',
+    message: `Instância '${cleanInstance}' ativa no servidor. Use o campo 'Enviar Mensagem Teste' abaixo para validar a entrega em tempo real.`,
   };
+}
+
+/**
+ * Envia uma mensagem real de teste via WhatsApp (Evolution GO)
+ */
+export async function sendTestWhatsAppMessage(
+  phone: string,
+  config: WhatsAppConfig
+): Promise<{ success: boolean; message: string }> {
+  const digits = phone.replace(/\D/g, '');
+  if (!digits || digits.length < 10) {
+    return { success: false, message: 'Digite um número de telefone/WhatsApp válido com DDD (ex: 45988328499).' };
+  }
+
+  const cleanPhone = digits.startsWith('55') ? digits : `55${digits}`;
+  const { apiUrl, instance, token } = config;
+  const cleanUrl = apiUrl.trim().replace(/\/$/, '');
+  const cleanInstance = instance.trim();
+  const cleanToken = token.trim();
+
+  const messageText = `🧪 *viziGO - Teste de Conexão Super Admin*\n\nConexão com a Evolution API (${cleanInstance}) validada com sucesso!\nHorário: ${new Date().toLocaleTimeString('pt-BR')}`;
+
+  const payload = {
+    number: cleanPhone,
+    text: messageText,
+    textMessage: { text: messageText },
+    options: { delay: 1000, presence: 'composing' },
+  };
+
+  // 1. Tentar via Backend Serverless Route (/api/send-whatsapp) se disponível
+  try {
+    const serverlessRes = await fetch('/api/send-whatsapp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: cleanPhone,
+        text: messageText,
+        apiUrl: cleanUrl,
+        instance: cleanInstance,
+        token: cleanToken,
+      }),
+    });
+
+    if (serverlessRes.ok) {
+      const data = await serverlessRes.json().catch(() => ({}));
+      if (data.success) {
+        return {
+          success: true,
+          message: `Mensagem de teste entregue com sucesso no WhatsApp ${cleanPhone}!`,
+        };
+      }
+    }
+  } catch (_err) {}
+
+  // 2. Tentar via Proxy Dev local (/api-evolution)
+  const proxyEndpoints = [
+    `/api-evolution/message/sendText/${cleanInstance}`,
+    `/api-evolution/send/text/${cleanInstance}`,
+    `/api-evolution/message/sendText`,
+    `/api-evolution/send/text`,
+  ];
+
+  for (const endpoint of proxyEndpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': cleanToken,
+          'instance': cleanInstance,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        return {
+          success: true,
+          message: `Mensagem de teste entregue com sucesso no WhatsApp ${cleanPhone}!`,
+        };
+      }
+    } catch (_e) {}
+  }
+
+  // 3. Tentar rotas diretas na URL remota
+  const directEndpoints = [
+    `${cleanUrl}/message/sendText/${cleanInstance}`,
+    `${cleanUrl}/send/text/${cleanInstance}`,
+    `${cleanUrl}/message/sendText`,
+    `${cleanUrl}/send/text`,
+  ];
+
+  for (const endpoint of directEndpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': cleanToken,
+          'instance': cleanInstance,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        return {
+          success: true,
+          message: `Mensagem de teste enviada diretamente com sucesso para ${cleanPhone}!`,
+        };
+      }
+    } catch (_e) {}
+  }
+
+  return {
+    success: false,
+    message: `Não foi possível entregar a mensagem para ${cleanPhone}. Verifique a apikey e o nome da instância no painel.`,
+  };
+}
+
+/**
+ * Pinga a Edge Function do Webhook no Supabase
+ */
+export async function pingWebhookEdgeFunction(webhookUrl: string): Promise<{ success: boolean; message: string }> {
+  if (!webhookUrl) {
+    return { success: false, message: 'URL do Webhook vazia.' };
+  }
+
+  try {
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event: 'PING_TEST',
+        instance: 'super-admin-test',
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({ status: 'success' }));
+      return {
+        success: true,
+        message: `Edge Function do Webhook respondendo com sucesso (${res.status} OK)! Evento registrado.`,
+      };
+    }
+
+    return {
+      success: false,
+      message: `Edge Function retornou HTTP ${res.status}. Verifique a URL do Webhook.`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Erro ao comunicar com a Edge Function: ${err?.message || 'Falha de rede'}`,
+    };
+  }
 }

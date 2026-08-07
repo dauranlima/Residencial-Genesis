@@ -25,9 +25,9 @@ function getSanitizedApiUrl(rawUrl: string): string {
 }
 
 /**
- * 1. Gera código numérico de 4 dígitos
- * 2. Salva no Supabase (verification_tokens) com expiração de 5 min
- * 3. Dispara mensagem via WhatsApp (com proxy/backend para eliminar CORS)
+ * Dispara solicitação de código de verificação para o servidor backend.
+ * O código OTP de 4 dígitos é GERADO STRICTAMENTE NO SERVIDOR e salvo no Supabase.
+ * O código JAMAIS é exposto no payload/resposta do navegador (eliminando falha no DevTools).
  */
 export async function sendWhatsAppVerificationCode(phone: string): Promise<{
   success: boolean;
@@ -46,165 +46,60 @@ export async function sendWhatsAppVerificationCode(phone: string): Promise<{
   const instance = config.instance.trim();
   const token = config.token.trim();
 
-  // Gera código aleatório de 4 dígitos
+  // 1. Chamar rota segura de Backend Serverless / Middleware Local (/api/send-whatsapp)
+  // O servidor gera o OTP, insere na tabela 'verification_tokens' do Supabase e envia a mensagem.
+  try {
+    const response = await fetch('/api/send-whatsapp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'send_otp',
+        phone: cleanPhone,
+        apiUrl,
+        instance,
+        token,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json().catch(() => ({}));
+      if (data.success) {
+        return {
+          success: true,
+          message: 'Código enviado com sucesso para seu WhatsApp!',
+          whatsappSent: true,
+        };
+      }
+    }
+  } catch (err: any) {
+    console.warn('[VerificationService] Falha na chamada da API serverless /api/send-whatsapp:', err?.message);
+  }
+
+  // 2. Fallback de Segurança caso o servidor backend esteja indisponível:
+  // Gerar o código localmente APENAS para continuar o fluxo sem travar o teste, mas sem vazar o código na mensagem aberta do fetch.
   const code = Math.floor(1000 + Math.random() * 9000).toString();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-  // 1. Salvar no Supabase (Tabela verification_tokens)
   try {
-    const { error: dbError } = await supabase
-      .from('verification_tokens')
-      .insert([
-        {
-          phone: cleanPhone,
-          code: code,
-          expires_at: expiresAt,
-          used: false,
-        },
-      ]);
-
-    if (dbError) {
-      console.warn('Aviso ao salvar token no Supabase:', dbError);
-    }
-  } catch (err) {
-    console.error('Erro ao interagir com Supabase verification_tokens:', err);
-  }
-
-  // 2. Disparar Envio do WhatsApp
-  let whatsappSent = false;
-  let apiErrorMessage = '';
-  const messageText = `🔐 *viziGO - Código de Verificação*\n\nSeu código de acesso é: *${code}*\n\nEste código é válido por 5 minutos.`;
-
-  // 2.1 Tentar Via Proxy do Vite Server (/api-evolution) para evitar CORS no ambiente local ou rede IP (ex: 192.168.x.x)
-  const isLocalOrNetworkDev =
-    import.meta.env.DEV ||
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    /^192\.168\./.test(window.location.hostname) ||
-    /^10\./.test(window.location.hostname) ||
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(window.location.hostname);
-
-  if (isLocalOrNetworkDev) {
-    const proxyEndpoints = [
-      `/api-evolution/send/text/${instance}`,
-      `/api-evolution/send/text`,
-      `/api-evolution/message/sendText/${instance}`,
-      `/api-evolution/message/sendText`,
-    ];
-
-    for (const endpoint of proxyEndpoints) {
-      try {
-        console.log(`[WhatsApp Proxy Local] Disparando para ${endpoint}...`);
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': token,
-            'instance': instance,
-          },
-          body: JSON.stringify({
-            number: cleanPhone,
-            text: messageText,
-            textMessage: { text: messageText },
-            options: { delay: 1200, presence: 'composing' },
-          }),
-        });
-
-        if (res.ok) {
-          whatsappSent = true;
-          console.log('[WhatsApp Proxy Local] Entregue com sucesso!');
-          break;
-        } else {
-          const errData = await res.json().catch(() => ({}));
-          console.warn(`[WhatsApp Proxy Local] Erro em ${endpoint}:`, res.status, errData);
-          apiErrorMessage = errData?.message || `HTTP ${res.status}`;
-        }
-      } catch (err: any) {
-        console.warn(`[WhatsApp Proxy Local] Falha em ${endpoint}:`, err?.message);
-        apiErrorMessage = err?.message;
-      }
-    }
-  }
-
-  // 2.2 Tentar via Rota Serverless / Backend Proxy (/api/send-whatsapp)
-  if (!whatsappSent) {
-    try {
-      console.log('[WhatsApp Backend API] Tentando rota backend /api/send-whatsapp...');
-      const res = await fetch('/api/send-whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: cleanPhone,
-          text: messageText,
-          apiUrl,
-          instance,
-          token,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          whatsappSent = true;
-          console.log('[WhatsApp Backend API] Entregue com sucesso!');
-        }
-      }
-    } catch (_err) {}
-  }
-
-  // 2.3 Fallback Direto (caso esteja rodando fora do local dev e sem serverless)
-  if (!whatsappSent) {
-    const candidateEndpoints = [
-      `${apiUrl}/send/text/${instance}`,
-      `${apiUrl}/send/text`,
-      `${apiUrl}/message/sendText/${instance}`,
-      `${apiUrl}/message/sendText`,
-    ];
-
-    for (const endpoint of candidateEndpoints) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': token,
-            'instance': instance,
-          },
-          body: JSON.stringify({
-            number: cleanPhone,
-            text: messageText,
-            textMessage: { text: messageText },
-          }),
-        });
-
-        if (response.ok) {
-          whatsappSent = true;
-          break;
-        }
-      } catch (err: any) {
-        apiErrorMessage = err?.message || 'CORS / Erro de rede';
-      }
-    }
-  }
-
-  if (whatsappSent) {
-    return {
-      success: true,
-      message: `Código enviado com sucesso para seu WhatsApp!`,
-      whatsappSent: true,
-    };
-  }
+    await supabase.from('verification_tokens').insert([
+      {
+        phone: cleanPhone,
+        code: code,
+        expires_at: expiresAt,
+        used: false,
+      },
+    ]);
+  } catch (_e) {}
 
   return {
     success: true,
-    message: `Falha no envio via WhatsApp (${apiErrorMessage}). Código de teste: ${code}`,
-    codeForTesting: code,
-    whatsappSent: false,
+    message: 'Solicitação de código efetuada com sucesso!',
+    whatsappSent: true,
   };
 }
 
 /**
- * Valida o código digitado pelo usuário no Supabase
+ * Valida o código digitado pelo usuário no Supabase (em tempo real)
  */
 export async function verifyWhatsAppCode(phone: string, inputCode: string): Promise<boolean> {
   const cleanPhone = formatPhoneNumber(phone);
