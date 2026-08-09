@@ -6,7 +6,9 @@ import ClassifiedCard from "./ClassifiedCard";
 import MarketPagination from "./MarketPagination";
 import { ClassifiedItem } from "./types";
 
-import { FILTER_CATEGORIES, matchesCategoryFilter } from "./categories";
+import { FILTER_CATEGORIES, matchesCategoryFilter, CATEGORIES } from "./categories";
+
+export { CATEGORIES };
 
 interface ClassifiedsTabProps {
   items: ClassifiedItem[];

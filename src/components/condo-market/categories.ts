@@ -234,6 +234,8 @@ export const CLASSIFIED_CATEGORIES_DATA: CategoryGroup[] = [
 
 export const MAIN_CATEGORIES = CLASSIFIED_CATEGORIES_DATA.map((cat) => cat.name);
 
+export const CATEGORIES = MAIN_CATEGORIES;
+
 export const FILTER_CATEGORIES = ["Todos", ...MAIN_CATEGORIES];
 
 /**

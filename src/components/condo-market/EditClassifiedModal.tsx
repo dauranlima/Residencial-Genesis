@@ -7,7 +7,9 @@ import { ClassifiedItem } from "./types";
 import { updateClassifiedInSupabase, deleteClassifiedInSupabase } from "@/lib/condoMarketService";
 import { toast } from "sonner";
 
-import { CLASSIFIED_CATEGORIES_DATA } from "./categories";
+import { CLASSIFIED_CATEGORIES_DATA, CATEGORIES } from "./categories";
+
+export { CATEGORIES };
 
 interface EditClassifiedModalProps {
   item: ClassifiedItem | null;

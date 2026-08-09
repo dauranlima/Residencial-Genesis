@@ -9,7 +9,9 @@ import { toast } from "sonner";
 
 import TermsOfUseModal from "./TermsOfUseModal";
 
-import { CLASSIFIED_CATEGORIES_DATA } from "./categories";
+import { CLASSIFIED_CATEGORIES_DATA, CATEGORIES } from "./categories";
+
+export { CATEGORIES };
 
 interface NewClassifiedModalProps {
   isOpen: boolean;
