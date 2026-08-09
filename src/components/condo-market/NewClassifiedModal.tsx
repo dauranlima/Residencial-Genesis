@@ -225,10 +225,17 @@ export default function NewClassifiedModal({
                   isSeniorMode ? "h-14 text-lg" : "h-10"
                 }`}
               >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
+                {CLASSIFIED_CATEGORIES_DATA.map((group) => (
+                  <optgroup key={group.name} label={`📁 ${group.name}`}>
+                    <option value={group.name} className="font-bold">
+                      {group.name} (Geral)
+                    </option>
+                    {group.subcategories.map((sub) => (
+                      <option key={sub} value={sub}>
+                        ↳ {sub}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

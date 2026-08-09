@@ -7,6 +7,8 @@ import { ClassifiedItem } from "./types";
 import { updateClassifiedInSupabase, deleteClassifiedInSupabase } from "@/lib/condoMarketService";
 import { toast } from "sonner";
 
+import { CLASSIFIED_CATEGORIES_DATA } from "./categories";
+
 interface EditClassifiedModalProps {
   item: ClassifiedItem | null;
   isOpen: boolean;
@@ -15,8 +17,6 @@ interface EditClassifiedModalProps {
   onDeleteClassified?: (itemId: string) => void;
   isSeniorMode: boolean;
 }
-
-const CATEGORIES = ["Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
 
 export default function EditClassifiedModal({
   item,
@@ -28,7 +28,7 @@ export default function EditClassifiedModal({
 }: EditClassifiedModalProps) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Móveis");
+  const [category, setCategory] = useState("Casa, Decoração e Utensílios");
   const [description, setDescription] = useState("");
   const [sellerName, setSellerName] = useState("");
   const [sellerBlock, setSellerBlock] = useState("");
@@ -268,10 +268,17 @@ export default function EditClassifiedModal({
                   isSeniorMode ? "h-14 text-lg" : "h-10"
                 }`}
               >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
+                {CLASSIFIED_CATEGORIES_DATA.map((group) => (
+                  <optgroup key={group.name} label={`📁 ${group.name}`}>
+                    <option value={group.name} className="font-bold">
+                      {group.name} (Geral)
+                    </option>
+                    {group.subcategories.map((sub) => (
+                      <option key={sub} value={sub}>
+                        ↳ {sub}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

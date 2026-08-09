@@ -6,6 +6,8 @@ import ClassifiedCard from "./ClassifiedCard";
 import MarketPagination from "./MarketPagination";
 import { ClassifiedItem } from "./types";
 
+import { FILTER_CATEGORIES, matchesCategoryFilter } from "./categories";
+
 interface ClassifiedsTabProps {
   items: ClassifiedItem[];
   isLoading?: boolean;
@@ -14,7 +16,6 @@ interface ClassifiedsTabProps {
   onSelectItem?: (item: ClassifiedItem) => void;
 }
 
-const CATEGORIES = ["Todos", "Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
 const ITEMS_PER_PAGE = 9;
 
 export default function ClassifiedsTab({
@@ -37,10 +38,11 @@ export default function ClassifiedsTab({
     // Cancelled and Sold/Finalized items disappear immediately from public classifieds tab
     if (item.status === "cancelled" || item.status === "sold") return false;
 
-    const matchesCategory = selectedCategory === "Todos" || item.category === selectedCategory;
+    const matchesCategory = matchesCategoryFilter(selectedCategory, item.category);
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.sellerName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -69,7 +71,7 @@ export default function ClassifiedsTab({
           />
           <Input
             type="text"
-            placeholder="Buscar desapego dos vizinhos..."
+            placeholder="Buscar desapego dos vizinhos por título, descrição ou categoria..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`pl-10 bg-background ${
@@ -93,13 +95,13 @@ export default function ClassifiedsTab({
 
       {/* Categorias (Chips) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {CATEGORIES.map((cat) => (
+        {FILTER_CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
               selectedCategory === cat
-                ? "bg-primary text-primary-foreground shadow-md font-bold"
+                ? "bg-primary text-primary-foreground shadow-md font-bold ring-2 ring-primary/30"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             } ${isSeniorMode ? "text-lg px-6 py-3" : "text-sm"}`}
           >
