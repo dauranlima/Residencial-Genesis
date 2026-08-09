@@ -449,7 +449,7 @@ export default function EditClassifiedModal({
           </div>
 
           {/* Botões de Ação */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 pb-2 sm:pb-4 border-t border-border shrink-0">
             <Button
               type="button"
               variant="destructive"

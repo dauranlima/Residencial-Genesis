@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser, DatabaseCouponRedemption } from '@/components/condo-market/types';
+import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser, DatabaseCouponRedemption, AdminUser } from '@/components/condo-market/types';
 import { compressImage } from './imageCompression';
 
 // ==========================================
@@ -204,21 +204,16 @@ export async function updateClassifiedInSupabase(
 }
 
 export async function deleteClassifiedInSupabase(id: string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('classifieds')
-      .delete()
-      .eq('id', id);
+  const { error } = await supabase
+    .from('classifieds')
+    .delete()
+    .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting classified from Supabase:', error);
-      return false;
-    }
-    return true;
-  } catch (e) {
-    console.error('Falha ao excluir anúncio no Supabase:', e);
-    return false;
+  if (error) {
+    console.error('Error deleting classified from Supabase:', error);
+    throw new Error(`Falha ao excluir anúncio: ${error.message}`);
   }
+  return true;
 }
 
 
@@ -843,7 +838,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
   try {
     let { data: usersData, error: uErr } = await supabase
       .from('users')
-      .select('name, block, unit, phone')
+      .select('name, block, unit, phone, is_blocked')
       .in('phone', variations);
 
     if (uErr) {
@@ -855,7 +850,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
       const last4 = phoneWithout55.slice(-4);
       const { data: ilikeUsers } = await supabase
         .from('users')
-        .select('name, block, unit, phone')
+        .select('name, block, unit, phone, is_blocked')
         .ilike('phone', `%${last4}%`);
       usersData = ilikeUsers;
     }
@@ -864,7 +859,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
     if (!usersData || usersData.length === 0) {
       const { data: allUsers } = await supabase
         .from('users')
-        .select('name, block, unit, phone');
+        .select('name, block, unit, phone, is_blocked');
       usersData = allUsers;
     }
 
@@ -877,6 +872,7 @@ export async function getResidentByPhone(phone: string): Promise<CurrentUser | n
           block: match.block || '',
           unit: match.unit || 'Sem Apto',
           phone: match.phone || phone,
+          isBlocked: match.is_blocked ?? false,
         };
       }
     }
@@ -1021,3 +1017,228 @@ export async function saveResidentProfile(resident: CurrentUser): Promise<void> 
     ]);
   } catch (_e) {}
 }
+
+// ==========================================
+// MÓDULO DE GESTÃO DE MORADORES (SUPER ADMIN)
+// ==========================================
+
+export async function fetchAllUsersForAdmin(): Promise<AdminUser[]> {
+  const usersMap = new Map<string, AdminUser>();
+
+  const cleanDigits = (p?: string | null) => (p || '').replace(/\D/g, '');
+
+  // 1. Carregar anúncios para calcular contagem por morador
+  let classifiedsData: any[] = [];
+  try {
+    const { data: cData } = await supabase
+      .from('classifieds')
+      .select('id, seller_name, seller_block, seller_unit, whatsapp, created_at');
+    if (cData) classifiedsData = cData;
+  } catch (e) {
+    console.warn('Aviso ao carregar anúncios para contagem:', e);
+  }
+
+  // 2. Carregar registros da tabela 'users'
+  try {
+    const { data: usersData, error } = await supabase
+      .from('users')
+      .select('id, name, phone, block, unit, is_blocked, created_at, updated_at')
+      .order('created_at', { ascending: false });
+
+    if (!error && usersData) {
+      usersData.forEach((u: any) => {
+        const phoneClean = cleanDigits(u.phone);
+        const count = classifiedsData.filter((c: any) => {
+          const cPhone = cleanDigits(c.whatsapp);
+          return cPhone && (cPhone === phoneClean || cPhone.endsWith(phoneClean) || phoneClean.endsWith(cPhone));
+        }).length;
+
+        const key = phoneClean || u.id;
+        usersMap.set(key, {
+          id: u.id,
+          name: u.name || 'Morador',
+          phone: u.phone || '',
+          block: u.block || '',
+          unit: u.unit || '',
+          isBlocked: u.is_blocked ?? false,
+          createdAt: u.created_at,
+          updatedAt: u.updated_at,
+          announcementsCount: count,
+        });
+      });
+    }
+  } catch (e) {
+    console.error('Erro ao buscar usuários da tabela users:', e);
+  }
+
+  // 3. Incluir moradores que postaram anúncios mas ainda não constam na tabela 'users'
+  classifiedsData.forEach((c: any, idx: number) => {
+    const phoneClean = cleanDigits(c.whatsapp);
+    if (phoneClean && !usersMap.has(phoneClean)) {
+      const count = classifiedsData.filter((item: any) => {
+        const itemPhone = cleanDigits(item.whatsapp);
+        return itemPhone === phoneClean || itemPhone.endsWith(phoneClean) || phoneClean.endsWith(itemPhone);
+      }).length;
+
+      usersMap.set(phoneClean, {
+        id: `usr-class-${idx}`,
+        name: c.seller_name || 'Morador Anunciante',
+        phone: c.whatsapp || '',
+        block: c.seller_block || '',
+        unit: c.seller_unit || '',
+        isBlocked: false,
+        createdAt: c.created_at,
+        announcementsCount: count,
+      });
+    }
+  });
+
+  return Array.from(usersMap.values());
+}
+
+export async function toggleBlockUserInSupabase(phoneOrId: string, isBlocked: boolean): Promise<boolean> {
+  const cleanPhone = phoneOrId.replace(/\D/g, '');
+
+  // 1. Tentar atualizar diretamente na tabela 'users' por ID ou telefone
+  const { data: usersData } = await supabase
+    .from('users')
+    .select('id, phone')
+    .or(`id.eq.${phoneOrId},phone.eq.${phoneOrId}`);
+
+  if (usersData && usersData.length > 0) {
+    for (const u of usersData) {
+      const { error } = await supabase
+        .from('users')
+        .update({ is_blocked: isBlocked, updated_at: new Date().toISOString() })
+        .eq('id', u.id);
+
+      if (error) throw new Error(`Falha ao atualizar bloqueio: ${error.message}`);
+    }
+    return true;
+  }
+
+  // 2. Se a busca por igualdade direta falhou, tentar por telefone limpo
+  if (cleanPhone) {
+    const { data: phoneUsers } = await supabase
+      .from('users')
+      .select('id, phone')
+      .ilike('phone', `%${cleanPhone.slice(-8)}%`);
+
+    if (phoneUsers && phoneUsers.length > 0) {
+      for (const u of phoneUsers) {
+        await supabase
+          .from('users')
+          .update({ is_blocked: isBlocked, updated_at: new Date().toISOString() })
+          .eq('id', u.id);
+      }
+      return true;
+    }
+  }
+
+  // 3. Se o morador veio dos anúncios e ainda não tinha registro em 'users', registrar agora com o status de bloqueio
+  const { data: cData } = await supabase
+    .from('classifieds')
+    .select('seller_name, seller_block, seller_unit, whatsapp')
+    .ilike('whatsapp', `%${cleanPhone.slice(-8)}%`)
+    .limit(1);
+
+  if (cData && cData.length > 0) {
+    const c = cData[0];
+    const { error } = await supabase.from('users').upsert([
+      {
+        name: c.seller_name || 'Morador',
+        phone: c.whatsapp || phoneOrId,
+        block: c.seller_block || null,
+        unit: c.seller_unit || 'Sem Apto',
+        is_blocked: isBlocked,
+        updated_at: new Date().toISOString(),
+      },
+    ], { onConflict: 'phone' });
+
+    if (error) throw new Error(`Erro ao registrar morador para bloqueio: ${error.message}`);
+  } else {
+    // Se não tinha anúncio nem user, registrar por telefone
+    const { error } = await supabase.from('users').upsert([
+      {
+        name: 'Morador',
+        phone: phoneOrId,
+        block: null,
+        unit: 'Sem Apto',
+        is_blocked: isBlocked,
+        updated_at: new Date().toISOString(),
+      },
+    ], { onConflict: 'phone' });
+
+    if (error) throw new Error(`Erro ao registrar usuário: ${error.message}`);
+  }
+
+  return true;
+}
+
+export async function fetchClassifiedsByUserPhone(phone: string): Promise<ClassifiedItem[]> {
+  if (!phone) return [];
+  const cleanPhone = phone.replace(/\D/g, '');
+
+  const { data, error } = await supabase
+    .from('classifieds')
+    .select('id, title, description, price, category, images, status, created_at, seller_name, seller_block, seller_unit, whatsapp')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  return data
+    .filter((row: any) => {
+      const rPhone = (row.whatsapp || '').replace(/\D/g, '');
+      return rPhone === cleanPhone || rPhone.endsWith(cleanPhone) || cleanPhone.endsWith(rPhone);
+    })
+    .map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description || '',
+      price: Number(row.price),
+      category: row.category,
+      images: row.images || [],
+      status: (row.status as ClassifiedStatus) || 'available',
+      createdAt: row.created_at,
+      sellerName: row.seller_name,
+      sellerBlock: row.seller_block || '',
+      sellerUnit: row.seller_unit,
+      whatsapp: row.whatsapp,
+    }));
+}
+
+export async function updateUserProfileInSupabase(
+  userId: string,
+  updates: { name?: string; block?: string; unit?: string; phone?: string }
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      ...(updates.name && { name: updates.name }),
+      ...(updates.block !== undefined && { block: updates.block }),
+      ...(updates.unit && { unit: updates.unit }),
+      ...(updates.phone && { phone: updates.phone }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Erro ao atualizar perfil do usuário:', error);
+    throw new Error(`Falha ao atualizar morador: ${error.message}`);
+  }
+  return true;
+}
+
+export async function deleteUserFromSupabase(userId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Erro ao excluir usuário do Supabase:', error);
+    throw new Error(`Falha ao excluir morador: ${error.message}`);
+  }
+  return true;
+}
+

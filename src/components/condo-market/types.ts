@@ -22,6 +22,19 @@ export interface CurrentUser {
   block: string;
   unit: string;
   phone: string;
+  isBlocked?: boolean;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  phone: string;
+  block?: string;
+  unit: string;
+  isBlocked: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  announcementsCount: number;
 }
 
 export interface ClassifiedItem {

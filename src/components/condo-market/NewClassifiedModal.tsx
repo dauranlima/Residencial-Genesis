@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 import TermsOfUseModal from "./TermsOfUseModal";
 
+import { CLASSIFIED_CATEGORIES_DATA } from "./categories";
+
 interface NewClassifiedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,8 +18,6 @@ interface NewClassifiedModalProps {
   isSeniorMode: boolean;
   currentUser?: { name: string; block: string; unit: string } | null;
 }
-
-const CATEGORIES = ["Móveis", "Eletrônicos", "Eletrodomésticos", "Roupas & Acessórios", "Esportes", "Outros"];
 
 export default function NewClassifiedModal({
   isOpen,
@@ -28,7 +28,7 @@ export default function NewClassifiedModal({
 }: NewClassifiedModalProps) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Móveis");
+  const [category, setCategory] = useState("Casa, Decoração e Utensílios");
   const [description, setDescription] = useState("");
   const [sellerName, setSellerName] = useState("");
   const [sellerBlock, setSellerBlock] = useState("");

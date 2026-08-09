@@ -390,16 +390,15 @@ export default function SuperAdminMerchantsModal({
                         {onSelectMerchantToAuthenticate && (
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => {
                               onSelectMerchantToAuthenticate(merchant);
                               toast.success(`Modo parceiro ativado para "${merchant.businessName}"`);
                               onClose();
                             }}
                             title="Entrar como este parceiro no sistema"
-                            className="h-8 px-2 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 gap-1"
+                            className="h-8 px-2.5 text-xs bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 gap-1 font-bold shadow-sm"
                           >
-                            <LogIn className="h-3.5 w-3.5" />
+                            <LogIn className="h-3.5 w-3.5 text-amber-400" />
                             <span>Acessar</span>
                           </Button>
                         )}
@@ -480,20 +479,18 @@ export default function SuperAdminMerchantsModal({
                     <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => openEditView(merchant)}
-                        className="h-8 text-xs border-border gap-1.5"
+                        className="h-8 text-xs bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 gap-1.5 font-semibold"
                       >
-                        <Edit2 className="h-3.5 w-3.5 text-blue-500" />
+                        <Edit2 className="h-3.5 w-3.5 text-blue-400" />
                         Editar
                       </Button>
 
                       <Button
                         size="sm"
-                        variant="outline"
                         disabled={deletingMerchantId === merchant.id}
                         onClick={() => handleDeleteMerchant(merchant)}
-                        className="h-8 text-xs border-red-500/30 text-red-600 hover:bg-red-500/10 gap-1.5"
+                        className="h-8 text-xs bg-red-950/80 border border-red-500/40 text-red-300 hover:bg-red-900 font-bold gap-1.5"
                       >
                         {deletingMerchantId === merchant.id ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />

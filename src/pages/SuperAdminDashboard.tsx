@@ -23,6 +23,9 @@ import {
   Phone,
   Terminal,
   Zap,
+  Users,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +42,8 @@ import {
   getDefaultWhatsAppConfig,
   WhatsAppConfig,
 } from '@/lib/whatsappConfigService';
+import { fetchAllUsersForAdmin } from '@/lib/condoMarketService';
+import SuperAdminUsersModal from '@/components/super-admin/SuperAdminUsersModal';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
@@ -68,6 +73,10 @@ export default function SuperAdminDashboard() {
 
   // Edge Function Ping State
   const [pingingWebhook, setPingingWebhook] = useState(false);
+
+  // User Management State
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [userStats, setUserStats] = useState({ totalUsers: 0, blockedUsers: 0 });
 
   useEffect(() => {
     // 1. Verificar autenticação Super Admin
@@ -100,12 +109,18 @@ export default function SuperAdminDashboard() {
         authenticatedAt: new Date().toLocaleTimeString(),
       });
 
-      // 2. Carregar configurações do WhatsApp
+      // 2. Carregar configurações do WhatsApp e Métricas de Usuários
       try {
         const loadedConfig = await getWhatsAppConfig();
         setConfig(loadedConfig);
+
+        const allUsers = await fetchAllUsersForAdmin();
+        setUserStats({
+          totalUsers: allUsers.length,
+          blockedUsers: allUsers.filter((u) => u.isBlocked).length,
+        });
       } catch (err) {
-        console.error('Erro ao carregar configurações do WhatsApp:', err);
+        console.error('Erro ao carregar dados do dashboard:', err);
       } finally {
         setLoading(false);
       }
@@ -236,10 +251,9 @@ export default function SuperAdminDashboard() {
 
           <div className="flex items-center gap-3">
             <Button
-              variant="outline"
               size="sm"
               onClick={() => navigate('/condo-market')}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100 text-xs hidden sm:flex items-center gap-1.5"
+              className="bg-slate-950 border border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-white text-xs font-semibold hidden sm:flex items-center gap-1.5"
             >
               <Building2 className="w-3.5 h-3.5 text-amber-400" />
               <span>Ver Sistema</span>
@@ -437,14 +451,13 @@ export default function SuperAdminDashboard() {
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Button
                     type="button"
-                    variant="outline"
                     onClick={handleTestConnection}
                     disabled={testing}
-                    className="border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-10"
+                    className="bg-slate-950 border border-amber-500/40 text-amber-300 hover:bg-slate-800 font-bold text-xs h-10 px-4 shadow-sm"
                   >
                     {testing ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-3.5 h-3.5 border-2 border-slate-200 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3.5 h-3.5 border-2 border-amber-300 border-t-transparent rounded-full animate-spin" />
                         <span>Testando...</span>
                       </div>
                     ) : (
@@ -457,14 +470,13 @@ export default function SuperAdminDashboard() {
 
                   <Button
                     type="button"
-                    variant="outline"
                     onClick={handlePingWebhook}
                     disabled={pingingWebhook}
-                    className="border-slate-700 hover:bg-slate-800 text-slate-200 text-xs h-10"
+                    className="bg-slate-950 border border-emerald-500/40 text-emerald-300 hover:bg-slate-800 font-bold text-xs h-10 px-4 shadow-sm"
                     title="Pinguar a Edge Function do Webhook no Supabase"
                   >
                     {pingingWebhook ? (
-                      <div className="w-3.5 h-3.5 border-2 border-slate-200 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <div className="flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-emerald-400" />
@@ -548,6 +560,46 @@ export default function SuperAdminDashboard() {
 
           {/* Sidebar System Cards (1 column) */}
           <div className="space-y-6">
+            {/* User Management Card */}
+            <Card className="bg-gradient-to-br from-slate-900 via-amber-950/20 to-slate-900 border-amber-500/30 shadow-xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+              <CardHeader className="pb-3 border-b border-slate-800/80">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-400" />
+                    Gestão de Usuários & Moradores
+                  </CardTitle>
+                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] uppercase font-bold">
+                    Super Admin
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs text-slate-400">
+                  Gerencie a lista de moradores, bloqueie usuários e moderar anúncios ativos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block uppercase font-semibold">Moradores</span>
+                    <span className="text-base font-black text-slate-100">{userStats.totalUsers}</span>
+                  </div>
+                  <div className="bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block uppercase font-semibold">Bloqueados</span>
+                    <span className="text-base font-black text-red-400">{userStats.blockedUsers}</span>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => setIsUsersModalOpen(true)}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs h-10 shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Abrir Central de Usuários</span>
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Root Session Card */}
             <Card className="bg-slate-900/90 border-slate-800 shadow-xl">
               <CardHeader className="pb-3">
@@ -620,25 +672,22 @@ export default function SuperAdminDashboard() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button
-                  variant="outline"
                   onClick={() => navigate('/admin')}
-                  className="w-full justify-start border-slate-800 hover:bg-slate-800 text-slate-200 text-xs h-9"
+                  className="w-full justify-start bg-slate-950 border border-slate-800 text-slate-100 hover:bg-slate-800 hover:border-amber-500/40 font-semibold text-xs h-10"
                 >
                   <Building2 className="w-3.5 h-3.5 mr-2 text-amber-400" />
                   Painel de Gestão do Condomínio (/admin)
                 </Button>
                 <Button
-                  variant="outline"
                   onClick={() => navigate('/condo-market')}
-                  className="w-full justify-start border-slate-800 hover:bg-slate-800 text-slate-200 text-xs h-9"
+                  className="w-full justify-start bg-slate-950 border border-slate-800 text-slate-100 hover:bg-slate-800 hover:border-emerald-500/40 font-semibold text-xs h-10"
                 >
                   <Building2 className="w-3.5 h-3.5 mr-2 text-emerald-400" />
                   Portal CondoMarket (/condo-market)
                 </Button>
                 <Button
-                  variant="outline"
                   onClick={() => navigate('/ficha-cadastral')}
-                  className="w-full justify-start border-slate-800 hover:bg-slate-800 text-slate-200 text-xs h-9"
+                  className="w-full justify-start bg-slate-950 border border-slate-800 text-slate-100 hover:bg-slate-800 hover:border-blue-500/40 font-semibold text-xs h-10"
                 >
                   <Info className="w-3.5 h-3.5 mr-2 text-blue-400" />
                   Ficha Cadastral (/ficha-cadastral)
@@ -648,6 +697,12 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Modal de Gestão de Usuários & Moradores */}
+      <SuperAdminUsersModal
+        isOpen={isUsersModalOpen}
+        onClose={() => setIsUsersModalOpen(false)}
+      />
     </div>
   );
 }

@@ -116,7 +116,7 @@ export default function ClassifiedDetailModal({
         }`}
       >
         {/* Cabeçalho */}
-        <div className="bg-primary px-4 sm:px-6 py-4 text-primary-foreground flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 shadow-md">
+        <div className="bg-primary px-4 sm:px-6 py-4 text-primary-foreground flex flex-wrap items-center justify-between gap-3 sticky top-0 z-10 shadow-md shrink-0">
           <div className="flex items-center gap-2">
             <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1">
               <Tag className="h-3 w-3" />
@@ -190,7 +190,7 @@ export default function ClassifiedDetailModal({
         </div>
 
         {/* Conteúdo rolável */}
-        <div className="overflow-y-auto p-6 space-y-6 flex-1">
+        <div className="overflow-y-auto p-4 sm:p-6 space-y-6 flex-1 min-h-0">
           {/* Galeria de Fotos */}
           <div className="space-y-3">
             <div
@@ -315,40 +315,47 @@ export default function ClassifiedDetailModal({
         </div>
 
         {/* Rodapé fixo com Ações */}
-        <div className="p-4 sm:p-5 bg-muted/30 border-t border-border flex flex-col sm:flex-row items-center gap-3 justify-between">
-          <Button variant="outline" onClick={onClose} className={`w-full sm:w-auto font-semibold ${isSeniorMode ? "h-14 text-lg px-6" : ""}`}>
-            Voltar para lista
-          </Button>
-
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleShare}
-            className={`w-full sm:w-auto font-bold flex items-center justify-center gap-2 border border-border shadow-sm cursor-pointer ${
-              isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-4 text-sm"
-            }`}
-          >
-            <Share2 className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
-            <span>{copiedLink ? "Link Copiado!" : "Compartilhar"}</span>
-          </Button>
-
-          {isOwner && onEdit && (
+        <div className="p-3 sm:p-4 bg-muted/30 border-t border-border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <Button
               type="button"
-              onClick={() => onEdit(item)}
-              className={`w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-amber-400 ${
-                isSeniorMode ? "h-14 text-lg px-6" : "h-11 px-5 text-sm"
+              variant="outline"
+              onClick={onClose}
+              className={`flex-1 sm:flex-initial font-semibold ${isSeniorMode ? "h-14 text-lg px-6" : "h-10 sm:h-11 px-4 text-xs sm:text-sm"}`}
+            >
+              Voltar para lista
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleShare}
+              className={`flex-1 sm:flex-initial font-bold flex items-center justify-center gap-2 border border-border shadow-sm cursor-pointer ${
+                isSeniorMode ? "h-14 text-lg px-6" : "h-10 sm:h-11 px-4 text-xs sm:text-sm"
               }`}
             >
-              <Pencil className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
-              <span>Editar Anúncio</span>
+              <Share2 className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
+              <span>{copiedLink ? "Link Copiado!" : "Compartilhar"}</span>
             </Button>
-          )}
 
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            {isOwner && onEdit && (
+              <Button
+                type="button"
+                onClick={() => onEdit(item)}
+                className={`flex-1 sm:flex-initial bg-amber-500 hover:bg-amber-600 text-slate-950 font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer border border-amber-400 ${
+                  isSeniorMode ? "h-14 text-lg px-6" : "h-10 sm:h-11 px-4 text-xs sm:text-sm"
+                }`}
+              >
+                <Pencil className={isSeniorMode ? "h-6 w-6" : "h-4 w-4"} />
+                <span>Editar Anúncio</span>
+              </Button>
+            )}
+          </div>
+
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full md:w-auto shrink-0">
             <Button
-              className={`w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
-                isSeniorMode ? "h-16 text-xl px-8 rounded-xl" : "h-12 text-base px-6"
+              className={`w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-all ${
+                isSeniorMode ? "h-16 text-xl px-8 rounded-xl" : "h-11 sm:h-12 text-xs sm:text-sm px-5"
               }`}
             >
               <MessageCircle className={isSeniorMode ? "h-7 w-7" : "h-5 w-5"} />
