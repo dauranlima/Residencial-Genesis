@@ -433,86 +433,59 @@ const MERCHANTS_STORAGE_KEY = 'condo_market_merchants_db';
 export async function createMerchantInSupabase(
   merchant: Omit<Merchant, 'id'>
 ): Promise<Merchant> {
-  // 1. Salva no LocalStorage fallback imediatamente
-  let localMerchants: Merchant[] = [];
-  try {
-    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
-    if (raw) localMerchants = JSON.parse(raw);
-  } catch (e) {
-    console.error('Erro ao ler merchants do localStorage:', e);
+  // 1. Tentar gravar diretamente no Supabase como banco de dados principal
+  const { data, error } = await supabase
+    .from('merchants')
+    .insert([
+      {
+        business_name: merchant.businessName,
+        category: merchant.category,
+        responsible_name: merchant.responsibleName || null,
+        phone: merchant.whatsapp,
+        address: merchant.address || null,
+        access_code: merchant.accessCode,
+        description: merchant.description || null,
+        logo_url: merchant.logoUrl || null,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao salvar parceiro comercial no Supabase:', error);
+    throw new Error(`Falha ao salvar no banco de dados Supabase: ${error.message || error.details || 'Verifique se a tabela "merchants" foi criada.'}`);
   }
 
-  const newId = `m-${Date.now()}`;
-  const newMerchant: Merchant = {
-    id: newId,
-    ...merchant,
+  const createdMerchant: Merchant = {
+    id: data.id,
+    businessName: data.business_name,
+    category: data.category,
+    responsibleName: data.responsible_name || '',
+    whatsapp: data.phone || merchant.whatsapp,
+    address: data.address || '',
+    accessCode: data.access_code || merchant.accessCode,
+    description: data.description || '',
+    logoUrl: data.logo_url || '',
   };
 
-  localMerchants.unshift(newMerchant);
+  // 2. Atualizar cache local no LocalStorage
   try {
-    localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(localMerchants));
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    const localMerchants: Merchant[] = raw ? JSON.parse(raw) : [];
+    const updated = [createdMerchant, ...localMerchants.filter((m) => m.id !== createdMerchant.id)];
+    localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(updated));
   } catch (e) {
-    console.error('Erro ao salvar merchant no localStorage:', e);
+    console.warn('Aviso ao sincronizar cache local:', e);
   }
 
-  // 2. Insere na tabela 'merchants' no Supabase
-  try {
-    const { data, error } = await supabase
-      .from('merchants')
-      .insert([
-        {
-          business_name: merchant.businessName,
-          category: merchant.category,
-          responsible_name: merchant.responsibleName || null,
-          phone: merchant.whatsapp,
-          address: merchant.address || null,
-          access_code: merchant.accessCode,
-          description: merchant.description || null,
-          logo_url: merchant.logoUrl || null,
-        },
-      ])
-      .select()
-      .single();
-
-    if (!error && data) {
-      return {
-        id: data.id,
-        businessName: data.business_name,
-        category: data.category,
-        responsibleName: data.responsible_name || '',
-        whatsapp: data.phone || merchant.whatsapp,
-        address: data.address || '',
-        accessCode: data.access_code || merchant.accessCode,
-        description: data.description || '',
-        logoUrl: data.logo_url || '',
-      };
-    } else {
-      console.warn('Aviso ao salvar comerciante no Supabase (usando fallback local):', error);
-    }
-  } catch (e) {
-    console.error('Erro ao conectar com Supabase ao criar merchant:', e);
-  }
-
-  return newMerchant;
+  return createdMerchant;
 }
 
 export async function getMerchantByAccessCode(code: string): Promise<Merchant | null> {
   if (!code) return null;
   const cleanCode = code.trim();
 
-  // 1. Tentar buscar do localStorage
-  try {
-    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
-    if (raw) {
-      const localList: Merchant[] = JSON.parse(raw);
-      const match = localList.find((m) => m.accessCode === cleanCode);
-      if (match) return match;
-    }
-  } catch (e) {
-    console.error('Erro ao ler merchants no localStorage:', e);
-  }
-
-  // 2. Consultar no Supabase
+  // 1. Consultar prioritariamente no Supabase
   try {
     const { data, error } = await supabase
       .from('merchants')
@@ -531,10 +504,23 @@ export async function getMerchantByAccessCode(code: string): Promise<Merchant | 
         address: m.address || '',
         accessCode: m.access_code || cleanCode,
         description: m.description || '',
+        logoUrl: m.logo_url || '',
       };
     }
   } catch (e) {
     console.error('Erro ao buscar comerciante por código no Supabase:', e);
+  }
+
+  // 2. Fallback de contingência para localStorage se offline
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (raw) {
+      const localList: Merchant[] = JSON.parse(raw);
+      const match = localList.find((m) => m.accessCode === cleanCode);
+      if (match) return match;
+    }
+  } catch (e) {
+    console.error('Erro ao ler merchants no localStorage:', e);
   }
 
   return null;
@@ -544,25 +530,12 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
   const resultMerchants: Merchant[] = [];
   const addedIds = new Set<string>();
 
-  // 0. Carregar do localStorage
   try {
-    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
-    if (raw) {
-      const localList: Merchant[] = JSON.parse(raw);
-      localList.forEach((m) => {
-        if (!addedIds.has(m.id)) {
-          addedIds.add(m.id);
-          resultMerchants.push(m);
-        }
-      });
-    }
-  } catch (_e) {}
-
-  try {
-    // 1. Tentar buscar da tabela 'merchants' se existir no Supabase (sem retornar access_code sensivel)
+    // 1. Buscar da tabela 'merchants' no Supabase (Fonte Principal)
     const { data: merchantsData, error: merchantsErr } = await supabase
       .from('merchants')
-      .select('id, business_name, category, responsible_name, description, address, phone, logo_url');
+      .select('id, business_name, category, responsible_name, description, address, phone, logo_url, access_code')
+      .order('created_at', { ascending: false });
 
     if (!merchantsErr && merchantsData && merchantsData.length > 0) {
       merchantsData.forEach((m: any) => {
@@ -577,12 +550,13 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
             address: m.address || '',
             whatsapp: m.phone || m.whatsapp || '',
             accessCode: m.access_code || '',
+            logoUrl: m.logo_url || '',
           });
         }
       });
     }
 
-    // 2. Extrair parceiros reais a partir dos anúncios na tabela 'promotions'
+    // 2. Complementar com parceiros extraídos dos anúncios de promoções se não estiverem na lista
     const { data: promotionsData } = await supabase
       .from('promotions')
       .select('merchant_name, merchant_category, merchant_whatsapp, description');
@@ -610,6 +584,22 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
     console.error('Erro ao buscar comerciantes do Supabase:', e);
   }
 
+  // 3. Fallback offline: apenas se o banco de dados não retornar nada
+  if (resultMerchants.length === 0) {
+    try {
+      const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+      if (raw) {
+        const localList: Merchant[] = JSON.parse(raw);
+        localList.forEach((m) => {
+          if (!addedIds.has(m.id)) {
+            addedIds.add(m.id);
+            resultMerchants.push(m);
+          }
+        });
+      }
+    } catch (_e) {}
+  }
+
   return resultMerchants;
 }
 
@@ -620,14 +610,16 @@ export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
   const resultMerchants: Merchant[] = [];
   const addedIds = new Set<string>();
 
-  // 1. Tentar buscar da tabela 'merchants' no Supabase INCLUINDO access_code
+  // 1. Buscar da tabela 'merchants' no Supabase INCLUINDO access_code
   try {
     const { data: merchantsData, error: merchantsErr } = await supabase
       .from('merchants')
       .select('id, business_name, category, responsible_name, description, address, phone, access_code, logo_url')
       .order('created_at', { ascending: false });
 
-    if (!merchantsErr && merchantsData && merchantsData.length > 0) {
+    if (merchantsErr) {
+      console.error('Erro de consulta Supabase (fetchAllMerchantsForAdmin):', merchantsErr);
+    } else if (merchantsData && merchantsData.length > 0) {
       merchantsData.forEach((m: any) => {
         if (!addedIds.has(m.id)) {
           addedIds.add(m.id);
@@ -649,19 +641,21 @@ export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
     console.error('Erro ao buscar comerciantes para Super Admin:', e);
   }
 
-  // 2. Carregar do localStorage fallback caso haja itens locais
-  try {
-    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
-    if (raw) {
-      const localList: Merchant[] = JSON.parse(raw);
-      localList.forEach((m) => {
-        if (!addedIds.has(m.id)) {
-          addedIds.add(m.id);
-          resultMerchants.push(m);
-        }
-      });
-    }
-  } catch (_e) {}
+  // 2. Se o Supabase não retornar registros, verificar cache local como contingência
+  if (resultMerchants.length === 0) {
+    try {
+      const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+      if (raw) {
+        const localList: Merchant[] = JSON.parse(raw);
+        localList.forEach((m) => {
+          if (!addedIds.has(m.id)) {
+            addedIds.add(m.id);
+            resultMerchants.push(m);
+          }
+        });
+      }
+    } catch (_e) {}
+  }
 
   return resultMerchants;
 }
@@ -670,31 +664,27 @@ export async function updateMerchantInSupabase(
   id: string,
   updates: Partial<Merchant>
 ): Promise<boolean> {
-  // 1. Atualizar no Supabase
-  try {
-    const payload: any = {};
-    if (updates.businessName !== undefined) payload.business_name = updates.businessName;
-    if (updates.category !== undefined) payload.category = updates.category;
-    if (updates.responsibleName !== undefined) payload.responsible_name = updates.responsibleName;
-    if (updates.whatsapp !== undefined) payload.phone = updates.whatsapp;
-    if (updates.address !== undefined) payload.address = updates.address;
-    if (updates.accessCode !== undefined) payload.access_code = updates.accessCode;
-    if (updates.description !== undefined) payload.description = updates.description;
-    if (updates.logoUrl !== undefined) payload.logo_url = updates.logoUrl;
+  const payload: any = {};
+  if (updates.businessName !== undefined) payload.business_name = updates.businessName;
+  if (updates.category !== undefined) payload.category = updates.category;
+  if (updates.responsibleName !== undefined) payload.responsible_name = updates.responsibleName;
+  if (updates.whatsapp !== undefined) payload.phone = updates.whatsapp;
+  if (updates.address !== undefined) payload.address = updates.address;
+  if (updates.accessCode !== undefined) payload.access_code = updates.accessCode;
+  if (updates.description !== undefined) payload.description = updates.description;
+  if (updates.logoUrl !== undefined) payload.logo_url = updates.logoUrl;
 
-    const { error } = await supabase
-      .from('merchants')
-      .update(payload)
-      .eq('id', id);
+  const { error } = await supabase
+    .from('merchants')
+    .update(payload)
+    .eq('id', id);
 
-    if (error) {
-      console.warn('Aviso ao atualizar merchant no Supabase:', error);
-    }
-  } catch (e) {
-    console.error('Erro ao conectar com Supabase ao atualizar merchant:', e);
+  if (error) {
+    console.error('Erro ao atualizar parceiro no Supabase:', error);
+    throw new Error(`Falha ao atualizar parceiro no Supabase: ${error.message}`);
   }
 
-  // 2. Atualizar no localStorage fallback
+  // Atualizar cache local no localStorage
   try {
     const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
     if (raw) {
@@ -708,21 +698,17 @@ export async function updateMerchantInSupabase(
 }
 
 export async function deleteMerchantFromSupabase(id: string): Promise<boolean> {
-  // 1. Deletar do Supabase
-  try {
-    const { error } = await supabase
-      .from('merchants')
-      .delete()
-      .eq('id', id);
+  const { error } = await supabase
+    .from('merchants')
+    .delete()
+    .eq('id', id);
 
-    if (error) {
-      console.warn('Aviso ao deletar merchant do Supabase:', error);
-    }
-  } catch (e) {
-    console.error('Erro ao conectar com Supabase ao deletar merchant:', e);
+  if (error) {
+    console.error('Erro ao deletar parceiro no Supabase:', error);
+    throw new Error(`Falha ao excluir parceiro no Supabase: ${error.message}`);
   }
 
-  // 2. Deletar do localStorage fallback
+  // Remover do cache local
   try {
     const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
     if (raw) {

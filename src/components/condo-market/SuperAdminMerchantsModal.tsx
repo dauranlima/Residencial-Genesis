@@ -177,8 +177,8 @@ export default function SuperAdminMerchantsModal({
       toast.success(`Parceiro "${merchant.businessName}" removido com sucesso.`);
       await loadMerchants();
       if (onMerchantListUpdated) onMerchantListUpdated();
-    } catch (e) {
-      toast.error("Erro ao excluir parceiro.");
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao excluir parceiro.");
     } finally {
       setDeletingMerchantId(null);
     }
@@ -242,9 +242,9 @@ export default function SuperAdminMerchantsModal({
       await loadMerchants();
       if (onMerchantListUpdated) onMerchantListUpdated();
       setViewMode("list");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao salvar parceiro:", err);
-      toast.error("Falha ao salvar dados do parceiro.");
+      toast.error(err?.message || "Falha ao salvar dados do parceiro.");
     } finally {
       setIsSaving(false);
     }

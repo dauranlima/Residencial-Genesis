@@ -101,7 +101,7 @@ export default function NewPromotionModal({
       onClose();
     } catch (err: any) {
       console.error(err);
-      toast.error("Erro ao salvar promoção no Supabase.");
+      toast.error(err?.message || "Erro ao salvar promoção no Supabase.");
     } finally {
       setIsUploading(false);
     }

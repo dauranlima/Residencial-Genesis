@@ -112,9 +112,9 @@ export default function SuperAdminRegisterMerchantModal({
 
       onSuccess(created);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao cadastrar parceiro comercial:", err);
-      toast.error("Falha ao cadastrar o parceiro. Tente novamente.");
+      toast.error(err?.message || "Falha ao cadastrar o parceiro. Tente novamente.");
     } finally {
       setIsSaving(false);
     }
