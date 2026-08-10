@@ -4,7 +4,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import UnderDevelopmentModal from "./UnderDevelopmentModal";
 import FooterConsentBanner from "./FooterConsentBanner";
-import { isPathEnabled, subscribeToPageStatusChanges } from "@/lib/pageStatusService";
+import { isPathEnabled, subscribeToPageStatusChanges, syncPagesFromSupabase } from "@/lib/pageStatusService";
 
 interface LayoutProps {
   children: ReactNode;
@@ -25,6 +25,8 @@ export default function Layout({ children }: LayoutProps) {
     };
 
     checkStatus();
+    syncPagesFromSupabase().then(() => checkStatus());
+
     const unsubscribe = subscribeToPageStatusChanges(checkStatus);
     return () => unsubscribe();
   }, [location.pathname]);

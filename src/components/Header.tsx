@@ -20,7 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import logoChp from "@/assets/LOGOchp.png";
-import { getEnabledPages, subscribeToPageStatusChanges, PageConfig } from "@/lib/pageStatusService";
+import { getEnabledPages, subscribeToPageStatusChanges, syncPagesFromSupabase, PageConfig } from "@/lib/pageStatusService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +59,8 @@ export default function Header() {
     };
 
     updatePages();
+    syncPagesFromSupabase().then(() => updatePages());
+
     const unsubscribe = subscribeToPageStatusChanges(updatePages);
     return () => unsubscribe();
   }, []);

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Construction, Store, ArrowLeft } from "lucide-react";
-import { isPathEnabled, getEnabledPages, subscribeToPageStatusChanges } from "@/lib/pageStatusService";
+import { isPathEnabled, getEnabledPages, subscribeToPageStatusChanges, syncPagesFromSupabase } from "@/lib/pageStatusService";
 
 export default function UnderDevelopmentModal() {
   const location = useLocation();
@@ -26,6 +26,8 @@ export default function UnderDevelopmentModal() {
     };
 
     updateState();
+    syncPagesFromSupabase().then(() => updateState());
+
     const unsubscribe = subscribeToPageStatusChanges(updateState);
     return () => unsubscribe();
   }, [location.pathname]);

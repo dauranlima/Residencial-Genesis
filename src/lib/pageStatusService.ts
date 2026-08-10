@@ -182,6 +182,13 @@ export async function syncPagesFromSupabase(): Promise<PageConfig[]> {
         dbMap[row.id] = Boolean(row.enabled);
       });
 
+      // Garante que todas as páginas padrão existam no dbMap
+      DEFAULT_PAGES.forEach((p) => {
+        if (dbMap[p.id] === undefined) {
+          dbMap[p.id] = p.enabled;
+        }
+      });
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dbMap));
       window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { fromSupabase: true } }));
       return getPageConfigs();
@@ -192,16 +199,31 @@ export async function syncPagesFromSupabase(): Promise<PageConfig[]> {
       .from('system_settings')
       .select('value')
       .eq('key', 'system_pages_status')
-      .single();
+      .maybeSingle();
 
     if (!settingsErr && settingsData?.value) {
       const dbMap = settingsData.value as Record<string, boolean>;
+      DEFAULT_PAGES.forEach((p) => {
+        if (dbMap[p.id] === undefined) {
+          dbMap[p.id] = p.enabled;
+        }
+      });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dbMap));
       window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { fromSupabase: true } }));
       return getPageConfigs();
     }
+
+    // Se o banco ainda não tiver registros, salva o estado inicial no Supabase
+    if (!pagesData || pagesData.length === 0) {
+      const defaultMap: Record<string, boolean> = {};
+      DEFAULT_PAGES.forEach((p) => {
+        defaultMap[p.id] = p.enabled;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultMap));
+      await saveToSupabase(defaultMap);
+    }
   } catch (err) {
-    console.warn('Persistência Supabase offline ou tabela ainda não criada. Usando estado local:', err);
+    console.warn('Persistência Supabase offline ou erro ao sincronizar:', err);
   }
 
   return getPageConfigs();
@@ -209,32 +231,41 @@ export async function syncPagesFromSupabase(): Promise<PageConfig[]> {
 
 /**
  * Salva as alterações no Supabase (em system_pages e system_settings).
+ * Inclui todas as colunas obrigatórias para evitar violações de not-null no PostgreSQL.
  */
 async function saveToSupabase(updatedMap: Record<string, boolean>, pageId?: string, enabled?: boolean) {
   try {
-    // 1. Tenta atualizar/inserir na tabela system_pages
-    if (pageId !== undefined && enabled !== undefined) {
-      await supabase
-        .from('system_pages')
-        .upsert({ id: pageId, enabled, updated_at: new Date().toISOString() }, { onConflict: 'id' })
-        .catch(() => { });
-    } else {
-      const rows = Object.entries(updatedMap).map(([id, isEnabled]) => ({
-        id,
+    const fullRows = DEFAULT_PAGES.map((p) => {
+      const isEnabled = pageId !== undefined && p.id === pageId ? enabled! : (updatedMap[p.id] ?? p.enabled);
+      return {
+        id: p.id,
+        name: p.name,
+        path: p.path,
+        description: p.description,
+        category: p.category,
         enabled: isEnabled,
+        is_core: p.isCore ?? false,
         updated_at: new Date().toISOString(),
-      }));
-      await supabase
-        .from('system_pages')
-        .upsert(rows, { onConflict: 'id' })
-        .catch(() => { });
+      };
+    });
+
+    // 1. Salva em system_pages com todos os campos preenchidos
+    const { error: pagesErr } = await supabase
+      .from('system_pages')
+      .upsert(fullRows, { onConflict: 'id' });
+
+    if (pagesErr) {
+      console.warn('Aviso ao salvar em system_pages:', pagesErr.message);
     }
 
     // 2. Salva o snapshot completo de configurações na tabela system_settings
-    await supabase
+    const { error: settingsErr } = await supabase
       .from('system_settings')
-      .upsert({ key: 'system_pages_status', value: updatedMap, updated_at: new Date().toISOString() }, { onConflict: 'key' })
-      .catch(() => { });
+      .upsert({ key: 'system_pages_status', value: updatedMap, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+    if (settingsErr) {
+      console.warn('Aviso ao salvar em system_settings:', settingsErr.message);
+    }
   } catch (err) {
     console.warn('Não foi possível salvar no Supabase no momento:', err);
   }
