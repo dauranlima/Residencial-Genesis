@@ -44,6 +44,8 @@ import {
 } from '@/lib/whatsappConfigService';
 import { fetchAllUsersForAdmin } from '@/lib/condoMarketService';
 import SuperAdminUsersModal from '@/components/super-admin/SuperAdminUsersModal';
+import SystemPagesControlCard from '@/components/super-admin/SystemPagesControlCard';
+import SuperAdminLeadsCard from '@/components/super-admin/SuperAdminLeadsCard';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
@@ -252,7 +254,7 @@ export default function SuperAdminDashboard() {
           <div className="flex items-center gap-3">
             <Button
               size="sm"
-              onClick={() => navigate('/condo-market')}
+              onClick={() => navigate('/vizigo')}
               className="bg-slate-950 border border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-white text-xs font-semibold hidden sm:flex items-center gap-1.5"
             >
               <Building2 className="w-3.5 h-3.5 text-amber-400" />
@@ -295,6 +297,12 @@ export default function SuperAdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Config Card (Spans 2 columns) */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Card de Solicitações de Demonstração / Leads da Landing Page */}
+            <SuperAdminLeadsCard />
+
+            {/* Card de Controle de Telas e Módulos */}
+            <SystemPagesControlCard />
+
             <Card className="bg-slate-900/90 border-slate-800 shadow-xl">
               <CardHeader className="border-b border-slate-800/80 pb-4">
                 <div className="flex items-center justify-between">
@@ -679,11 +687,11 @@ export default function SuperAdminDashboard() {
                   Painel de Gestão do Condomínio (/admin)
                 </Button>
                 <Button
-                  onClick={() => navigate('/condo-market')}
+                  onClick={() => navigate('/vizigo')}
                   className="w-full justify-start bg-slate-950 border border-slate-800 text-slate-100 hover:bg-slate-800 hover:border-emerald-500/40 font-semibold text-xs h-10"
                 >
                   <Building2 className="w-3.5 h-3.5 mr-2 text-emerald-400" />
-                  Portal CondoMarket (/condo-market)
+                  Portal viziGO (/vizigo)
                 </Button>
                 <Button
                   onClick={() => navigate('/ficha-cadastral')}

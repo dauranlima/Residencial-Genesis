@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Dialog,
@@ -9,21 +10,37 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Construction, Store, ArrowLeft } from "lucide-react";
-
-const ALLOWED_PATHS = ["/", "/condo-market", "/localizacao", "/adm-login", "/super-admin"];
+import { isPathEnabled, getEnabledPages, subscribeToPageStatusChanges } from "@/lib/pageStatusService";
 
 export default function UnderDevelopmentModal() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isUnderDevelopment = !ALLOWED_PATHS.includes(location.pathname);
+  const [enabledPages, setEnabledPages] = useState(getEnabledPages());
+  const [isUnderDev, setIsUnderDev] = useState(!isPathEnabled(location.pathname));
+
+  useEffect(() => {
+    const updateState = () => {
+      setIsUnderDev(!isPathEnabled(location.pathname));
+      setEnabledPages(getEnabledPages());
+    };
+
+    updateState();
+    const unsubscribe = subscribeToPageStatusChanges(updateState);
+    return () => unsubscribe();
+  }, [location.pathname]);
 
   const handleClose = () => {
     navigate("/");
   };
 
+  const enabledNames = enabledPages
+    .filter((p) => !p.isCore)
+    .map((p) => p.name)
+    .join(", ");
+
   return (
-    <Dialog open={isUnderDevelopment} onOpenChange={(open) => { if (!open) handleClose(); }}>
+    <Dialog open={isUnderDev} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-md border-border bg-card shadow-2xl p-6 rounded-2xl">
         <DialogHeader className="flex flex-col items-center text-center space-y-3">
           <div className="p-3.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-sm animate-pulse">
@@ -47,7 +64,7 @@ export default function UnderDevelopmentModal() {
           <div className="text-sm">
             <p className="font-semibold text-foreground">Acesso Liberado:</p>
             <p className="text-muted-foreground text-xs mt-0.5">
-              No momento, o sistema está disponível para uso na página <strong className="text-foreground">Início</strong>, no módulo <strong className="text-foreground">viziGO</strong> e na <strong className="text-foreground">Localização</strong>.
+              No momento, as páginas disponíveis para uso são: <strong className="text-foreground">{enabledNames || "viziGO, Localização"}</strong>.
             </p>
           </div>
         </div>

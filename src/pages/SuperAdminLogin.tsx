@@ -217,7 +217,7 @@ export default function SuperAdminLogin() {
         {/* Back Link */}
         <div className="text-center">
           <button
-            onClick={() => navigate('/condo-market')}
+            onClick={() => navigate('/vizigo')}
             className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center justify-center gap-1 mx-auto"
           >
             <Building2 className="w-3.5 h-3.5" />

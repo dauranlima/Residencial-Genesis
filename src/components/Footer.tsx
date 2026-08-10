@@ -22,7 +22,7 @@ export default function Footer() {
             <h3 className="font-semibold mb-4 text-accent">Links Rápidos</h3>
             <nav className="flex flex-col gap-2">
               <Link
-                to="/condo-market"
+                to="/vizigo"
                 className="text-sm text-primary-foreground/70 hover:text-accent transition-colors"
               >
                 viziGO (Classificados & Ofertas)
