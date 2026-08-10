@@ -16,7 +16,7 @@ const CHANGE_EVENT = 'vizi-page-status-changed';
 export const DEFAULT_PAGES: PageConfig[] = [
   {
     id: 'condo-market',
-    name: 'viziGO (CondoMarket)',
+    name: 'viziGO',
     path: '/vizigo',
     description: 'Portal principal de compras, anúncios e mercado do condomínio.',
     category: 'Principal',
@@ -156,7 +156,7 @@ export function getPageConfigs(): PageConfig[] {
       return DEFAULT_PAGES;
     }
     const parsed = JSON.parse(stored) as Record<string, boolean>;
-    
+
     // Mescla o estado salvo com a lista completa padrão
     return DEFAULT_PAGES.map((page) => ({
       ...page,
@@ -217,14 +217,14 @@ async function saveToSupabase(updatedMap: Record<string, boolean>, pageId?: stri
       await supabase
         .from('system_pages')
         .upsert({ id: pageId, enabled, updated_at: new Date().toISOString() }, { onConflict: 'id' })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     // 2. Salva o snapshot completo de configurações na tabela system_settings
     await supabase
       .from('system_settings')
       .upsert({ key: 'system_pages_status', value: updatedMap, updated_at: new Date().toISOString() }, { onConflict: 'key' })
-      .catch(() => {});
+      .catch(() => { });
   } catch (err) {
     console.warn('Não foi possível salvar no Supabase no momento:', err);
   }
@@ -236,7 +236,7 @@ async function saveToSupabase(updatedMap: Record<string, boolean>, pageId?: stri
 export function setPageEnabled(pageId: string, enabled: boolean): PageConfig[] {
   const configs = getPageConfigs();
   const target = configs.find((p) => p.id === pageId);
-  
+
   if (!target || target.isCore) {
     return configs;
   }
@@ -286,7 +286,7 @@ export function resetPagesToDefault(): PageConfig[] {
   try {
     localStorage.removeItem(STORAGE_KEY);
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { reset: true } }));
-    
+
     const defaultMap: Record<string, boolean> = {};
     DEFAULT_PAGES.forEach((p) => {
       defaultMap[p.id] = p.enabled;
