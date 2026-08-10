@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Lock,
   Unlock,
+  Database,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ import {
   toggleAllPages,
   resetPagesToDefault,
   subscribeToPageStatusChanges,
+  syncPagesFromSupabase,
 } from '@/lib/pageStatusService';
 import { toast } from 'sonner';
 
@@ -162,6 +164,21 @@ export default function SystemPagesControlCard() {
             <Badge variant="outline" className="bg-amber-950/40 border-amber-500/40 text-amber-400 text-xs py-1 px-2.5">
               Bloqueadas: <strong className="ml-1 text-amber-300">{stats.disabledCount}</strong>
             </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const res = await syncPagesFromSupabase();
+                setPages(res);
+                toast.success('Status das telas sincronizado com o banco de dados Supabase!');
+              }}
+              className="bg-slate-950 border-emerald-500/30 text-emerald-400 hover:bg-emerald-950/40 text-xs h-7 px-2.5 font-semibold flex items-center gap-1"
+              title="Carregar alterações do banco de dados Supabase"
+            >
+              <Database className="w-3 h-3 text-emerald-400" />
+              <span>Sincronizar DB</span>
+            </Button>
           </div>
         </div>
       </CardHeader>

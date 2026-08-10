@@ -30,19 +30,23 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 export default function Admin() {
+  const navigate = useNavigate();
+
   const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: true },
-    { icon: Building2, label: "Apartamentos" },
-    { icon: ClipboardCheck, label: "Documentos" },
-    { icon: FileText, label: "Ficha Cadastral", badge: true },
-    { icon: FileCheck, label: "Regimento Interno" },
-    { icon: Car, label: "Garagem" },
-    { icon: Image, label: "Fotos" },
-    { icon: MessageSquare, label: "Solicitações" },
-    { icon: LucideSwitchCamera, label: "Câmeras" },
-    { icon: Building2, label: "Mensagens" },
-    { icon: Key, label: "Controle de Acesso" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/admin", active: true },
+    { icon: Building2, label: "Apartamentos", path: "/apartamentos" },
+    { icon: ClipboardCheck, label: "Documentos", path: "/regimento" },
+    { icon: FileText, label: "Ficha Cadastral", path: "/ficha-cadastral", badge: true },
+    { icon: FileCheck, label: "Regimento Interno", path: "/regimento" },
+    { icon: Car, label: "Garagem", path: "/garagem" },
+    { icon: Image, label: "Fotos", path: "/galeria" },
+    { icon: MessageSquare, label: "Solicitações", path: "/solicitacoes" },
+    { icon: LucideSwitchCamera, label: "Câmeras", path: "/admin" },
+    { icon: Bell, label: "Mensagens", path: "/avisos" },
+    { icon: Key, label: "Controle de Acesso", path: "/super-admin" },
   ];
 
   const pendingApprovals = [
@@ -70,6 +74,7 @@ export default function Admin() {
           {sidebarItems.slice(0, 8).map((item, index) => (
             <div 
               key={index}
+              onClick={() => navigate(item.path)}
               className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-colors ${item.active ? 'bg-gold/10 text-gold border-r-2 border-gold' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
               <div className="flex items-center gap-3">
@@ -86,6 +91,7 @@ export default function Admin() {
           {sidebarItems.slice(8).map((item, index) => (
             <div 
               key={index}
+              onClick={() => navigate(item.path)}
               className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <item.icon className="w-5 h-5" />

@@ -86,11 +86,11 @@ export default function DemoLeadModal({
           <div className="flex items-center gap-2 mb-2">
             <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs font-semibold px-2.5 py-0.5">
               <Sparkles className="w-3 h-3 mr-1 text-amber-400" />
-              14 Dias Grátis sem Compromisso
+              7 Dias de Teste Grátis
             </Badge>
           </div>
           <DialogTitle className="text-2xl font-bold text-white tracking-tight">
-            Experimente o Residencial Gênesis
+            Experimente o viziGO
           </DialogTitle>
           <DialogDescription className="text-slate-300 text-sm mt-1">
             Preencha os dados abaixo para receber seu teste gratuito imediato e suporte dedicado.
@@ -225,7 +225,7 @@ export default function DemoLeadModal({
                       Enviando...
                     </>
                   ) : (
-                    'Ativar 14 Dias Grátis'
+                    'Ativar 7 Dias Grátis'
                   )}
                 </Button>
               </div>

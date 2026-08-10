@@ -59,8 +59,8 @@ export default function LandingPage() {
               <Building2 className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                Residencial <span className="text-amber-400">Gênesis</span>
+              <span className="text-xl font-bold tracking-tight text-white flex items-center">
+                vizi <span className="text-amber-400">GO</span>
               </span>
               <span className="text-[10px] text-slate-400 tracking-wider block font-medium uppercase">
                 Gestão Condominial
@@ -129,7 +129,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                O <strong>Residencial Gênesis</strong> coloca avisos, solicitações, moradores, vistorias e o mercado interno no mesmo fluxo — para você trabalhar com clareza e atender melhor.
+                O <strong>viziGO</strong> coloca avisos, solicitações, moradores, vistorias e o mercado interno no mesmo fluxo — para você trabalhar com clareza e atender melhor.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -168,7 +168,7 @@ export default function LandingPage() {
                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
                       <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                       <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                      <span className="text-xs font-semibold text-slate-400 ml-2">Painel Residencial Gênesis</span>
+                      <span className="text-xs font-semibold text-slate-400 ml-2">Painel viziGO</span>
                     </div>
                     <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
                       Operação Ativa
@@ -247,7 +247,7 @@ export default function LandingPage() {
               Do agendamento à solução das ocorrências, tudo no lugar certo.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              O Residencial Gênesis acompanha o fluxo real do condomínio para você não depender de memória, planilhas velhas ou mensagens espalhadas no WhatsApp.
+              O viziGO acompanha o fluxo real do condomínio para você não depender de memória, planilhas velhas ou mensagens espalhadas no WhatsApp.
             </p>
           </div>
 
@@ -316,7 +316,7 @@ export default function LandingPage() {
               Uma tela real para cada parte da sua operação.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              Explore os recursos do Residencial Gênesis e entenda, em poucos segundos, onde cada tarefa acontece.
+              Explore os recursos do viziGO e entenda, em poucos segundos, onde cada tarefa acontece.
             </p>
           </div>
 
@@ -539,7 +539,7 @@ export default function LandingPage() {
                   O que é importante não fica perdido no meio da correria.
                 </h2>
                 <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                  Do primeiro aviso ao encerramento do chamado, o Residencial Gênesis cria uma linha de tempo clara para você saber sempre o próximo passo.
+                  Do primeiro aviso ao encerramento do chamado, o viziGO cria uma linha de tempo clara para você saber sempre o próximo passo.
                 </p>
                 <div className="pt-2">
                   <Button
@@ -585,7 +585,7 @@ export default function LandingPage() {
               Escolha o plano ideal para o tamanho do seu condomínio.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              Sem taxas escondidas. Teste grátis por 14 dias sem compromisso.
+              Sem taxas escondidas. Teste grátis por 7 dias.
             </p>
 
             {/* Toggle Mensal / Anual */}
@@ -697,7 +697,7 @@ export default function LandingPage() {
                 onClick={() => handleOpenLeadModal('Profissional')}
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-6 shadow-lg shadow-amber-500/20"
               >
-                Testar 14 Dias Grátis
+                Testar 7 Dias Grátis
               </Button>
             </div>
 
@@ -759,11 +759,11 @@ export default function LandingPage() {
             {[
               {
                 q: 'Como funciona o teste grátis de 14 dias?',
-                a: 'Você faz o cadastro rápido e recebe acesso imediato a todas as funcionalidades do Residencial Gênesis. Não é necessário cartão de crédito para começar.',
+                a: 'Você faz o cadastro rápido e recebe acesso imediato a todas as funcionalidades do viziGO. Não é necessário cartão de crédito para começar.',
               },
               {
                 q: 'Preciso instalar algum programa nos computadores do condomínio?',
-                a: 'Não! O Residencial Gênesis é 100% online na nuvem. Você e os moradores podem acessar de qualquer computador, tablet ou celular.',
+                a: 'Não! O viziGO é 100% online na nuvem. Você e os moradores podem acessar de qualquer computador, tablet ou celular.',
               },
               {
                 q: 'Como funciona o Módulo CondoMarket?',
@@ -809,7 +809,7 @@ export default function LandingPage() {
               <span className="text-amber-400">Mais espaço para crescer.</span>
             </h2>
             <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto">
-              Junte-se aos condomínios que modernizaram a rotina de gestão com o Residencial Gênesis.
+              Junte-se aos condomínios que modernizaram a rotina de gestão com o viziGO.
             </p>
             <div>
               <Button
@@ -830,10 +830,10 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
-            <span className="text-sm font-bold text-white">Residencial Gênesis</span>
+            <span className="text-sm font-bold text-white">viziGO</span>
           </div>
 
-          <p>© 2026 Residencial Gênesis. Gestão simples para condomínios em movimento.</p>
+          <p>© 2026 viziGO. Gestão simples para condomínios em movimento.</p>
 
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/adm-login')} className="hover:text-amber-400 transition-colors">

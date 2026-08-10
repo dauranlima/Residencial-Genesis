@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 export interface PageConfig {
   id: string;
   name: string;
@@ -167,6 +169,68 @@ export function getPageConfigs(): PageConfig[] {
 }
 
 /**
+ * Sincroniza em tempo real com o banco de dados Supabase (tabela system_pages ou system_settings)
+ */
+export async function syncPagesFromSupabase(): Promise<PageConfig[]> {
+  try {
+    // Tenta primeiro consultar da tabela pública system_pages
+    const { data: pagesData, error: pagesErr } = await supabase.from('system_pages').select('*');
+
+    if (!pagesErr && pagesData && pagesData.length > 0) {
+      const dbMap: Record<string, boolean> = {};
+      pagesData.forEach((row: any) => {
+        dbMap[row.id] = Boolean(row.enabled);
+      });
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dbMap));
+      window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { fromSupabase: true } }));
+      return getPageConfigs();
+    }
+
+    // Fallback: tenta ler da tabela system_settings key='system_pages_status'
+    const { data: settingsData, error: settingsErr } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'system_pages_status')
+      .single();
+
+    if (!settingsErr && settingsData?.value) {
+      const dbMap = settingsData.value as Record<string, boolean>;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dbMap));
+      window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { fromSupabase: true } }));
+      return getPageConfigs();
+    }
+  } catch (err) {
+    console.warn('Persistência Supabase offline ou tabela ainda não criada. Usando estado local:', err);
+  }
+
+  return getPageConfigs();
+}
+
+/**
+ * Salva as alterações no Supabase (em system_pages e system_settings).
+ */
+async function saveToSupabase(updatedMap: Record<string, boolean>, pageId?: string, enabled?: boolean) {
+  try {
+    // 1. Tenta atualizar/inserir a linha específica na tabela system_pages
+    if (pageId !== undefined && enabled !== undefined) {
+      await supabase
+        .from('system_pages')
+        .upsert({ id: pageId, enabled, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+        .catch(() => {});
+    }
+
+    // 2. Salva o snapshot completo de configurações na tabela system_settings
+    await supabase
+      .from('system_settings')
+      .upsert({ key: 'system_pages_status', value: updatedMap, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+      .catch(() => {});
+  } catch (err) {
+    console.warn('Não foi possível salvar no Supabase no momento:', err);
+  }
+}
+
+/**
  * Atualiza o status de habilitação (enabled) de uma tela específica.
  */
 export function setPageEnabled(pageId: string, enabled: boolean): PageConfig[] {
@@ -185,6 +249,7 @@ export function setPageEnabled(pageId: string, enabled: boolean): PageConfig[] {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMap));
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { pageId, enabled } }));
+    saveToSupabase(updatedMap, pageId, enabled);
   } catch (err) {
     console.error('Erro ao salvar status das telas:', err);
   }
@@ -206,6 +271,7 @@ export function toggleAllPages(enable: boolean): PageConfig[] {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMap));
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { enableAll: enable } }));
+    saveToSupabase(updatedMap);
   } catch (err) {
     console.error('Erro ao alternar todas as telas:', err);
   }
@@ -220,6 +286,12 @@ export function resetPagesToDefault(): PageConfig[] {
   try {
     localStorage.removeItem(STORAGE_KEY);
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { reset: true } }));
+    
+    const defaultMap: Record<string, boolean> = {};
+    DEFAULT_PAGES.forEach((p) => {
+      defaultMap[p.id] = p.enabled;
+    });
+    saveToSupabase(defaultMap);
   } catch (err) {
     console.error('Erro ao resetar telas:', err);
   }
@@ -235,10 +307,8 @@ export function isPathEnabled(pathname: string): boolean {
   }
 
   const configs = getPageConfigs();
-  // Busca exata ou por prefixo se houver sub-rotas
   const page = configs.find((p) => p.path === pathname || (p.path !== '/' && pathname.startsWith(p.path)));
 
-  // Se a rota não estiver cadastrada explicitamente no serviço, trata como liberada
   if (!page) {
     return true;
   }
@@ -265,3 +335,6 @@ export function subscribeToPageStatusChanges(callback: () => void): () => void {
     window.removeEventListener('storage', handler);
   };
 }
+
+// Inicia a sincronização assíncrona em background ao carregar a aplicação
+syncPagesFromSupabase();
