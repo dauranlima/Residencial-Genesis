@@ -69,10 +69,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-primary/95 backdrop-blur-md border-b border-navy-light/30 shadow-md">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+      <div className="container mx-auto flex items-center justify-between h-20 px-4">
         {/* Logo */}
-        <Link to="/vizigo" className="flex items-center gap-2 shrink-0">
-          <img src={logoChp} alt="viziGO Logo" className="h-12 w-auto object-contain py-1" />
+        <Link to="/vizigo" className="flex items-center gap-2 shrink-0 py-1">
+          <img src={logoChp} alt="viziGO Logo" className="h-32 sm:h-36 md:h-40 w-auto object-contain -my-4 drop-shadow-md transition-transform hover:scale-105" />
         </Link>
 
         {/* Navegação Desktop (Telas Habilitadas pelo Super Admin) */}

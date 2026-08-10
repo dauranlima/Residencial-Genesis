@@ -606,7 +606,7 @@ export default function LandingPage() {
               <span className={`text-xs font-semibold flex items-center gap-1.5 ${billingCycle === 'anual' ? 'text-white' : 'text-slate-400'}`}>
                 Pagamento Anual
                 <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
-                  20% OFF
+                  + de 20% OFF
                 </Badge>
               </span>
             </div>
@@ -616,13 +616,13 @@ export default function LandingPage() {
             {/* Plano Essencial */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between space-y-6 hover:border-slate-700 transition-all">
               <div className="space-y-4">
-                <Badge className="bg-slate-800 text-slate-300 text-xs">Até 30 Unidades</Badge>
+                <Badge className="bg-slate-800 text-slate-300 text-xs">Até 32 Unidades</Badge>
                 <h3 className="text-xl font-bold text-white">Plano Essencial</h3>
                 <p className="text-xs text-slate-400">Ideal para condomínios de pequeno porte ou blocos individuais.</p>
 
                 <div className="pt-2">
                   <span className="text-3xl font-extrabold text-white">
-                    R$ {billingCycle === 'anual' ? '119' : '149'}
+                    R$ {billingCycle === 'anual' ? '59' : '79'}
                   </span>
                   <span className="text-xs text-slate-400"> / mês</span>
                 </div>
@@ -669,7 +669,7 @@ export default function LandingPage() {
 
                 <div className="pt-2">
                   <span className="text-4xl font-extrabold text-amber-400">
-                    R$ {billingCycle === 'anual' ? '239' : '299'}
+                    R$ {billingCycle === 'anual' ? '99' : '129'}
                   </span>
                   <span className="text-xs text-slate-400"> / mês</span>
                 </div>
@@ -712,7 +712,7 @@ export default function LandingPage() {
 
                 <div className="pt-2">
                   <span className="text-3xl font-extrabold text-white">
-                    R$ {billingCycle === 'anual' ? '399' : '499'}
+                    R$ {billingCycle === 'anual' ? '199' : '249'}
                   </span>
                   <span className="text-xs text-slate-400"> / mês</span>
                 </div>

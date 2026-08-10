@@ -193,9 +193,9 @@ export default function DemoLeadModal({
                 onChange={(e) => setPlan(e.target.value)}
                 className="w-full h-10 rounded-md bg-slate-950/80 border border-slate-800 text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="Essencial">Plano Essencial (Até 30 unidades) - R$ 149/mês</option>
-                <option value="Profissional">Plano Profissional (Até 100 unidades - Mais Popular) - R$ 299/mês</option>
-                <option value="Enterprise">Plano Enterprise (Condomínios 100+ u.) - R$ 499/mês</option>
+                <option value="Essencial">Plano Essencial (Até 32 unidades) - R$ 79/mês</option>
+                <option value="Profissional">Plano Profissional (Até 120 unidades - Mais Popular) - R$ 129/mês</option>
+                <option value="Enterprise">Plano Enterprise (Condomínios 120+ u.) - R$ 249/mês</option>
               </select>
             </div>
 
