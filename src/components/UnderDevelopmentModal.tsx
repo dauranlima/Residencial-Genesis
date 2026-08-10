@@ -64,7 +64,7 @@ export default function UnderDevelopmentModal() {
           <div className="text-sm">
             <p className="font-semibold text-foreground">Acesso Liberado:</p>
             <p className="text-muted-foreground text-xs mt-0.5">
-              No momento, as páginas disponíveis para uso são: <strong className="text-foreground">{enabledNames || "viziGO, Localização"}</strong>.
+              No momento, as páginas disponíveis para uso são: <strong className="text-foreground">{enabledNames || "viziGO"}</strong>.
             </p>
           </div>
         </div>

@@ -420,7 +420,7 @@ export default function CondoMarket() {
               } ${isSeniorMode ? "text-xl px-8 py-4" : "text-base"}`}
             >
               <Zap className={isSeniorMode ? "h-6 w-6 fill-slate-950" : "h-5 w-5 fill-current"} />
-              <span>Promoções Relâmpago ({coupons.length})</span>
+              <span>Comércios Locais ({coupons.length})</span>
             </button>
 
             {currentUser && (

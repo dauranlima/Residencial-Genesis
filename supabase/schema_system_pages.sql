@@ -29,8 +29,8 @@ CREATE POLICY "Permitir leitura e escrita de system_pages"
 -- Inserção inicial das telas padrão do sistema
 INSERT INTO public.system_pages (id, name, path, description, category, enabled, is_core) VALUES
     ('condo-market', 'viziGO (CondoMarket)', '/vizigo', 'Portal principal de compras, anúncios e mercado do condomínio.', 'Principal', true, false),
-    ('localizacao', 'Localização & Mapa', '/localizacao', 'Mapa de localização e endereço do condomínio.', 'Principal', true, false),
-    ('admin', 'Painel Gestão (Admin)', '/admin', 'Dashboard de gestão de moradores, recados e autorizações do síndico.', 'Gestão', true, false),
+    ('localizacao', 'Localização & Mapa', '/localizacao', 'Mapa de localização e endereço do condomínio.', 'Principal', false, false),
+    ('admin', 'Painel Gestão (Admin)', '/admin', 'Dashboard de gestão de moradores, recados e autorizações do síndico.', 'Gestão', false, false),
     ('avisos', 'Mural de Avisos & Comunicados', '/avisos', 'Comunicados oficiais, avisos urgentes e notícias da gestão.', 'Morador', false, false),
     ('apartamentos', 'Apartamentos & Unidades', '/apartamentos', 'Listagem e cadastro dos apartamentos e seus ocupantes.', 'Gestão', false, false),
     ('ficha-cadastral', 'Ficha Cadastral do Morador', '/ficha-cadastral', 'Formulário de recadastramento e registro de moradores.', 'Cadastros', false, false),

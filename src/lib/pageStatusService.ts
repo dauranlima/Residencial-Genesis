@@ -28,7 +28,7 @@ export const DEFAULT_PAGES: PageConfig[] = [
     path: '/localizacao',
     description: 'Mapa de localização e endereço do condomínio.',
     category: 'Principal',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'admin',
@@ -36,7 +36,7 @@ export const DEFAULT_PAGES: PageConfig[] = [
     path: '/admin',
     description: 'Dashboard de gestão de moradores, recados e autorizações do síndico.',
     category: 'Gestão',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'avisos',
@@ -212,11 +212,21 @@ export async function syncPagesFromSupabase(): Promise<PageConfig[]> {
  */
 async function saveToSupabase(updatedMap: Record<string, boolean>, pageId?: string, enabled?: boolean) {
   try {
-    // 1. Tenta atualizar/inserir a linha específica na tabela system_pages
+    // 1. Tenta atualizar/inserir na tabela system_pages
     if (pageId !== undefined && enabled !== undefined) {
       await supabase
         .from('system_pages')
         .upsert({ id: pageId, enabled, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+        .catch(() => { });
+    } else {
+      const rows = Object.entries(updatedMap).map(([id, isEnabled]) => ({
+        id,
+        enabled: isEnabled,
+        updated_at: new Date().toISOString(),
+      }));
+      await supabase
+        .from('system_pages')
+        .upsert(rows, { onConflict: 'id' })
         .catch(() => { });
     }
 
@@ -323,10 +333,43 @@ export function getEnabledPages(): PageConfig[] {
   return getPageConfigs().filter((p) => p.enabled);
 }
 
+let isSubscribedRealtime = false;
+
+/**
+ * Inicializa a assinatura em tempo real via canais do Supabase.
+ */
+export function initRealtimeSubscription() {
+  if (isSubscribedRealtime) return;
+  isSubscribedRealtime = true;
+
+  try {
+    supabase
+      .channel('system_pages_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'system_pages' },
+        () => {
+          syncPagesFromSupabase();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings' },
+        () => {
+          syncPagesFromSupabase();
+        }
+      )
+      .subscribe();
+  } catch (err) {
+    console.warn('Incapaz de assinar atualizações Realtime do Supabase:', err);
+  }
+}
+
 /**
  * Inscreve um callback para ser notificado sempre que o status de qualquer tela mudar.
  */
 export function subscribeToPageStatusChanges(callback: () => void): () => void {
+  initRealtimeSubscription();
   const handler = () => callback();
   window.addEventListener(CHANGE_EVENT, handler);
   window.addEventListener('storage', handler);
@@ -338,3 +381,5 @@ export function subscribeToPageStatusChanges(callback: () => void): () => void {
 
 // Inicia a sincronização assíncrona em background ao carregar a aplicação
 syncPagesFromSupabase();
+initRealtimeSubscription();
+
