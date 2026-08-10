@@ -24,6 +24,27 @@ import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
+const RootRoute = () => {
+  const hostname = window.location.hostname.toLowerCase();
+
+  // Se houver subdomínio prefixo (ex: morada.vizigo.shop, genesis.vizigo.shop)
+  // redireciona diretamente para a página do condomínio /vizigo
+  const isSubdomain = (() => {
+    if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+    const parts = hostname.split(".");
+    // Domínio principal (ex: vizigo.shop ou www.vizigo.shop)
+    if (parts.length <= 2 && !hostname.includes("localhost")) return false;
+    if (parts[0] === "www") return false;
+    return true;
+  })();
+
+  if (isSubdomain) {
+    return <Navigate to="/vizigo" replace />;
+  }
+
+  return <LandingPage />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -32,7 +53,7 @@ const App = () => (
       <BrowserRouter>
         <Layout>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<RootRoute />} />
             <Route path="/vizigo" element={<CondoMarket />} />
             <Route path="/localizacao" element={<Localizacao />} />
             <Route path="/adm-login" element={<SuperAdminLogin />} />

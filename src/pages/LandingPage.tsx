@@ -229,7 +229,7 @@ export default function LandingPage() {
               <p className="text-xs text-slate-400">histórico e fichas sempre acessíveis</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-              <h4 className="text-sm font-bold text-white mb-1">CondoMarket Ativo</h4>
+              <h4 className="text-sm font-bold text-white mb-1">MarketPlace Ativo</h4>
               <p className="text-xs text-slate-400">serviços e benefícios para a comunidade</p>
             </div>
           </div>
