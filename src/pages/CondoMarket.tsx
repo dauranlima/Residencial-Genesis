@@ -400,7 +400,15 @@ export default function CondoMarket() {
           {/* Abas de Navegação (Desapegos vs Promoções vs Meus Anúncios) */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6">
             <button
-              onClick={() => setActiveTab("classifieds")}
+              onClick={() => {
+                setActiveTab("classifieds");
+                setTimeout(() => {
+                  document.getElementById("market-categories-section")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }, 50);
+              }}
               className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer ${
                 activeTab === "classifieds"
                   ? "bg-accent text-accent-foreground shadow-luxury font-black"

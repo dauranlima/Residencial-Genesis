@@ -96,7 +96,7 @@ export default function ClassifiedsTab({
       </div>
 
       {/* Categorias (Chips) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      <div id="market-categories-section" className="scroll-mt-24 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {FILTER_CATEGORIES.map((cat) => (
           <button
             key={cat}
