@@ -30,7 +30,7 @@ export default function EditClassifiedModal({
 }: EditClassifiedModalProps) {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("Casa, Decoração e Utensílios");
+  const [category, setCategory] = useState(CLASSIFIED_CATEGORIES_DATA[0]?.name || "💡 Casa, Decoração e Utensílios");
   const [description, setDescription] = useState("");
   const [sellerName, setSellerName] = useState("");
   const [sellerBlock, setSellerBlock] = useState("");
@@ -271,16 +271,9 @@ export default function EditClassifiedModal({
                 }`}
               >
                 {CLASSIFIED_CATEGORIES_DATA.map((group) => (
-                  <optgroup key={group.name} label={`📁 ${group.name}`}>
-                    <option value={group.name} className="font-bold">
-                      {group.name} (Geral)
-                    </option>
-                    {group.subcategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        ↳ {sub}
-                      </option>
-                    ))}
-                  </optgroup>
+                  <option key={group.name} value={group.name}>
+                    {group.name}
+                  </option>
                 ))}
               </select>
             </div>
