@@ -23,6 +23,15 @@ import {
   Smartphone,
   Calendar,
   Check,
+  ShoppingBag,
+  Tag,
+  Wrench,
+  Gift,
+  TrendingUp,
+  Clock,
+  ArrowUpRight,
+  ShoppingBasket,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +42,7 @@ export default function LandingPage() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState('Profissional');
   const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>('mensal');
-  const [activeTab, setActiveTab] = useState<'market' | 'avisos' | 'vistorias' | 'fichas' | 'vagas'>('market');
+  const [activeTab, setActiveTab] = useState<'market' | 'servicos' | 'parceiros' | 'cupons'>('market');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const handleOpenLeadModal = (plan = 'Profissional') => {
@@ -54,16 +63,19 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div
+            className="flex items-center gap-3 cursor-pointer"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-bold">
-              <Building2 className="w-6 h-6 stroke-[2.5]" />
+              <Store className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
               <span className="text-xl font-bold tracking-tight text-white flex items-center">
                 vizi <span className="text-amber-400">GO</span>
               </span>
               <span className="text-[10px] text-slate-400 tracking-wider block font-medium uppercase">
-                Gestão Condominial
+                Condo Marketplace
               </span>
             </div>
           </div>
@@ -73,11 +85,17 @@ export default function LandingPage() {
             <button onClick={() => scrollToSection('como-funciona')} className="hover:text-amber-400 transition-colors">
               Como Funciona
             </button>
+            <button onClick={() => scrollToSection('categorias')} className="hover:text-amber-400 transition-colors">
+              Categorias
+            </button>
             <button onClick={() => scrollToSection('veja-por-dentro')} className="hover:text-amber-400 transition-colors">
               Demonstração
             </button>
-            <button onClick={() => scrollToSection('recursos')} className="hover:text-amber-400 transition-colors">
-              Módulos
+            <button onClick={() => scrollToSection('roadmap')} className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
+              <span>O Futuro</span>
+              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] px-1.5 py-0">
+                Em breve
+              </Badge>
             </button>
             <button onClick={() => scrollToSection('planos')} className="hover:text-amber-400 transition-colors">
               Planos
@@ -97,7 +115,7 @@ export default function LandingPage() {
               Já sou cliente
             </Button>
             <Button
-              onClick={() => handleOpenLeadModal('Profissional')}
+              onClick={() => scrollToSection('planos')}
               className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm px-5 py-2.5 rounded-lg shadow-md shadow-amber-500/20 transition-all hover:scale-105"
             >
               Conhecer Planos <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -106,11 +124,11 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. Hero Section */}
+      {/* 2. Hero Section (Focada no Marketplace) */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/60">
         {/* Glow de fundo */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-amber-500/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute top-1/3 right-10 w-[400px] h-[300px] bg-blue-600/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/3 right-10 w-[400px] h-[300px] bg-amber-600/10 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -118,18 +136,18 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
                 <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Gestão simples para uma rotina mais leve</span>
+                <span>O Marketplace Exclusivo do Seu Condomínio</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
-                Seu condomínio em movimento. <br />
+                Conecte vizinhos, serviços e <br />
                 <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">
-                  Sua gestão sob controle.
+                  o comércio local do condomínio.
                 </span>
               </h1>
 
               <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                O <strong>viziGO</strong> coloca avisos, solicitações, moradores, vistorias e o mercado interno no mesmo fluxo — para você trabalhar com clareza e atender melhor.
+                O <strong>viziGO Market</strong> transforma o seu condomínio em uma rede de comércio hiperlocal. Compre, venda, troque produtos e contrate serviços com quem mora ao seu lado — com total comodidade e segurança.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -137,7 +155,7 @@ export default function LandingPage() {
                   onClick={() => handleOpenLeadModal('Profissional')}
                   className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-base px-8 py-6 rounded-xl shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 transition-all hover:-translate-y-0.5"
                 >
-                  Começar agora <ArrowRight className="w-5 h-5 ml-2" />
+                  Ativar no Meu Condomínio <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
 
                 <Button
@@ -145,21 +163,21 @@ export default function LandingPage() {
                   onClick={() => scrollToSection('como-funciona')}
                   className="w-full sm:w-auto border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold text-base px-6 py-6 rounded-xl"
                 >
-                  Entender o fluxo
+                  Como funciona
                 </Button>
               </div>
 
               <div className="flex items-center justify-center lg:justify-start gap-2 text-xs text-slate-400 pt-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Feito para síndicos profissionais, administradoras e moradores.</span>
+                <span>100% seguro para moradores, produtores locais e comércios da região.</span>
               </div>
             </div>
 
-            {/* Direita: Mockup 3D do Painel */}
+            {/* Direita: Mockup do Marketplace */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-md lg:max-w-none">
-                {/* Glow envolvente no card */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-blue-600 rounded-2xl blur-lg opacity-30 animate-pulse" />
+                {/* Glow envolvente */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur-lg opacity-30 animate-pulse" />
 
                 <div className="relative bg-slate-900 border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4">
                   {/* Topo da janela simulada */}
@@ -168,46 +186,68 @@ export default function LandingPage() {
                       <div className="w-3 h-3 rounded-full bg-red-500/80" />
                       <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                       <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                      <span className="text-xs font-semibold text-slate-400 ml-2">Painel viziGO</span>
+                      <span className="text-xs font-semibold text-slate-400 ml-2">viziGO Market • Residencial Gênesis</span>
                     </div>
                     <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
-                      Operação Ativa
+                      Ambiente Verificado
                     </Badge>
                   </div>
 
-                  {/* Indicadores rápidos no Mockup */}
+                  {/* Indicadores rápidos do Marketplace */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Chamados Pendentes</span>
-                      <span className="text-xl font-bold text-amber-400">2 abertos</span>
+                      <span className="text-[11px] text-slate-400 block">Anúncios Ativos</span>
+                      <span className="text-xl font-bold text-amber-400">48 ofertas</span>
                     </div>
                     <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                      <span className="text-[11px] text-slate-400 block">Moradores Ativos</span>
-                      <span className="text-xl font-bold text-emerald-400">142 cadastrados</span>
+                      <span className="text-[11px] text-slate-400 block">Vizinhos Conectados</span>
+                      <span className="text-xl font-bold text-emerald-400">142 membros</span>
                     </div>
                   </div>
 
-                  {/* Mini Card de Anúncio / CondoMarket */}
-                  <div className="bg-slate-950/80 p-3.5 rounded-xl border border-amber-500/30 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                        <Store className="w-3.5 h-3.5" /> CondoMarket Parceiros
-                      </span>
-                      <span className="text-[10px] text-slate-400">Publicado hoje</span>
+                  {/* Mini Cards de Anúncios */}
+                  <div className="space-y-2.5">
+                    <div className="bg-slate-950/80 p-3 rounded-xl border border-amber-500/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          🧹
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Lava Rápido Ecológico</h4>
+                          <p className="text-[10px] text-slate-400">Direto na sua vaga de garagem • Bloco B</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">
+                        R$ 50,00
+                      </Badge>
                     </div>
-                    <p className="text-xs text-slate-200">
-                      Limpeza de Ar Condicionado com 15% de desconto para moradores do Gênesis.
-                    </p>
+
+                    <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          🚲
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Bicicleta Aro 29 (Seminova)</h4>
+                          <p className="text-[10px] text-slate-400">Desapego do Apto 304 • Bloco A</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+                        R$ 1.200
+                      </Badge>
+                    </div>
                   </div>
 
-                  {/* Tooltip flutuante inferior */}
-                  <div className="bg-gradient-to-r from-amber-500/20 to-slate-950 border border-amber-500/40 p-3 rounded-xl flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0">
-                      ✨
+                  {/* Banner de Parceiro Comercial */}
+                  <div className="bg-gradient-to-r from-amber-500/20 via-slate-950 to-slate-950 border border-amber-500/40 p-3 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Store className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-amber-300">Pizzaria Forno a Lenha</p>
+                        <p className="text-[10px] text-slate-300">15% OFF exclusivo para moradores do condomínio</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-200 font-medium">
-                      Avisos, confirmações e solicitações em uma única visão centralizada.
-                    </p>
+                    <ArrowUpRight className="w-4 h-4 text-amber-400 shrink-0" />
                   </div>
                 </div>
               </div>
@@ -216,38 +256,46 @@ export default function LandingPage() {
 
           {/* Barra de Benefícios Rápida (4 Colunas) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 pt-10 border-t border-slate-800/80">
-            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-              <h4 className="text-sm font-bold text-white mb-1">Mais organização</h4>
-              <p className="text-xs text-slate-400">menos tarefas esquecidas no condomínio</p>
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <ShoppingBag className="w-4 h-4 text-amber-400" /> Comércio Hiperlocal
+              </h4>
+              <p className="text-xs text-slate-400">Valorize a produção e produtos dos seus próprios vizinhos.</p>
             </div>
-            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-              <h4 className="text-sm font-bold text-white mb-1">Mural público</h4>
-              <p className="text-xs text-slate-400">comunicados com entrega rápida</p>
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Wrench className="w-4 h-4 text-amber-400" /> Serviços Recomendados
+              </h4>
+              <p className="text-xs text-slate-400">Contrate profissionais avaliados por quem você já conhece.</p>
             </div>
-            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-              <h4 className="text-sm font-bold text-white mb-1">Moradores por perto</h4>
-              <p className="text-xs text-slate-400">histórico e fichas sempre acessíveis</p>
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <Tag className="w-4 h-4 text-amber-400" /> Desapego Sem Frete
+              </h4>
+              <p className="text-xs text-slate-400">Venda o que não usa mais sem taxa de entrega ou complicação.</p>
             </div>
-            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80">
-              <h4 className="text-sm font-bold text-white mb-1">MarketPlace Ativo</h4>
-              <p className="text-xs text-slate-400">serviços e benefícios para a comunidade</p>
+            <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1">
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-400" /> 100% Seguro
+              </h4>
+              <p className="text-xs text-slate-400">Ambiente exclusivo e fechado para condôminos verificados.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Como o Trabalho Acontece (Fluxo de Trabalho) */}
+      {/* 3. Como Funciona o ViziGO Market */}
       <section id="como-funciona" className="py-20 bg-slate-950 border-b border-slate-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-              COMO O TRABALHO ACONTECE
+              COMO O MARKETPLACE FUNCIONA
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Do agendamento à solução das ocorrências, tudo no lugar certo.
+              Do anúncio à entrega na porta, sem complicação.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              O viziGO acompanha o fluxo real do condomínio para você não depender de memória, planilhas velhas ou mensagens espalhadas no WhatsApp.
+              Uma experiência simples e intuitiva feita sob medida para a dinâmica de condomínios.
             </p>
           </div>
 
@@ -255,31 +303,31 @@ export default function LandingPage() {
             {[
               {
                 step: '01',
-                tag: 'Configuração',
-                title: 'Cadastro do Condomínio',
-                desc: 'Organize blocos, apartamentos e áreas comuns em poucos minutos sem complicação.',
-                icon: Building2,
-              },
-              {
-                step: '02',
-                tag: 'Comunicação',
-                title: 'Avisos & Regimento',
-                desc: 'Publique avisos urgentes e mantenha as regras do condomínio acessíveis a todos os moradores.',
-                icon: Bell,
-              },
-              {
-                step: '03',
-                tag: 'Operação',
-                title: 'Chamados & CondoMarket',
-                desc: 'Moradores abrem solicitações e acessam ofertas de parceiros comerciais homologados.',
+                tag: 'Anúncio Rápido',
+                title: 'Publique em Minutos',
+                desc: 'Moradores e comércios parceiros postam fotos, descrição e preço diretamente na vitrine do condomínio.',
                 icon: Store,
               },
               {
+                step: '02',
+                tag: 'Navegação',
+                title: 'Explore por Categoria',
+                desc: 'Alimentação artesanal, prestação de serviços, desapegos ou cupons de lojas locais organizados por área.',
+                icon: Search,
+              },
+              {
+                step: '03',
+                tag: 'Conexão',
+                title: 'Negociação Direta',
+                desc: 'Entre em contato diretamente pelo WhatsApp ou sistema de mensagens sem intermediários ou comissões.',
+                icon: MessageSquare,
+              },
+              {
                 step: '04',
-                tag: 'Transparência',
-                title: 'Relatórios & Vistorias',
-                desc: 'Acompanhe registros de entrada e saída com fotos e relatórios completos em PDF.',
-                icon: FileText,
+                tag: 'Comunidade',
+                title: 'Praticidade & Economia',
+                desc: 'Receba seus produtos no próprio condomínio, ajude a economia local e economize tempo no seu dia a dia.',
+                icon: Zap,
               },
             ].map((item, idx) => (
               <div
@@ -305,29 +353,88 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Showcase Interativo ("Veja por Dentro") */}
-      <section id="veja-por-dentro" className="py-24 bg-slate-900/40 border-b border-slate-800/60">
+      {/* 4. Categorias em Destaque */}
+      <section id="categorias" className="py-20 bg-slate-900/30 border-b border-slate-800/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-              VEJA POR DENTRO
+              OPORTUNIDADES DENTRO DO CONDOMÍNIO
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Uma tela real para cada parte da sua operação.
+              Tudo o que seu condomínio precisa comprar, vender ou contratar.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              Explore os recursos do viziGO e entenda, em poucos segundos, onde cada tarefa acontece.
+              Descubra a variedade de possibilidades que o viziGO Market oferece para condôminos e comerciantes da região.
             </p>
           </div>
 
-          {/* Abas de Módulos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: 'Alimentação & Gastronomia',
+                desc: 'Marmitas fitness, pães artesanais, bolos, doces e bebidas preparados por vizinhos ou parceiros locais.',
+                icon: ShoppingBasket,
+                tag: 'Alta procura',
+              },
+              {
+                title: 'Serviços Profissionais',
+                desc: 'Eletricistas, encanadores, personal trainers, aulas particulares, suporte de informática e manicures.',
+                icon: Wrench,
+                tag: 'Prestadores locais',
+              },
+              {
+                title: 'Desapego de Moradores',
+                desc: 'Móveis, brinquedos, bicicletas, eletrônicos e livros com preços excelentes e sem custo de frete.',
+                icon: Tag,
+                tag: 'Sem frete',
+              },
+              {
+                title: 'Parceiros do Bairro',
+                desc: 'Descontos em padarias, mercados, lavanderias e farmácias da região exclusivos para moradores.',
+                icon: Store,
+                tag: 'Benefícios',
+              },
+            ].map((cat, index) => (
+              <div
+                key={index}
+                className="bg-slate-900 border border-slate-800 hover:border-amber-500/40 rounded-2xl p-6 space-y-4 transition-all hover:-translate-y-1"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                    <cat.icon className="w-6 h-6" />
+                  </div>
+                  <Badge className="bg-slate-800 text-slate-300 text-[10px]">{cat.tag}</Badge>
+                </div>
+                <h3 className="text-lg font-bold text-white">{cat.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{cat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Showcase Interativo ("Veja por Dentro") */}
+      <section id="veja-por-dentro" className="py-24 bg-slate-900/50 border-b border-slate-800/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
+              VEJA O MARKET POR DENTRO
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              Uma vitrine moderna e fácil de usar.
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base">
+              Navegue pelas diferentes opções disponíveis no viziGO Market e veja como é simples anunciar e encontrar o que precisa.
+            </p>
+          </div>
+
+          {/* Abas do Showcase */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
             {[
-              { id: 'market', label: '🛍️ CondoMarket', title: 'Marketplace do Condomínio' },
-              { id: 'avisos', label: '📢 Mural de Avisos', title: 'Comunicação Oficial' },
-              { id: 'vistorias', label: '🔍 Vistorias Digitais', title: 'Relatórios Fotográficos' },
-              { id: 'fichas', label: '📋 Fichas & Fiadores', title: 'Gestão de Moradores' },
-              { id: 'vagas', label: '🚗 Controle de Garagem', title: 'Vagas e Veículos' },
+              { id: 'market', label: '🛍️ Anúncios & Desapegos' },
+              { id: 'servicos', label: '🛠️ Prestadores & Serviços' },
+              { id: 'parceiros', label: '🏪 Comércio Local do Bairro' },
+              { id: 'cupons', label: '🎁 Descontos Exclusivos' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -350,75 +457,79 @@ export default function LandingPage() {
               <div className="lg:col-span-7 bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                    {activeTab === 'market' && 'CONDOMARKET PARCEIROS & MORADORES'}
-                    {activeTab === 'avisos' && 'COMUNICADOS EM TEMPO REAL'}
-                    {activeTab === 'vistorias' && 'RELATÓRIO DIGITAL DE VISTORIA'}
-                    {activeTab === 'fichas' && 'FICHA CADASTRAL E ANEXOS'}
-                    {activeTab === 'vagas' && 'GESTÃO DE VAGAS E VEÍCULOS'}
+                    {activeTab === 'market' && 'VITRINE DE ANÚNCIOS DOS MORADORES'}
+                    {activeTab === 'servicos' && 'SERVIÇOS E PRESTADORES AVALIADOS'}
+                    {activeTab === 'parceiros' && 'LOJAS E COMÉRCIOS CREDENCIADOS'}
+                    {activeTab === 'cupons' && 'CUPONS E BENEFÍCIOS PARA O CONDOMÍNIO'}
                   </span>
-                  <Badge className="bg-slate-800 text-slate-300 text-[10px]">Visão do Morador & Síndico</Badge>
+                  <Badge className="bg-slate-800 text-slate-300 text-[10px]">Visão do Morador</Badge>
                 </div>
 
                 {activeTab === 'market' && (
                   <div className="space-y-3">
                     <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
                       <div>
-                        <h4 className="text-sm font-bold text-white">Lava Rápido Delivery</h4>
-                        <p className="text-xs text-slate-400">Lavagem ecológica direto na sua vaga de garagem.</p>
+                        <h4 className="text-sm font-bold text-white">Bicicleta Aro 29 Caloi</h4>
+                        <p className="text-xs text-slate-400">Pouco uso • Anúncio do Apto 304 - Bloco A</p>
                       </div>
-                      <Badge className="bg-emerald-500/20 text-emerald-300">R$ 50,00</Badge>
+                      <Badge className="bg-amber-500/20 text-amber-300">R$ 1.200</Badge>
                     </div>
                     <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
                       <div>
-                        <h4 className="text-sm font-bold text-white">Venda de Bicicleta Aro 29</h4>
-                        <p className="text-xs text-slate-400">Anúncio interno do Apto 304 - Bloco B.</p>
+                        <h4 className="text-sm font-bold text-white">Kit Pães de Queijo Artesanais</h4>
+                        <p className="text-xs text-slate-400">Congelados • Entrega na porta pelo Apto 102</p>
                       </div>
-                      <Badge className="bg-amber-500/20 text-amber-300">R$ 1.200,00</Badge>
+                      <Badge className="bg-emerald-500/20 text-emerald-300">R$ 35,00</Badge>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'avisos' && (
+                {activeTab === 'servicos' && (
                   <div className="space-y-3">
-                    <div className="p-3 bg-slate-950 rounded-xl border border-amber-500/30">
-                      <span className="text-[10px] font-bold text-amber-400 block mb-1">IMPORTANTE - MANUTENÇÃO</span>
-                      <h4 className="text-sm font-bold text-white">Limpeza da Caixa d'Água</h4>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Aviso: O abastecimento será interrompido nesta quinta-feira das 08h às 14h.
-                      </p>
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Higienização de Sofá & Estofados</h4>
+                        <p className="text-xs text-slate-400">Atendimento no próprio apartamento • Nota 4.9 ★</p>
+                      </div>
+                      <Badge className="bg-amber-500/20 text-amber-300">R$ 150</Badge>
+                    </div>
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Aulas Particulares de Inglês</h4>
+                        <p className="text-xs text-slate-400">Professora moradora do Bloco B • Presencial ou online</p>
+                      </div>
+                      <Badge className="bg-emerald-500/20 text-emerald-300">R$ 80 / hora</Badge>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'vistorias' && (
+                {activeTab === 'parceiros' && (
                   <div className="space-y-3">
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
-                      <h4 className="text-sm font-bold text-white">Vistoria de Entrada - Apto 402</h4>
-                      <p className="text-xs text-slate-400">
-                        Status: 12 Fotos anexadas • Pintura nova • Medidores validados.
-                      </p>
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Padaria da Esquina</h4>
+                        <p className="text-xs text-slate-400">Entrega diária de pão quentinho sem taxa na portaria.</p>
+                      </div>
+                      <Badge className="bg-blue-500/20 text-blue-300">Parceiro Oficial</Badge>
+                    </div>
+                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Pet Shop Amigo Fiel</h4>
+                        <p className="text-xs text-slate-400">Banho e tosa com busca e entrega gratuita no prédio.</p>
+                      </div>
+                      <Badge className="bg-purple-500/20 text-purple-300">Homologado</Badge>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'fichas' && (
+                {activeTab === 'cupons' && (
                   <div className="space-y-3">
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
-                      <h4 className="text-sm font-bold text-white">Cadastro de Inquilino / Proprietário</h4>
-                      <p className="text-xs text-slate-400">
-                        Ficha com dados do fiador, cópia do contrato e autorização de portaria.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'vagas' && (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
-                      <h4 className="text-sm font-bold text-white">Vaga 14 (Subsolo 1)</h4>
-                      <p className="text-xs text-slate-400">
-                        Veículo: Honda Civic Prata • Placa: ABC-1234 • Morador: Apto 102.
-                      </p>
+                    <div className="p-3 bg-slate-950 rounded-xl border border-amber-500/30 flex justify-between items-center">
+                      <div>
+                        <span className="text-[10px] font-bold text-amber-400 block">CUPOM: VIZIGO15</span>
+                        <h4 className="text-sm font-bold text-white">15% OFF em Pizzas de Quinta a Domingo</h4>
+                      </div>
+                      <Badge className="bg-amber-500 text-slate-950 font-bold">Resgatar</Badge>
                     </div>
                   </div>
                 )}
@@ -427,27 +538,27 @@ export default function LandingPage() {
               {/* Lado Direito: Benefícios do Módulo */}
               <div className="lg:col-span-5 space-y-6">
                 <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
-                  UMA ROTINA CONECTADA
+                  ECONOMIA & CONVENIÊNCIA
                 </span>
                 <h3 className="text-2xl font-bold text-white leading-tight">
-                  Tudo o que seu condomínio precisa para manter o ritmo sem dor de cabeça.
+                  Seu condomínio transformado em um centro de oportunidades.
                 </h3>
                 <ul className="space-y-3 text-sm text-slate-300">
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>Ficha 360° com histórico de moradores e contatos.</span>
+                    <span>Conexão segura exclusivamente entre condôminos e lojas da vizinhança.</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>CondoMarket para incentivar o comércio e serviços no local.</span>
+                    <span>Incentivo a microempreendedores e moradores autônomos.</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>Confirmações e lembretes com canal rápido.</span>
+                    <span>Contato direto via WhatsApp ou chat interno.</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>Avisos e documentos centralizados no mesmo lugar.</span>
+                    <span>Gestão simplificada para aprovação de comércios pelo síndico.</span>
                   </li>
                 </ul>
 
@@ -455,7 +566,7 @@ export default function LandingPage() {
                   onClick={() => handleOpenLeadModal('Profissional')}
                   className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-3 rounded-xl"
                 >
-                  Quero conhecer os planos <ArrowRight className="w-4 h-4 ml-1.5" />
+                  Quero no Meu Condomínio <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               </div>
             </div>
@@ -463,113 +574,77 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. Grid de Recursos & Módulos */}
-      <section id="recursos" className="py-24 bg-slate-950 border-b border-slate-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 6. NOVO: Seção Roadmap / O Futuro do viziGO */}
+      <section id="roadmap" className="py-24 bg-slate-950 border-b border-slate-800/60 relative overflow-hidden">
+        {/* Subtle glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-amber-500/5 blur-[140px] rounded-full pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-              TUDO CONECTADO
-            </span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>O FUTURO DA GESTÃO CONDOMINIAL</span>
+            </div>
+
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Ferramentas que fazem sentido para o seu condomínio.
+              Uma plataforma completa em constante expansão.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              Você não precisa aprender um sistema complicado. Cada área existe para resolver uma parte do seu dia a dia.
+              O <strong>viziGO Market</strong> é apenas o começo. Em breve, disponibilizaremos módulos adicionais de gestão para simplificar toda a rotina do seu condomínio em um só lugar.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                title: 'CondoMarket & Parceiros',
-                desc: 'Moradores e fornecedores divulgam produtos e serviços direto na plataforma interna.',
-                icon: Store,
-              },
-              {
-                title: 'Mural de Avisos em Tempo Real',
-                desc: 'Publique informativos com confirmação de visualização e notificações rápidas.',
+                title: 'Mural de Avisos Digitais',
+                desc: 'Comunicação oficial do síndico em tempo real, confirmação de leitura e informativos importantes.',
                 icon: Bell,
-              },
-              {
-                title: 'Ficha Cadastral & Fiadores',
-                desc: 'Formulários digitais completos para controle de proprietários, moradores e inquilinos.',
-                icon: ClipboardList,
+                status: 'Em Breve',
               },
               {
                 title: 'Vistorias Fotográficas',
-                desc: 'Registre estado de conservação de áreas e apartamentos com imagens e laudo.',
+                desc: 'Laudos de entrada e saída com fotos anexadas, registro de conservação e exportação de relatórios.',
                 icon: FileText,
+                status: 'Em Breve',
               },
               {
-                title: 'Vagas & Garagens',
-                desc: 'Controle rigoroso de veículos cadastrados por unidade para evitar conflitos no estacionamento.',
+                title: 'Fichas Cadastrais & Fiadores',
+                desc: 'Formulários digitais completos para gestão de moradores, inquilinos e proprietários.',
+                icon: ClipboardList,
+                status: 'Em Desenvolvimento',
+              },
+              {
+                title: 'Gestão de Vagas & Garagens',
+                desc: 'Controle de veículos cadastrados por apartamento para evitar conflitos de estacionamento.',
                 icon: Car,
+                status: 'Em Desenvolvimento',
               },
-              {
-                title: 'Regimento Interno Digital',
-                desc: 'Consulte regras, horários de barulho e normas da convenção em qualquer dispositivo.',
-                icon: ShieldCheck,
-              },
-            ].map((module, i) => (
+            ].map((module, idx) => (
               <div
-                key={i}
-                className="bg-slate-900 border border-slate-800 hover:border-amber-500/30 rounded-2xl p-6 space-y-3 transition-all hover:-translate-y-1"
+                key={idx}
+                className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 space-y-4 relative group hover:border-amber-500/30 transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                  <module.icon className="w-5 h-5" />
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 group-hover:text-amber-400 flex items-center justify-center transition-colors">
+                    <module.icon className="w-5 h-5" />
+                  </div>
+                  <Badge className="bg-amber-500/10 text-amber-300 border-amber-500/20 text-[10px]">
+                    {module.status}
+                  </Badge>
                 </div>
-                <h3 className="text-lg font-bold text-white">{module.title}</h3>
+                <h3 className="text-lg font-bold text-slate-200 group-hover:text-white transition-colors">
+                  {module.title}
+                </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">{module.desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* 6. Card de Destaque Navy Escuro (High Contrast Block) */}
-      <section className="py-20 bg-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-900 via-[#1B2A4A] to-slate-950 border border-amber-500/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-7 space-y-4">
-                <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                  CONTROLE ABSOLUTO
-                </span>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-                  O que é importante não fica perdido no meio da correria.
-                </h2>
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                  Do primeiro aviso ao encerramento do chamado, o viziGO cria uma linha de tempo clara para você saber sempre o próximo passo.
-                </p>
-                <div className="pt-2">
-                  <Button
-                    onClick={() => handleOpenLeadModal('Profissional')}
-                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-8 py-4 rounded-xl text-sm"
-                  >
-                    Conhecer a experiência <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 bg-slate-950/80 p-6 rounded-2xl border border-slate-800 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <span className="text-xs text-slate-300 font-medium">Avisos e regras sempre acessíveis</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                  <span className="text-xs text-slate-300 font-medium">Atendimento organizado por chamado</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-blue-400" />
-                  <span className="text-xs text-slate-300 font-medium">Registro do histórico de solicitações</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-purple-400" />
-                  <span className="text-xs text-slate-300 font-medium">Prestação de contas e relatórios claros</span>
-                </div>
-              </div>
-            </div>
+          <div className="mt-12 text-center">
+            <p className="text-xs text-slate-400">
+              💡 <em>Ao contratar o viziGO Market hoje, seu condomínio garante acesso prioritário aos novos módulos à medida que forem lançados!</em>
+            </p>
           </div>
         </div>
       </section>
@@ -582,10 +657,10 @@ export default function LandingPage() {
               PLANOS TRANSPARENTES
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Escolha o plano ideal para o tamanho do seu condomínio.
+              Ative o viziGO Market no seu condomínio.
             </h2>
             <p className="text-slate-400 text-sm sm:text-base">
-              Sem taxas escondidas. Teste grátis por 7 dias.
+              Sem taxas escondidas. Comece com 7 dias de teste grátis.
             </p>
 
             {/* Toggle Mensal / Anual */}
@@ -618,7 +693,7 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <Badge className="bg-slate-800 text-slate-300 text-xs">Até 32 Unidades</Badge>
                 <h3 className="text-xl font-bold text-white">Plano Essencial</h3>
-                <p className="text-xs text-slate-400">Ideal para condomínios de pequeno porte ou blocos individuais.</p>
+                <p className="text-xs text-slate-400">Ideal para condomínios pequenos ou edifícios de bloco único.</p>
 
                 <div className="pt-2">
                   <span className="text-3xl font-extrabold text-white">
@@ -629,13 +704,13 @@ export default function LandingPage() {
 
                 <ul className="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Mural de Avisos Digital
+                    <Check className="w-4 h-4 text-emerald-400" /> Vitrine de Anúncios do Condomínio
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Regimento Interno Interativo
+                    <Check className="w-4 h-4 text-emerald-400" /> Cadastro de Prestadores Locais
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Controle de Garagens & Vagas
+                    <Check className="w-4 h-4 text-emerald-400" /> Contato Direto via WhatsApp
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-400" /> Suporte via E-mail
@@ -665,7 +740,7 @@ export default function LandingPage() {
                   Até 100 Unidades
                 </Badge>
                 <h3 className="text-2xl font-bold text-white">Plano Profissional</h3>
-                <p className="text-xs text-slate-300">A solução completa com CondoMarket para o condomínio moderno.</p>
+                <p className="text-xs text-slate-300">A solução completa do viziGO Market para o seu condomínio.</p>
 
                 <div className="pt-2">
                   <span className="text-4xl font-extrabold text-amber-400">
@@ -679,13 +754,13 @@ export default function LandingPage() {
                     <Check className="w-4 h-4 text-amber-400" /> <strong>Tudo do Plano Essencial</strong>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-amber-400" /> Módulo CondoMarket & Parceiros
+                    <Check className="w-4 h-4 text-amber-400" /> Parcerias com Comércio Local & Cupons
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-amber-400" /> Fichas Cadastrais & Fiadores
+                    <Check className="w-4 h-4 text-amber-400" /> Aprovação e Moderação de Anúncios
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-amber-400" /> Relatórios de Vistoria Fotográfica
+                    <Check className="w-4 h-4 text-amber-400" /> Acesso Prioritário a Novos Módulos
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-amber-400" /> Suporte Prioritário via WhatsApp
@@ -708,7 +783,7 @@ export default function LandingPage() {
                   Condomínios 100+ u.
                 </Badge>
                 <h3 className="text-xl font-bold text-white">Plano Enterprise</h3>
-                <p className="text-xs text-slate-400">Para grandes condomínios e administradoras de imóveis.</p>
+                <p className="text-xs text-slate-400">Para grandes condomínios de várias torres e administradoras.</p>
 
                 <div className="pt-2">
                   <span className="text-3xl font-extrabold text-white">
@@ -722,10 +797,10 @@ export default function LandingPage() {
                     <Check className="w-4 h-4 text-purple-400" /> Unidades Ilimitadas
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-purple-400" /> Múltiplas Torres e Bloco Único
+                    <Check className="w-4 h-4 text-purple-400" /> Múltiplos Blocos e Administradores
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-purple-400" /> Gestão Multi-Administrador
+                    <Check className="w-4 h-4 text-purple-400" /> Relatórios de Engajamento do Market
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-purple-400" /> Gerente de Conta Dedicado
@@ -758,20 +833,24 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: 'Como funciona o teste grátis de 14 dias?',
-                a: 'Você faz o cadastro rápido e recebe acesso imediato a todas as funcionalidades do viziGO. Não é necessário cartão de crédito para começar.',
+                q: 'Como funciona o viziGO Market no condomínio?',
+                a: 'O viziGO Market é uma vitrine online exclusiva onde moradores e parceiros comerciais aprovados podem anunciar produtos, desapegos, refeições e serviços profissionais diretamente para os vizinhos.',
               },
               {
-                q: 'Preciso instalar algum programa nos computadores do condomínio?',
-                a: 'Não! O viziGO é 100% online na nuvem. Você e os moradores podem acessar de qualquer computador, tablet ou celular.',
+                q: 'É seguro para os moradores do prédio?',
+                a: 'Sim! O acesso é restrito ao condomínio, garantindo que você esteja negociando com pessoas identificadas ou comércios locais devidamente credenciados.',
               },
               {
-                q: 'Como funciona o Módulo CondoMarket?',
-                a: 'O CondoMarket permite que moradores e parceiros comerciais homologados anunciem serviços (ex: lava-jato, personal trainer, alimentos) diretamente para os condôminos, gerando valor e praticidade.',
+                q: 'O viziGO cobra comissão sobre os produtos ou serviços vendidos?',
+                a: 'Não! O viziGO cobra apenas a assinatura mensal do condomínio. As negociações são 100% livres entre comprador e vendedor sem nenhuma taxa adicional.',
               },
               {
-                q: 'É possível importar a lista de moradores existente?',
-                a: 'Sim! Nossa equipe auxilia na importação em lote dos dados de apartamentos e moradores sem nenhum custo adicional.',
+                q: 'E os outros módulos do sistema de condomínio (avisos, vistorias, vagas)?',
+                a: 'Estamos focados em entregar a melhor experiência no viziGO Market agora! Os módulos adicionais de gestão estão no nosso roadmap e serão lançados em breve.',
+              },
+              {
+                q: 'Como funciona o teste grátis de 7 dias?',
+                a: 'Você faz o cadastro rápido e recebe acesso ao painel para testar o viziGO Market no seu condomínio sem necessidade de cadastrar cartão de crédito.',
               },
             ].map((faq, i) => (
               <div
@@ -805,11 +884,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/20 border border-amber-500/30 rounded-3xl p-8 sm:p-12 text-center space-y-6">
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white">
-              Mais clareza para trabalhar. <br />
-              <span className="text-amber-400">Mais espaço para crescer.</span>
+              Valorize quem está ao seu lado. <br />
+              <span className="text-amber-400">Ative o viziGO Market no seu condomínio.</span>
             </h2>
             <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto">
-              Junte-se aos condomínios que modernizaram a rotina de gestão com o viziGO.
+              Transforme a rotina do seu condomínio com praticidade, economia local e segurança.
             </p>
             <div>
               <Button
@@ -828,12 +907,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
-              <Building2 className="w-5 h-5" />
+              <Store className="w-5 h-5" />
             </div>
-            <span className="text-sm font-bold text-white">viziGO</span>
+            <span className="text-sm font-bold text-white">viziGO Market</span>
           </div>
 
-          <p>© 2026 viziGO. Gestão simples para condomínios em movimento.</p>
+          <p>© 2026 viziGO. O Marketplace Exclusivo do Seu Condomínio.</p>
 
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/adm-login')} className="hover:text-amber-400 transition-colors">

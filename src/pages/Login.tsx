@@ -61,7 +61,7 @@ const Login = () => {
             <div className="bg-navy-dark p-3 rounded-lg inline-flex items-center justify-center shadow-lg mb-4">
               <Building2 className="w-8 h-8 text-gold" />
             </div>
-            <h1 className="text-3xl font-bold tracking-wider text-navy-dark">Residencial Morada do Sol 2</h1>
+            <h1 className="text-3xl font-bold tracking-wider text-navy-dark">ViziGO - Sistema de Gestão</h1>
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-medium">Portal de Acesso</p>
           </div>
 
@@ -156,7 +156,7 @@ const Login = () => {
               </Button>
             </form>
 
-            {/* <div className="relative">
+            <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-muted/50" />
               </div>
@@ -172,7 +172,7 @@ const Login = () => {
               <Button variant="outline" className="text-xs font-semibold h-9 border-muted-foreground/20 hover:border-gold/50 hover:bg-gold/5 hover:text-navy text-muted-foreground transition-colors">
                 ACESSO ADMINISTRATIVO
               </Button>
-            </div> */}
+            </div> 
 
             <div className="w-full flex justify-center pt-2 border-t border-muted/20">
               <Link to="/" className="w-full">
@@ -192,8 +192,8 @@ const Login = () => {
           <div className="flex justify-center items-center gap-6 text-[10px] uppercase tracking-wider">
             <span>© 2026 Residencial Morada do Sol 2</span>
             <Link to="/#" className="hover:text-navy transition-colors">Desenvolvido por: Dauran Lima</Link>
-            {/* <Link to="/terms" className="hover:text-navy transition-colors">Termos de Serviço</Link> */}
-            {/* <Link to="/support" className="hover:text-navy transition-colors">Suporte</Link> */}
+            <Link to="/terms" className="hover:text-navy transition-colors">Termos de Serviço</Link>
+            <Link to="/support" className="hover:text-navy transition-colors">Suporte</Link>
           </div>
         </div>
       </footer>
