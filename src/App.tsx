@@ -22,6 +22,7 @@ import OutrosImoveis from "./pages/OutrosImoveis";
 import Localizacao from "./pages/Localizacao";
 import Login from "./pages/Login";
 import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
+import { SplashScreen } from "./components/pwa/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const RootRoute = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <SplashScreen />
       <Toaster />
       <Sonner />
       <PwaInstallBanner />

@@ -32,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [location.pathname]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#0f172a] text-slate-100">
       {!shouldHideLayout && <Header />}
       <main className="flex-1">{isUnderDev ? null : children}</main>
       {!shouldHideLayout && <Footer />}

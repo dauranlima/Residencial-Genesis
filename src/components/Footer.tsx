@@ -3,7 +3,7 @@ import { Building2, Phone, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-[#0f172a] text-primary-foreground pb-safe">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}

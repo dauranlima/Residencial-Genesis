@@ -70,7 +70,7 @@ export default function Header() {
   const dropdownDesktopPages = enabledPages.length > 5 ? enabledPages.slice(4) : [];
 
   return (
-    <header className="sticky top-0 z-50 bg-primary/95 backdrop-blur-md border-b border-navy-light/30 shadow-md">
+    <header className="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-navy-light/30 shadow-md pt-safe">
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         {/* Logo */}
         <Link to="/vizigo" className="flex items-center gap-2 shrink-0 py-1">
