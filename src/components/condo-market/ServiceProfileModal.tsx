@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Clock, CreditCard, Award, MessageCircle, X, ChevronLeft, ChevronRight, UserCheck, PlusCircle, Maximize2 } from "lucide-react";
 import { ResidentServiceProfile, ServiceReview } from "./types";
 import { fetchServiceReviewsFromSupabase } from "@/lib/residentServicesService";
+
 
 interface ServiceProfileModalProps {
   profile: ResidentServiceProfile | null;
@@ -31,12 +33,14 @@ export default function ServiceProfileModal({
   useEffect(() => {
     if (profile && isOpen) {
       setActiveImageIndex(0);
+      setIsFullScreenImage(false);
       setIsLoadingReviews(true);
       fetchServiceReviewsFromSupabase(profile.id)
         .then((res) => setReviews(res))
         .finally(() => setIsLoadingReviews(false));
     }
   }, [profile, isOpen]);
+
 
   if (!profile) return null;
 
@@ -300,57 +304,66 @@ export default function ServiceProfileModal({
         </div>
       </DialogContent>
 
-      {/* Modal / Overlay de Foto em Tela Cheia */}
-      {isFullScreenImage && profile.images && profile.images.length > 0 && (
+      {/* Modal / Overlay de Foto em Tela Cheia via Portal (evita traps do Radix UI) */}
+      {isFullScreenImage && profile.images && profile.images.length > 0 && createPortal(
         <div
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
           onClick={() => setIsFullScreenImage(false)}
         >
-          {/* Cabeçalho do Fullscreen */}
-          <div className="flex items-center justify-between text-white z-10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2">
-              <span className="text-sm sm:text-base font-bold truncate max-w-[80%]">
-                {profile.residentName} - {profile.profession} ({activeImageIndex + 1} / {profile.images.length})
-              </span>
-            </div>
+          {/* Topo do Fullscreen com Título e Botão Fechar em Destaque */}
+          <div className="w-full flex items-center justify-between pt-2 sm:pt-4 px-2 z-[999999] shrink-0" onClick={(e) => e.stopPropagation()}>
+            <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[65%]">
+              {profile.residentName} - {profile.profession} ({activeImageIndex + 1} de {profile.images.length})
+            </span>
             <button
-              onClick={() => setIsFullScreenImage(false)}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsFullScreenImage(false);
+              }}
+              className="bg-slate-900/90 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full shadow-2xl border border-white/20 flex items-center gap-1.5 text-xs cursor-pointer transition-all active:scale-95 shrink-0"
               aria-label="Fechar tela cheia"
             >
-              <X className="h-6 w-6 sm:h-8 sm:w-8" />
+              <X className="w-4 h-4 text-red-400" />
+              <span>Fechar</span>
             </button>
           </div>
 
-          {/* Imagem Centralizada em Tela Cheia */}
-          <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+
+          {/* Imagem Centralizada com Botões de Avançar/Voltar */}
+          <div className="relative flex-1 flex items-center justify-center my-2 overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <img
               src={profile.images[activeImageIndex]}
               alt={`Portfólio ${activeImageIndex + 1}`}
-              className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg shadow-2xl select-none"
+              className="max-h-[75vh] max-w-[95vw] object-contain rounded-xl shadow-2xl select-none"
             />
 
             {profile.images.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setActiveImageIndex((prev) => (prev === 0 ? profile.images.length - 1 : prev - 1));
                   }}
-                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-slate-900/80 hover:bg-emerald-600 text-white p-3.5 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer z-[999999] active:scale-90"
                   aria-label="Foto anterior"
                 >
-                  <ChevronLeft className="h-8 w-8" />
+                  <ChevronLeft className="h-7 w-7 sm:h-8 sm:w-8 pointer-events-none" />
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setActiveImageIndex((prev) => (prev === profile.images.length - 1 ? 0 : prev + 1));
                   }}
-                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-slate-900/80 hover:bg-emerald-600 text-white p-3.5 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer z-[999999] active:scale-90"
                   aria-label="Próxima foto"
                 >
-                  <ChevronRight className="h-8 w-8" />
+                  <ChevronRight className="h-7 w-7 sm:h-8 sm:w-8 pointer-events-none" />
                 </button>
               </>
             )}
@@ -358,23 +371,30 @@ export default function ServiceProfileModal({
 
           {/* Rodapé / Miniaturas no Fullscreen */}
           {profile.images.length > 1 && (
-            <div className="flex justify-center gap-2 overflow-x-auto py-2 z-10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center gap-2 overflow-x-auto py-2 z-[999999] shrink-0" onClick={(e) => e.stopPropagation()}>
               {profile.images.map((img, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
-                    activeImageIndex === idx ? "border-emerald-400 scale-110" : "border-transparent opacity-60 hover:opacity-100"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveImageIndex(idx);
+                  }}
+                  className={`w-14 h-11 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                    activeImageIndex === idx ? "border-emerald-400 scale-110 shadow-lg" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover pointer-events-none" />
                 </button>
               ))}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </Dialog>
   );
 }
+
 
