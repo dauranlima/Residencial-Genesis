@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Lock, Mail, Eye, EyeOff, KeyRound, Sparkles, Building2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Eye, EyeOff, KeyRound, Building2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,12 +14,6 @@ export default function SuperAdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const fillRootCredentials = () => {
-    setEmail('dauranlima@gmail.com');
-    setPassword('123123@');
-    toast.info('Credenciais de Root Admin preenchidas!');
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,27 +112,6 @@ export default function SuperAdminLogin() {
           </p>
         </div>
 
-        {/* Quick Credentials Preset Card */}
-        <div className="bg-amber-950/40 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between gap-3 text-xs">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-amber-300 font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Root Admin Credentials</span>
-            </div>
-            <p className="text-slate-400">
-              <span className="text-slate-200 font-mono">dauranlima@gmail.com</span> | <span className="text-slate-200 font-mono">123123@</span>
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={fillRootCredentials}
-            className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 whitespace-nowrap text-xs h-8"
-          >
-            Auto Preencher
-          </Button>
-        </div>
 
         {/* Login Card */}
         <Card className="bg-slate-900/80 border-slate-800 backdrop-blur-xl shadow-2xl">

@@ -73,16 +73,15 @@ export interface ServiceCategoryItem {
 }
 
 export const SERVICE_CATEGORIES: ServiceCategoryItem[] = [
-  { id: "maquiagem", name: "Maquiadora", emoji: "👩💄", description: "Maquiagem social, noivas e eventos" },
-  { id: "massagem", name: "Massagista", emoji: "💆", description: "Massagem relaxante e terapêutica" },
-  { id: "informatica", name: "Técnico de informática", emoji: "💻", description: "Formatação, redes e suporte" },
-  { id: "diarista", name: "Diarista", emoji: "🧹", description: "Limpeza residencial e faxina" },
-  { id: "eletricista", name: "Eletricista", emoji: "🔧", description: "Reparos elétricos e instalações" },
-  { id: "jardinagem", name: "Jardinagem", emoji: "🪴", description: "Manutenção de plantas e vasos" },
-  { id: "pet_sitter", name: "Pet sitter", emoji: "🐶", description: "Cuidados e passeios com pets" },
-  { id: "professor", name: "Professor particular", emoji: "📚", description: "Reforço escolar e idiomas" },
-  { id: "fotografo", name: "Fotógrafo", emoji: "📸", description: "Ensaios, festas e fotos de produto" },
-  { id: "cabeleireiro", name: "Cabeleireiro", emoji: "💇", description: "Corte, escova e penteados" },
+  { id: "beleza", name: "Beleza e Bem-Estar", emoji: "💄", description: "Maquiagem, cabelo, estética e cuidados pessoais" },
+  { id: "domesticos", name: "Serviços Domésticos", emoji: "🧹", description: "Limpeza residencial, faxina e organização" },
+  { id: "manutencao", name: "Manutenção e Reformas", emoji: "🛠️", description: "Eletricista, encanador, pintura e reparos" },
+  { id: "tecnologia", name: "Tecnologia e Assistência", emoji: "💻", description: "Formatação, redes, celulares e suporte técnico" },
+  { id: "pet", name: "Mundo Pet", emoji: "🐾", description: "Pet sitter, passeios, banho e tosas" },
+  { id: "educacao", name: "Aulas e Educação", emoji: "📚", description: "Reforço escolar, idiomas e cursos" },
+  { id: "eventos", name: "Eventos e Fotografia", emoji: "📸", description: "Fotografia, filmagem, recepção e eventos" },
+  { id: "jardinagem", name: "Jardinagem e Áreas Externas", emoji: "🌱", description: "Manutenção de jardim, plantas e paisagismo" },
+  { id: "fretes", name: "Fretes e Transporte", emoji: "📦", description: "Mudanças, entregas e transporte de volumes" },
   { id: "outros", name: "Outros Serviços", emoji: "💼", description: "Serviços diversos para o condomínio" },
 ];
 

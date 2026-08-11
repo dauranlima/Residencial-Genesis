@@ -23,18 +23,39 @@ export default function ServicesTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
 
+  // Mapeamento de palavras-chave para categorias antigas / profissões legadas
+  const legacyKeywords: Record<string, string[]> = {
+    beleza: ["maquiadora", "maquiagem", "massagista", "massagem", "cabeleireiro", "estética", "manicure", "beleza"],
+    domesticos: ["diarista", "faxineira", "limpeza", "passadeira", "arrumadeira", "doméstico", "domestico"],
+    manutencao: ["eletricista", "encanador", "pintor", "pedreiro", "marceneiro", "reparos", "manutenção", "manutencao"],
+    tecnologia: ["técnico de informática", "informática", "ti", "computador", "celular", "suporte", "tecnologia"],
+    pet: ["pet sitter", "pet", "dog walker", "adestrador", "tosador", "veterinário", "animais"],
+    educacao: ["professor", "professor particular", "reforço", "aulas", "idiomas", "educação", "educacao"],
+    eventos: ["fotógrafo", "fotografia", "filmagem", "buffet", "eventos", "fotos"],
+    jardinagem: ["jardinagem", "jardineiro", "paisagismo", "plantas", "externa"],
+    fretes: ["frete", "fretes", "mudança", "transporte", "entregas"],
+  };
+
   // Filtro inteligente por busca e categoria
   const filteredProfiles = profiles.filter((p) => {
     // Filtro por Categoria
     if (selectedCategory !== "Todos") {
       const catObj = SERVICE_CATEGORIES.find(
-        (c) => `${c.emoji} ${c.name}` === selectedCategory
+        (c) => `${c.emoji} ${c.name}` === selectedCategory || c.name === selectedCategory
       );
-      if (catObj && p.category !== catObj.name && p.profession !== catObj.name) {
-        // se a categoria selecionada não for equivalente
-        const isMatch = p.category?.toLowerCase().includes(catObj.name.toLowerCase()) ||
-                        p.profession?.toLowerCase().includes(catObj.name.toLowerCase());
-        if (!isMatch) return false;
+      if (catObj) {
+        const catNameNorm = catObj.name.toLowerCase();
+        const pCatNorm = (p.category || "").toLowerCase();
+        const pProfNorm = (p.profession || "").toLowerCase();
+
+        const directMatch = pCatNorm === catNameNorm || pProfNorm === catNameNorm;
+        const partialMatch = pCatNorm.includes(catNameNorm) || catNameNorm.includes(pCatNorm) ||
+                             pProfNorm.includes(catNameNorm) || catNameNorm.includes(pProfNorm);
+
+        const keywords = legacyKeywords[catObj.id] || [];
+        const keywordMatch = keywords.some(kw => pCatNorm.includes(kw) || pProfNorm.includes(kw));
+
+        if (!directMatch && !partialMatch && !keywordMatch) return false;
       }
     }
 
@@ -43,9 +64,10 @@ export default function ServicesTab({
       const q = searchQuery.toLowerCase();
       const matchName = p.residentName.toLowerCase().includes(q);
       const matchProfession = p.profession.toLowerCase().includes(q);
+      const matchCategory = (p.category || "").toLowerCase().includes(q);
       const matchSpecialty = (p.specialty || "").toLowerCase().includes(q);
       const matchDesc = p.description.toLowerCase().includes(q);
-      return matchName || matchProfession || matchSpecialty || matchDesc;
+      return matchName || matchProfession || matchCategory || matchSpecialty || matchDesc;
     }
 
     return true;
