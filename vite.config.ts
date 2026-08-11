@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import sendWhatsAppHandler from "./api/send-whatsapp";
 
-// Garantir que a imagem de compartilhamento esteja sempre na pasta public para o Open Graph (WhatsApp/Social)
+// Garantir que as imagens PWA e Open Graph estejam sempre na pasta public
 try {
   const srcImg = path.resolve(__dirname, "src/assets/indexshareimg.png");
   const pubImg = path.resolve(__dirname, "public/indexshareimg.png");
@@ -17,10 +17,26 @@ try {
       fs.mkdirSync(pubAssetsDir, { recursive: true });
     }
     fs.copyFileSync(srcImg, pubAssetsImg);
-    console.log("[Vite Config] indexshareimg.png copiada para public/ com sucesso.");
+  }
+
+  // Garantir existência dos arquivos de ícones PNG para PWA (iOS / Android)
+  const sourceIcon = fs.existsSync(pubImg) ? pubImg : srcImg;
+  if (fs.existsSync(sourceIcon)) {
+    const pwaIcons = [
+      "public/pwa-192x192.png",
+      "public/pwa-512x512.png",
+      "public/apple-touch-icon.png",
+      "public/maskable-icon-512x512.png"
+    ];
+    pwaIcons.forEach((iconPath) => {
+      const fullPath = path.resolve(__dirname, iconPath);
+      if (!fs.existsSync(fullPath)) {
+        fs.copyFileSync(sourceIcon, fullPath);
+      }
+    });
   }
 } catch (err) {
-  console.error("[Vite Config] Erro ao copiar indexshareimg.png:", err);
+  console.error("[Vite Config] Erro ao sincronizar ícones PWA:", err);
 }
 
 // Plugin personalizado para integrar a API serverless /api/send-whatsapp no ambiente local de desenvolvimento

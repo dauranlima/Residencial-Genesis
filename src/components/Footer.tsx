@@ -35,10 +35,10 @@ export default function Footer() {
             <h3 className="font-semibold mb-4 text-accent">Contato</h3>
             <div className="flex flex-col gap-3 text-sm text-primary-foreground/70">
               <a href="tel:+554598470171" className="flex items-center gap-2 hover:text-accent transition-colors">
-                <Phone className="h-4 w-4" /> (45) 9847-0171
+                <Phone className="h-4 w-4" /> (45) 98832-8499
               </a>
               <a href="mailto:contato@moradadosol2.com" className="flex items-center gap-2 hover:text-accent transition-colors">
-                <Mail className="h-4 w-4" /> contato@moradao2.com
+                <Mail className="h-4 w-4" /> contato@morada2.com
               </a>
               <span className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-accent shrink-0" /> Rua Jorge Lacerda, 855 - Bairro Centro - Cascavel - PR - 85810-220

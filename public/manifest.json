@@ -1,0 +1,47 @@
+{
+  "name": "viziGO - Classificados do seu condomínio",
+  "short_name": "viziGO",
+  "description": "Compre, venda, troque e contrate serviços com seus vizinhos com total segurança.",
+  "start_url": "/",
+  "scope": "/",
+  "id": "vizigo-condominio-app",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": [
+    "shopping",
+    "social",
+    "lifestyle",
+    "business"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-icon.png",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

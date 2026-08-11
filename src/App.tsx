@@ -21,6 +21,7 @@ import Regimento from "./pages/Regimento";
 import OutrosImoveis from "./pages/OutrosImoveis";
 import Localizacao from "./pages/Localizacao";
 import Login from "./pages/Login";
+import { PwaInstallBanner } from "./components/pwa/PwaInstallBanner";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <PwaInstallBanner />
       <BrowserRouter>
         <Layout>
           <Routes>
