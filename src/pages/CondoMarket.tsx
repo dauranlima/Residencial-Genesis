@@ -31,31 +31,6 @@ import { fetchResidentServicesFromSupabase } from "@/lib/residentServicesService
 import { toast } from "sonner";
 
 
-// Parceiros locais fixos do condomínio (exibidos na vitrine)
-const CONDOCENTER_MERCHANTS: Merchant[] = [
-  {
-    id: "m-1",
-    businessName: "Padaria & Confeitaria Pão D'Oro",
-    category: "Padaria",
-    description: "Pães quentinhos a 2 quadras do condomínio.",
-    whatsapp: "(45) 99111-2233",
-  },
-  {
-    id: "m-2",
-    businessName: "Petshop Amigo Fiel",
-    category: "Petshop",
-    description: "Banho, tosa e rações com entrega grátis na portaria.",
-    whatsapp: "(45) 99222-3344",
-  },
-  {
-    id: "m-3",
-    businessName: "Lava-Car Brilho Express",
-    category: "Lava-Car",
-    description: "Lavagem completa e espelhamento a 500 metros.",
-    whatsapp: "(45) 99333-4455",
-  },
-];
-
 export default function CondoMarket() {
   const [isSeniorMode, setIsSeniorMode] = useState(false);
   const [activeTab, setActiveTab] = useState<"classifieds" | "merchants" | "services" | "my_classifieds">("classifieds");
@@ -63,7 +38,7 @@ export default function CondoMarket() {
   // Dados reais persistidos no Supabase (zero mock)
   const [classifieds, setClassifieds] = useState<ClassifiedItem[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [merchants, setMerchants] = useState<Merchant[]>(CONDOCENTER_MERCHANTS);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [serviceProfiles, setServiceProfiles] = useState<ResidentServiceProfile[]>([]);
 
   // Estados de carregamento

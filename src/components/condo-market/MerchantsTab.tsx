@@ -347,36 +347,38 @@ export default function MerchantsTab({
         )}
       </div>
 
-      {/* Vitrine de Parceiros */}
-      <div className="pt-6 border-t border-border">
-        <h3 className={`font-bold text-foreground mb-4 ${isSeniorMode ? "text-2xl" : "text-lg"}`}>
-          Comércios Parceiros do Condomínio
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {merchants.map((m) => (
-            <a
-              key={m.id}
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                m.address || `${m.businessName}, Cascavel - PR`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-card p-4 rounded-xl border border-border flex items-center justify-between gap-3 hover:border-amber-400/50 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="h-12 w-12 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-xl flex-shrink-0">
-                  {m.businessName[0]}
+      {/* Vitrine de Parceiros (Exibida apenas se houver parceiros reais cadastrados no Supabase) */}
+      {merchants.length > 0 && (
+        <div className="pt-6 border-t border-border">
+          <h3 className={`font-bold text-foreground mb-4 ${isSeniorMode ? "text-2xl" : "text-lg"}`}>
+            Comércios Parceiros do Condomínio
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {merchants.map((m) => (
+              <a
+                key={m.id}
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  m.address || `${m.businessName}, Cascavel - PR`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-card p-4 rounded-xl border border-border flex items-center justify-between gap-3 hover:border-amber-400/50 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="h-12 w-12 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-xl flex-shrink-0">
+                    {m.businessName[0]}
+                  </div>
+                  <div className="overflow-hidden">
+                    <h4 className="font-bold text-sm text-foreground truncate">{m.businessName}</h4>
+                    <p className="text-xs text-muted-foreground">{m.category}</p>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                  <h4 className="font-bold text-sm text-foreground truncate">{m.businessName}</h4>
-                  <p className="text-xs text-muted-foreground">{m.category}</p>
-                </div>
-              </div>
-              <MapPin className="h-4 w-4 text-red-500 flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
-            </a>
-          ))}
+                <MapPin className="h-4 w-4 text-red-500 flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
