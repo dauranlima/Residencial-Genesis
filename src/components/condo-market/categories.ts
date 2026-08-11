@@ -64,3 +64,27 @@ export function matchesCategoryFilter(selectedFilter: string, itemCategory: stri
 
   return false;
 }
+
+export interface ServiceCategoryItem {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+export const SERVICE_CATEGORIES: ServiceCategoryItem[] = [
+  { id: "maquiagem", name: "Maquiadora", emoji: "👩💄", description: "Maquiagem social, noivas e eventos" },
+  { id: "massagem", name: "Massagista", emoji: "💆", description: "Massagem relaxante e terapêutica" },
+  { id: "informatica", name: "Técnico de informática", emoji: "💻", description: "Formatação, redes e suporte" },
+  { id: "diarista", name: "Diarista", emoji: "🧹", description: "Limpeza residencial e faxina" },
+  { id: "eletricista", name: "Eletricista", emoji: "🔧", description: "Reparos elétricos e instalações" },
+  { id: "jardinagem", name: "Jardinagem", emoji: "🪴", description: "Manutenção de plantas e vasos" },
+  { id: "pet_sitter", name: "Pet sitter", emoji: "🐶", description: "Cuidados e passeios com pets" },
+  { id: "professor", name: "Professor particular", emoji: "📚", description: "Reforço escolar e idiomas" },
+  { id: "fotografo", name: "Fotógrafo", emoji: "📸", description: "Ensaios, festas e fotos de produto" },
+  { id: "cabeleireiro", name: "Cabeleireiro", emoji: "💇", description: "Corte, escova e penteados" },
+  { id: "outros", name: "Outros Serviços", emoji: "💼", description: "Serviços diversos para o condomínio" },
+];
+
+export const SERVICE_FILTER_CATEGORIES = ["Todos", ...SERVICE_CATEGORIES.map((c) => `${c.emoji} ${c.name}`)];
+

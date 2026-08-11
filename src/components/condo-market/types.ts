@@ -99,3 +99,36 @@ export interface DatabaseCouponRedemption {
   residentBlock?: string;
   redeemedAt: string;
 }
+
+export interface ServiceReview {
+  id: string;
+  profileId: string;
+  authorName: string;
+  authorBlock?: string;
+  authorUnit: string;
+  rating: number; // 1 a 5
+  comment: string;
+  createdAt: string;
+}
+
+export interface ResidentServiceProfile {
+  id: string;
+  residentName: string;
+  residentBlock?: string;
+  residentUnit: string;
+  profession: string;
+  category: string;
+  specialty?: string;
+  experience?: string;
+  description: string;
+  images: string[];
+  workHours?: string;
+  startingPrice: number;
+  paymentMethods: string[];
+  whatsapp: string;
+  rating: number;
+  reviewCount: number;
+  isActive: boolean;
+  createdAt: string;
+}
+

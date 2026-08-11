@@ -38,6 +38,9 @@ import {
   saveWhatsAppConfig,
   testWhatsAppConnection,
   sendTestWhatsAppMessage,
+  sendWhatsAppGroupMessage,
+  fetchWhatsAppGroups,
+  WhatsAppGroupItem,
   pingWebhookEdgeFunction,
   getDefaultWhatsAppConfig,
   WhatsAppConfig,
@@ -72,6 +75,9 @@ export default function SuperAdminDashboard() {
   // Test Message State
   const [testPhone, setTestPhone] = useState('');
   const [sendingTestMsg, setSendingTestMsg] = useState(false);
+  const [sendingGroupTestMsg, setSendingGroupTestMsg] = useState(false);
+  const [fetchingGroups, setFetchingGroups] = useState(false);
+  const [groupList, setGroupList] = useState<WhatsAppGroupItem[]>([]);
 
   // Edge Function Ping State
   const [pingingWebhook, setPingingWebhook] = useState(false);
@@ -195,6 +201,45 @@ export default function SuperAdminDashboard() {
       toast.error('Erro ao enviar mensagem de teste: ' + err.message);
     } finally {
       setSendingTestMsg(false);
+    }
+  };
+
+  const handleSendTestGroupMessage = async () => {
+    if (!config.groupId) {
+      toast.error('Informe o ID do Grupo do WhatsApp (ex: 12036301234567890@g.us) no campo acima.');
+      return;
+    }
+
+    setSendingGroupTestMsg(true);
+    try {
+      const testMsg = `🧪 *viziGO - Teste de Envio em Grupo*\n\nConexão com o Grupo do WhatsApp validada com sucesso!\nHorário: ${new Date().toLocaleTimeString('pt-BR')}`;
+      const res = await sendWhatsAppGroupMessage(config.groupId, testMsg, config);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao enviar mensagem no grupo: ' + err.message);
+    } finally {
+      setSendingGroupTestMsg(false);
+    }
+  };
+
+  const handleFetchGroups = async () => {
+    setFetchingGroups(true);
+    try {
+      const res = await fetchWhatsAppGroups(config);
+      if (res.success) {
+        setGroupList(res.groups);
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error('Erro ao buscar grupos: ' + err.message);
+    } finally {
+      setFetchingGroups(false);
     }
   };
 
@@ -421,6 +466,77 @@ export default function SuperAdminDashboard() {
                     />
                   </div>
 
+                  {/* WhatsApp Group ID for Ad Notifications */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="groupId" className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-amber-400" />
+                        ID do Grupo do WhatsApp (Notificação de Novos Anúncios)
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleFetchGroups}
+                        disabled={fetchingGroups}
+                        className="text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-7 px-2"
+                        title="Buscar todos os grupos em que o WhatsApp está inserido"
+                      >
+                        {fetchingGroups ? (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                            <span>Buscando Grupos...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <RefreshCw className="w-3 h-3" />
+                            <span>Listar Grupos da Instância</span>
+                          </div>
+                        )}
+                      </Button>
+                    </div>
+
+                    <Input
+                      id="groupId"
+                      type="text"
+                      placeholder="12036301234567890@g.us"
+                      value={config.groupId || ''}
+                      onChange={(e) => setConfig({ ...config, groupId: e.target.value })}
+                      className="bg-slate-950/70 border-slate-800 text-slate-100 placeholder:text-slate-600 focus:border-amber-500/50 font-mono text-sm h-10"
+                    />
+
+                    {/* Group Selector Dropdown when groups are loaded */}
+                    {groupList.length > 0 && (
+                      <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                        <p className="text-xs font-semibold text-amber-400 flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          Selecione um grupo localizado ({groupList.length}):
+                        </p>
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setConfig({ ...config, groupId: e.target.value });
+                              toast.info(`Grupo selecionado! Clique em Salvar Configurações.`);
+                            }
+                          }}
+                          value={config.groupId || ''}
+                          className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-xs rounded-lg p-2.5 font-mono focus:border-amber-500"
+                        >
+                          <option value="">-- Clique para escolher um grupo --</option>
+                          {groupList.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.subject} ({g.id})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-slate-500">
+                      Sempre que um morador publicar um anúncio no desapego, uma notificação será enviada para este grupo.
+                    </p>
+                  </div>
+
                   {/* Connection Status Box */}
                   {connectionStatus.message && (
                     <div
@@ -489,6 +605,23 @@ export default function SuperAdminDashboard() {
                       <div className="flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-emerald-400" />
                         <span>Pinguar Webhook Edge</span>
+                      </div>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={handleSendTestGroupMessage}
+                    disabled={sendingGroupTestMsg}
+                    className="bg-slate-950 border border-blue-500/40 text-blue-300 hover:bg-slate-800 font-bold text-xs h-10 px-4 shadow-sm"
+                    title="Enviar uma mensagem de teste no grupo do WhatsApp configurado"
+                  >
+                    {sendingGroupTestMsg ? (
+                      <div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Testar Envio no Grupo</span>
                       </div>
                     )}
                   </Button>

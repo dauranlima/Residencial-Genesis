@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { ShoppingBag, Zap, ShoppingCart, UserCheck, Package, LogOut, Building2 } from "lucide-react";
+import { ShoppingBag, Zap, ShoppingCart, UserCheck, Package, LogOut, Building2, Briefcase, Sparkles } from "lucide-react";
 import ClassifiedsTab from "@/components/condo-market/ClassifiedsTab";
 import MerchantsTab from "@/components/condo-market/MerchantsTab";
+import ServicesTab from "@/components/condo-market/ServicesTab";
 import MyClassifiedsTab from "@/components/condo-market/MyClassifiedsTab";
 import NewClassifiedModal from "@/components/condo-market/NewClassifiedModal";
 import NewPromotionModal from "@/components/condo-market/NewPromotionModal";
@@ -11,8 +12,11 @@ import ClassifiedDetailModal from "@/components/condo-market/ClassifiedDetailMod
 import MerchantRedemptionsModal from "@/components/condo-market/MerchantRedemptionsModal";
 import SuperAdminMerchantsModal from "@/components/condo-market/SuperAdminMerchantsModal";
 import EditClassifiedModal from "@/components/condo-market/EditClassifiedModal";
+import ServiceProfileModal from "@/components/condo-market/ServiceProfileModal";
+import RegisterServiceProfileModal from "@/components/condo-market/RegisterServiceProfileModal";
+import AddReviewModal from "@/components/condo-market/AddReviewModal";
 import AdminAuthPinModal from "@/components/AdminAuthPinModal";
-import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus } from "@/components/condo-market/types";
+import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus, ResidentServiceProfile } from "@/components/condo-market/types";
 import { Button } from "@/components/ui/button";
 import {
   fetchClassifiedsFromSupabase,
@@ -23,7 +27,9 @@ import {
   fetchMerchantsFromSupabase,
   deletePromotionInSupabase,
 } from "@/lib/condoMarketService";
+import { fetchResidentServicesFromSupabase } from "@/lib/residentServicesService";
 import { toast } from "sonner";
+
 
 // Parceiros locais fixos do condomínio (exibidos na vitrine)
 const CONDOCENTER_MERCHANTS: Merchant[] = [
@@ -52,16 +58,18 @@ const CONDOCENTER_MERCHANTS: Merchant[] = [
 
 export default function CondoMarket() {
   const [isSeniorMode, setIsSeniorMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<"classifieds" | "merchants" | "my_classifieds">("classifieds");
+  const [activeTab, setActiveTab] = useState<"classifieds" | "merchants" | "services" | "my_classifieds">("classifieds");
 
   // Dados reais persistidos no Supabase (zero mock)
   const [classifieds, setClassifieds] = useState<ClassifiedItem[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>(CONDOCENTER_MERCHANTS);
+  const [serviceProfiles, setServiceProfiles] = useState<ResidentServiceProfile[]>([]);
 
   // Estados de carregamento
   const [isLoadingClassifieds, setIsLoadingClassifieds] = useState(true);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
 
   // Estados dos Modais
   const [isNewClassifiedOpen, setIsNewClassifiedOpen] = useState(false);
@@ -73,6 +81,11 @@ export default function CondoMarket() {
   const [selectedClassifiedItem, setSelectedClassifiedItem] = useState<ClassifiedItem | null>(null);
   const [editingClassifiedItem, setEditingClassifiedItem] = useState<ClassifiedItem | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+  // Modais de Serviços
+  const [selectedServiceProfile, setSelectedServiceProfile] = useState<ResidentServiceProfile | null>(null);
+  const [isRegisterServiceOpen, setIsRegisterServiceOpen] = useState(false);
+  const [reviewTargetProfile, setReviewTargetProfile] = useState<ResidentServiceProfile | null>(null);
   
   const [currentMerchant, setCurrentMerchant] = useState<Merchant | null>(() => {
     try {
@@ -132,9 +145,23 @@ export default function CondoMarket() {
     loadClassifieds();
     loadPromotions();
     loadMerchants();
+    loadServices();
   }, []);
 
+  const loadServices = async () => {
+    try {
+      setIsLoadingServices(true);
+      const data = await fetchResidentServicesFromSupabase();
+      setServiceProfiles(data);
+    } catch (e) {
+      console.error("Erro ao carregar serviços dos moradores:", e);
+    } finally {
+      setIsLoadingServices(false);
+    }
+  };
+
   const loadMerchants = async () => {
+
     try {
       const dbMerchants = await fetchMerchantsFromSupabase();
       if (dbMerchants && dbMerchants.length > 0) {
@@ -431,6 +458,18 @@ export default function CondoMarket() {
               <span>Comércios Locais ({coupons.length})</span>
             </button>
 
+            <button
+              onClick={() => setActiveTab("services")}
+              className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer border border-emerald-500/40 ${
+                activeTab === "services"
+                  ? "bg-emerald-500 text-slate-950 shadow-luxury font-black"
+                  : "bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20"
+              } ${isSeniorMode ? "text-xl px-8 py-4" : "text-base"}`}
+            >
+              <Briefcase className={isSeniorMode ? "h-6 w-6" : "h-5 w-5"} />
+              <span>Serviços dos Moradores ({serviceProfiles.length})</span>
+            </button>
+
             {currentUser && (
               <button
                 onClick={() => setActiveTab("my_classifieds")}
@@ -463,6 +502,20 @@ export default function CondoMarket() {
               }
             }}
             onSelectItem={(item) => setSelectedClassifiedItem(item)}
+          />
+        ) : activeTab === "services" ? (
+          <ServicesTab
+            profiles={serviceProfiles}
+            isLoading={isLoadingServices}
+            isSeniorMode={isSeniorMode}
+            onSelectProfile={(p) => setSelectedServiceProfile(p)}
+            onOpenRegisterModal={() => {
+              if (!currentUser) {
+                setIsRegisterOpen(true);
+              } else {
+                setIsRegisterServiceOpen(true);
+              }
+            }}
           />
         ) : activeTab === "merchants" ? (
           <MerchantsTab
@@ -519,6 +572,39 @@ export default function CondoMarket() {
         isSeniorMode={isSeniorMode}
         currentUser={currentUser}
       />
+
+      <ServiceProfileModal
+        profile={selectedServiceProfile}
+        isOpen={!!selectedServiceProfile}
+        onClose={() => setSelectedServiceProfile(null)}
+        onOpenReviewModal={(profileToReview) => setReviewTargetProfile(profileToReview)}
+      />
+
+      <RegisterServiceProfileModal
+        isOpen={isRegisterServiceOpen}
+        onClose={() => setIsRegisterServiceOpen(false)}
+        currentUser={currentUser}
+        onSuccess={(newProfile) => {
+          setServiceProfiles((prev) => [newProfile, ...prev.filter((p) => p.id !== newProfile.id)]);
+          setSelectedServiceProfile(newProfile);
+        }}
+      />
+
+      <AddReviewModal
+        isOpen={!!reviewTargetProfile}
+        onClose={() => setReviewTargetProfile(null)}
+        profile={reviewTargetProfile}
+        currentUser={currentUser}
+        onSuccess={(updatedProfile) => {
+          setServiceProfiles((prev) =>
+            prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p))
+          );
+          if (selectedServiceProfile?.id === updatedProfile.id) {
+            setSelectedServiceProfile(updatedProfile);
+          }
+        }}
+      />
+
 
       <AdminAuthPinModal
         isOpen={isAdminPinOpen}

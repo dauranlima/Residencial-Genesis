@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { ClassifiedItem, Coupon, ClassifiedStatus, CurrentUser, DatabaseCouponRedemption, AdminUser } from '@/components/condo-market/types';
 import { compressImage } from './imageCompression';
+import { sendClassifiedNotificationToGroup } from './whatsappConfigService';
 
 // ==========================================
 // DESAPEGOS / CLASSIFIEDS (Bucket: imgs_anuncios)
@@ -108,7 +109,7 @@ export async function createClassifiedInSupabase(
     throw new Error('Erro ao salvar anúncio no banco de dados.');
   }
 
-  return {
+  const newClassified: ClassifiedItem = {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -122,6 +123,22 @@ export async function createClassifiedInSupabase(
     sellerUnit: data.seller_unit,
     whatsapp: data.whatsapp,
   };
+
+  // 3. Tentar disparar a notificação para o grupo do WhatsApp (sem travar o fluxo principal)
+  sendClassifiedNotificationToGroup({
+    title: newClassified.title,
+    price: newClassified.price,
+    category: newClassified.category,
+    sellerName: newClassified.sellerName,
+    sellerBlock: newClassified.sellerBlock,
+    sellerUnit: newClassified.sellerUnit,
+    description: newClassified.description,
+    whatsapp: newClassified.whatsapp,
+  }).catch((err) => {
+    console.warn('Aviso: Falha ao enviar notificação do anúncio para o grupo do WhatsApp:', err);
+  });
+
+  return newClassified;
 }
 
 export async function updateClassifiedStatusInSupabase(
