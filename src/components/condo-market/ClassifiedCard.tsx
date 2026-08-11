@@ -26,6 +26,7 @@ export default function ClassifiedCard({
   );
 
   const formatPrice = (val: number) => {
+    if (val === 0) return "🎁 Doação (Grátis)";
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",

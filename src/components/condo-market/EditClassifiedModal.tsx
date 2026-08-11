@@ -28,6 +28,7 @@ export default function EditClassifiedModal({
   onDeleteClassified,
   isSeniorMode,
 }: EditClassifiedModalProps) {
+  const [listingType, setListingType] = useState<"venda" | "doacao">("venda");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(CLASSIFIED_CATEGORIES_DATA[0]?.name || "💡 Casa, Decoração e Utensílios");
@@ -57,7 +58,9 @@ export default function EditClassifiedModal({
   useEffect(() => {
     if (item && isOpen) {
       setTitle(item.title || "");
-      setPrice(item.price ? String(item.price) : "");
+      const isFree = item.price === 0;
+      setListingType(isFree ? "doacao" : "venda");
+      setPrice(item.price !== undefined ? String(item.price) : "");
       setCategory(item.category || "Móveis");
       setDescription(item.description || "");
       setSellerName(item.sellerName || "");
@@ -140,7 +143,7 @@ export default function EditClassifiedModal({
       return;
     }
 
-    if (!title || !price || !sellerName || !sellerUnit || !whatsapp) {
+    if (!title || (listingType === "venda" && !price) || !sellerName || !sellerUnit || !whatsapp) {
       toast.error("Preencha todos os campos obrigatórios (*).");
       return;
     }
@@ -148,11 +151,13 @@ export default function EditClassifiedModal({
     try {
       setIsSubmitting(true);
 
+      const finalPrice = listingType === "doacao" ? 0 : parseFloat(price.replace(",", "."));
+
       const updatedItem = await updateClassifiedInSupabase(
         item.id,
         {
           title,
-          price: parseFloat(price.replace(",", ".")),
+          price: finalPrice,
           category,
           description,
           status: item.status,
@@ -246,38 +251,64 @@ export default function EditClassifiedModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
-                Preço (R$) *
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+                Tipo de Anúncio *
               </label>
-              <Input
-                required
-                type="number"
-                step="0.01"
-                placeholder="Ex: 350,00"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className={isSeniorMode ? "h-14 text-lg" : "h-10"}
-              />
+              <select
+                value={listingType}
+                onChange={(e) => {
+                  const val = e.target.value as "venda" | "doacao";
+                  setListingType(val);
+                  if (val === "doacao") {
+                    setPrice("0");
+                  } else if (price === "0") {
+                    setPrice("");
+                  }
+                }}
+                className={`w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isSeniorMode ? "h-14 text-lg" : "h-10"
+                }`}
+              >
+                <option value="venda">🏷️ Venda (Definir Valor)</option>
+                <option value="doacao">🎁 Doação (Grátis / R$ 0,00)</option>
+              </select>
             </div>
             <div>
-              <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
                 Categoria *
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isSeniorMode ? "h-14 text-lg" : "h-10"
                 }`}
               >
                 {CLASSIFIED_CATEGORIES_DATA.map((group) => (
-                  <option key={group.name} value={group.name}>
+                  <option key={group.name} value={group.name} className="text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100">
                     {group.name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
+
+          {listingType === "venda" && (
+            <div>
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+                Preço (R$) *
+              </label>
+              <Input
+                required={listingType === "venda"}
+                type="number"
+                step="0.01"
+                placeholder="Ex: 350,00"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-14 text-lg" : "h-10"}`}
+              />
+            </div>
+          )}
 
           <div>
             <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>

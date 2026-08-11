@@ -28,6 +28,7 @@ export default function NewClassifiedModal({
   isSeniorMode,
   currentUser,
 }: NewClassifiedModalProps) {
+  const [listingType, setListingType] = useState<"venda" | "doacao">("venda");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(CLASSIFIED_CATEGORIES_DATA[0]?.name || "💡 Casa, Decoração e Utensílios");
@@ -112,7 +113,7 @@ export default function NewClassifiedModal({
       return;
     }
 
-    if (!title || !price || !sellerName || !sellerUnit || !whatsapp) {
+    if (!title || (listingType === "venda" && !price) || !sellerName || !sellerUnit || !whatsapp) {
       toast.error("Preencha todos os campos obrigatórios (*).");
       return;
     }
@@ -125,10 +126,12 @@ export default function NewClassifiedModal({
     try {
       setIsUploading(true);
 
+      const finalPrice = listingType === "doacao" ? 0 : parseFloat(price.replace(",", "."));
+
       const createdItem = await createClassifiedInSupabase(
         {
           title,
-          price: parseFloat(price.replace(",", ".")),
+          price: finalPrice,
           category,
           description,
           status: "available",
@@ -163,7 +166,7 @@ export default function NewClassifiedModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
       <div
-        className={`bg-card w-full max-w-xl rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col max-h-[92vh] ${
+        className={`bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] ${
           isSeniorMode ? "border-2 border-primary" : ""
         }`}
       >
@@ -180,7 +183,7 @@ export default function NewClassifiedModal({
           <button
             onClick={onClose}
             disabled={isUploading}
-            className="p-2 rounded-full hover:bg-primary-foreground/10 transition-colors disabled:opacity-50"
+            className="p-2 rounded-full hover:bg-primary-foreground/10 transition-colors disabled:opacity-50 text-white"
           >
             <X className="h-6 w-6" />
           </button>
@@ -189,7 +192,7 @@ export default function NewClassifiedModal({
         {/* Formulário */}
         <form onSubmit={handleSubmit} className={`p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 ${isSeniorMode ? "space-y-6" : ""}`}>
           <div>
-            <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+            <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
               Título do Produto *
             </label>
             <Input
@@ -197,38 +200,47 @@ export default function NewClassifiedModal({
               placeholder="Ex: Sofá 3 Lugares Reclinável"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className={isSeniorMode ? "h-14 text-lg" : "h-10"}
+              className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-14 text-lg" : "h-10"}`}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
-                Preço (R$) *
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+                Tipo de Anúncio *
               </label>
-              <Input
-                required
-                type="number"
-                step="0.01"
-                placeholder="Ex: 350,00"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className={isSeniorMode ? "h-14 text-lg" : "h-10"}
-              />
+              <select
+                value={listingType}
+                onChange={(e) => {
+                  const val = e.target.value as "venda" | "doacao";
+                  setListingType(val);
+                  if (val === "doacao") {
+                    setPrice("0");
+                  } else if (price === "0") {
+                    setPrice("");
+                  }
+                }}
+                className={`w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isSeniorMode ? "h-14 text-lg" : "h-10"
+                }`}
+              >
+                <option value="venda">🏷️ Venda (Definir Valor)</option>
+                <option value="doacao">🎁 Doação (Grátis / R$ 0,00)</option>
+              </select>
             </div>
             <div>
-              <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
                 Categoria *
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isSeniorMode ? "h-14 text-lg" : "h-10"
                 }`}
               >
                 {CLASSIFIED_CATEGORIES_DATA.map((group) => (
-                  <option key={group.name} value={group.name}>
+                  <option key={group.name} value={group.name} className="text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100">
                     {group.name}
                   </option>
                 ))}
@@ -236,8 +248,25 @@ export default function NewClassifiedModal({
             </div>
           </div>
 
+          {listingType === "venda" && (
+            <div>
+              <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+                Preço (R$) *
+              </label>
+              <Input
+                required={listingType === "venda"}
+                type="number"
+                step="0.01"
+                placeholder="Ex: 350,00"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-14 text-lg" : "h-10"}`}
+              />
+            </div>
+          )}
+
           <div>
-            <label className={`block font-bold mb-1 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+            <label className={`block font-bold mb-1 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
               Descrição Detalhada
             </label>
             <Textarea
@@ -245,14 +274,14 @@ export default function NewClassifiedModal({
               placeholder="Descreva o estado de conservação, tempo de uso, etc."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className={isSeniorMode ? "text-lg" : "text-sm"}
+              className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "text-lg" : "text-sm"}`}
             />
           </div>
 
           {/* Upload de Fotos - Mobile First (Máximo 5 Fotos, Mínimo 1) */}
-          <div className="border border-border rounded-xl p-4 bg-muted/20">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40">
             <div className="flex items-center justify-between mb-2">
-              <label className={`font-bold flex items-center gap-2 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
+              <label className={`font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200 ${isSeniorMode ? "text-lg" : "text-sm"}`}>
                 <ImagePlus className="h-5 w-5 text-emerald-600" />
                 <span>Fotos do Produto * (Mín. 1 foto, Máx. 5)</span>
               </label>
@@ -311,7 +340,7 @@ export default function NewClassifiedModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed border-primary/40 hover:border-primary bg-background/50 hover:bg-primary/5 rounded-xl aspect-square flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer ${
+                  className={`border-2 border-dashed border-primary/40 hover:border-primary bg-white dark:bg-slate-800 hover:bg-primary/5 rounded-xl aspect-square flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer ${
                     isSeniorMode ? "min-h-[100px]" : "min-h-[85px]"
                   }`}
                 >
@@ -332,43 +361,43 @@ export default function NewClassifiedModal({
           </div>
 
           {/* Dados do Vizinho */}
-          <div className="border-t border-border pt-4 mt-4">
-            <h4 className={`font-bold mb-3 ${isSeniorMode ? "text-xl" : "text-base"}`}>
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-4 mt-4">
+            <h4 className={`font-bold mb-3 text-slate-900 dark:text-slate-100 ${isSeniorMode ? "text-xl" : "text-base"}`}>
               Seus Dados para Contato
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1">Seu Nome *</label>
+                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Seu Nome *</label>
                 <Input
                   required
                   placeholder="Nome"
                   value={sellerName}
                   onChange={(e) => setSellerName(e.target.value)}
-                  className={isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}
+                  className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">Bloco/Torre</label>
+                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Bloco/Torre</label>
                 <Input
                   placeholder="Ex: B"
                   value={sellerBlock}
                   onChange={(e) => setSellerBlock(e.target.value)}
-                  className={isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}
+                  className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}`}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1">Apto / Casa *</label>
+                <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Apto / Casa *</label>
                 <Input
                   required
                   placeholder="Ex: 402"
                   value={sellerUnit}
                   onChange={(e) => setSellerUnit(e.target.value)}
-                  className={isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}
+                  className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}`}
                 />
               </div>
             </div>
             <div className="mt-3">
-              <label className="block text-xs font-medium mb-1">WhatsApp para Contato *</label>
+              <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">WhatsApp para Contato *</label>
               <Input
                 required
                 placeholder="(45) 99999-9999"
@@ -380,14 +409,14 @@ export default function NewClassifiedModal({
                   if (digits.length > 7) formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
                   setWhatsapp(formatted);
                 }}
-                className={isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}
+                className={`text-slate-900 bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 ${isSeniorMode ? "h-12 text-base" : "h-9 text-xs"}`}
               />
             </div>
           </div>
 
           {/* Botões */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading} className="text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
               Cancelar
             </Button>
             <Button

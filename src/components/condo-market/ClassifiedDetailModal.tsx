@@ -73,6 +73,7 @@ export default function ClassifiedDetailModal({
     : ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&auto=format&fit=crop&q=60"];
 
   const formatPrice = (val: number) => {
+    if (val === 0) return "🎁 Doação (Grátis)";
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
