@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Upload, CheckCircle2, ImagePlus, Trash2, Loader2, AlertCircle, Pencil, AlertTriangle } from "lucide-react";
+import { X, Upload, CheckCircle2, ImagePlus, Trash2, Loader2, AlertCircle, Pencil, AlertTriangle, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +53,7 @@ export default function EditClassifiedModal({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Pré-preencher campos ao abrir o modal com o item selecionado
   useEffect(() => {
@@ -344,6 +345,7 @@ export default function EditClassifiedModal({
               </span>
             </div>
 
+            {/* Input para Galeria / Arquivos */}
             <input
               ref={fileInputRef}
               type="file"
@@ -351,7 +353,18 @@ export default function EditClassifiedModal({
               multiple
               onChange={handleFileSelect}
               className="hidden"
-              id="edit-photo-upload-input"
+              id="edit-photo-upload-gallery"
+            />
+
+            {/* Input para Câmera Direta (Android e iOS) */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="edit-photo-upload-camera"
             />
 
             {/* Grid de Previews das Fotos (Existentes + Novas) */}
@@ -405,23 +418,34 @@ export default function EditClassifiedModal({
                   </span>
                 </div>
               ))}
+            </div>
 
-              {/* Botão de Adicionar Mais Fotos */}
-              {totalPhotosCount < 5 && (
+            {/* Botões de Ação de Foto (Tirar Foto com Câmera ou Selecionar da Galeria) */}
+            {totalPhotosCount < 5 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 border-dashed border-emerald-500/60 hover:border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 font-bold transition-all active:scale-95 cursor-pointer ${
+                    isSeniorMode ? "text-base py-3" : "text-xs"
+                  }`}
+                >
+                  <Camera className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>📸 Tirar Foto (Câmera)</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed border-primary/40 hover:border-primary bg-background/50 hover:bg-primary/5 rounded-xl aspect-square flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer ${
-                    isSeniorMode ? "min-h-[100px]" : "min-h-[85px]"
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 text-primary dark:text-slate-200 font-bold transition-all active:scale-95 cursor-pointer ${
+                    isSeniorMode ? "text-base py-3" : "text-xs"
                   }`}
                 >
-                  <Upload className="h-6 w-6 text-primary mb-1" />
-                  <span className="text-xs font-bold text-primary">
-                    + Adicionar Foto
-                  </span>
+                  <Upload className="h-4 w-4 text-primary shrink-0" />
+                  <span>🖼️ Abrir Galeria / Fotos</span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {uploadError && (
               <div className="flex items-center gap-2 mt-3 text-red-600 text-xs font-semibold bg-red-50 dark:bg-red-950/40 p-2 rounded-lg border border-red-200">
