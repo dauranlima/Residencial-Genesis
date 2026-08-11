@@ -55,10 +55,10 @@ export default function ServiceProfileModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-2xl bg-white text-slate-900 border-0 shadow-2xl">
-        <DialogHeader className="p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
+      <DialogContent className="w-[94vw] sm:w-full max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 rounded-2xl bg-white text-slate-900 border-0 shadow-2xl">
+        <DialogHeader className="p-4 sm:p-6 pb-4 border-b border-slate-100 flex flex-row items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
           <div>
-            <DialogTitle className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+            <DialogTitle className="text-xl sm:text-2xl font-extrabold text-slate-900 flex flex-wrap items-center gap-2">
               <span>{profile.residentName}</span>
               <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full border border-emerald-200">
                 {profile.profession}
@@ -71,9 +71,19 @@ export default function ServiceProfileModal({
               </span>
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors shrink-0 cursor-pointer flex items-center justify-center"
+            title="Sair do anúncio"
+            aria-label="Sair do anúncio"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </DialogHeader>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6 overflow-x-hidden">
           {/* Galeria de Fotos / Portfólio */}
           {profile.images && profile.images.length > 0 && (
             <div className="space-y-3">
@@ -82,7 +92,7 @@ export default function ServiceProfileModal({
               </h4>
               <div
                 onClick={() => setIsFullScreenImage(true)}
-                className="relative w-full h-72 rounded-2xl overflow-hidden bg-slate-900 group cursor-zoom-in shadow-inner"
+                className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden bg-slate-900 group cursor-zoom-in shadow-inner"
                 title="Clique para ver a imagem em tela cheia"
               >
                 <img
@@ -106,7 +116,7 @@ export default function ServiceProfileModal({
                           prev === 0 ? profile.images.length - 1 : prev - 1
                         );
                       }}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
+                      className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
@@ -117,7 +127,7 @@ export default function ServiceProfileModal({
                           prev === profile.images.length - 1 ? 0 : prev + 1
                         );
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
+                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
@@ -128,12 +138,12 @@ export default function ServiceProfileModal({
 
               {/* Miniaturas de navegação */}
               {profile.images.length > 1 && (
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
                   {profile.images.map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
+                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
                         activeImageIndex === idx
                           ? "border-emerald-600 ring-2 ring-emerald-500/30 scale-105"
                           : "border-transparent opacity-60 hover:opacity-100"
@@ -148,30 +158,30 @@ export default function ServiceProfileModal({
           )}
 
           {/* Cards de Resumo e Preço */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-emerald-50/80 border border-emerald-200/70 p-4 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="bg-emerald-50/80 border border-emerald-200/70 p-3.5 rounded-xl">
               <span className="text-xs text-emerald-700 font-semibold block mb-1">Preço Inicial</span>
-              <span className="text-2xl font-extrabold text-emerald-800">
+              <span className="text-xl sm:text-2xl font-extrabold text-emerald-800">
                 A partir de R$ {profile.startingPrice.toFixed(0)}
               </span>
             </div>
 
-            <div className="bg-amber-50/80 border border-amber-200/70 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-amber-50/80 border border-amber-200/70 p-3.5 rounded-xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
               <div>
                 <span className="text-xs text-amber-700 font-semibold block mb-1">Reputação do Vizinho</span>
                 <div className="flex items-center gap-1.5">
                   <Star className="w-5 h-5 fill-amber-400 text-amber-500 shrink-0" />
-                  <span className="text-2xl font-extrabold text-amber-900">
+                  <span className="text-xl sm:text-2xl font-extrabold text-amber-900">
                     {profile.rating.toFixed(1)}
                   </span>
                 </div>
               </div>
-              <span className="text-xs text-amber-800 font-medium bg-amber-200/60 px-2.5 py-1 rounded-lg">
+              <span className="text-xs text-amber-800 font-medium bg-amber-200/60 px-2.5 py-1 rounded-lg shrink-0">
                 {profile.reviewCount} avaliações
               </span>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
+            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-xl">
               <span className="text-xs text-slate-500 font-semibold block mb-1">Horário de Atendimento</span>
               <p className="text-sm font-medium text-slate-800 line-clamp-2">
                 {profile.workHours || "A combinar com o morador"}
@@ -182,24 +192,24 @@ export default function ServiceProfileModal({
           {/* Especialidade e Descrição */}
           <div className="space-y-3">
             {profile.specialty && (
-              <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span className="text-sm font-bold text-slate-900">Especialidade:</span>
-                <span className="text-sm text-slate-700">{profile.specialty}</span>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
+                <Award className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-bold text-slate-900">Especialidade:</span>
+                <span className="text-slate-700">{profile.specialty}</span>
               </div>
             )}
 
             {profile.experience && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span className="text-sm font-bold text-slate-900">Experiência:</span>
-                <span className="text-sm text-slate-700">{profile.experience}</span>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
+                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-bold text-slate-900">Experiência:</span>
+                <span className="text-slate-700">{profile.experience}</span>
               </div>
             )}
 
-            <div className="pt-2">
+            <div className="pt-1">
               <h4 className="text-sm font-bold text-slate-900 mb-1.5">Sobre o Serviço</h4>
-              <p className="text-sm text-slate-600 whitespace-pre-line leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-100 break-words">
                 {profile.description}
               </p>
             </div>
@@ -216,7 +226,7 @@ export default function ServiceProfileModal({
                 {profile.paymentMethods.map((method, idx) => (
                   <span
                     key={idx}
-                    className="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200"
+                    className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200"
                   >
                     💳 {method}
                   </span>
@@ -227,11 +237,11 @@ export default function ServiceProfileModal({
 
           {/* Seção de Avaliações */}
           <div className="pt-4 border-t border-slate-200">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
                   <span>Avaliações de Vizinhos</span>
-                  <span className="text-sm font-normal text-slate-500">
+                  <span className="text-xs sm:text-sm font-normal text-slate-500">
                     ({profile.reviewCount})
                   </span>
                 </h3>
@@ -241,7 +251,7 @@ export default function ServiceProfileModal({
               <Button
                 onClick={() => onOpenReviewModal(profile)}
                 variant="outline"
-                className="border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs rounded-xl flex items-center gap-1.5"
+                className="border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
                 <span>Avaliar profissional</span>
@@ -276,7 +286,7 @@ export default function ServiceProfileModal({
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-600">{rev.comment}</p>
+                    <p className="text-xs text-slate-600 break-words">{rev.comment}</p>
                     <span className="text-[10px] text-slate-400 block pt-0.5">
                       {new Date(rev.createdAt).toLocaleDateString("pt-BR")}
                     </span>
@@ -287,22 +297,37 @@ export default function ServiceProfileModal({
           </div>
         </div>
 
-        {/* Action Button Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 sticky bottom-0 z-20 flex items-center justify-between gap-3">
-          <div>
+        {/* Action Button Footer Adaptável no Mobile com botão de Voltar/Sair */}
+        <div className="p-4 border-t border-slate-100 bg-slate-50 sticky bottom-0 z-20 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="text-center sm:text-left">
             <span className="text-[11px] text-slate-400 font-medium block">Contato direto sem taxas</span>
             <span className="text-xs font-semibold text-emerald-700">{profile.whatsapp}</span>
           </div>
 
-          <Button
-            onClick={handleOpenWhatsApp}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-600/25 transition-all scale-100 hover:scale-[1.02]"
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span>Solicitar orçamento via WhatsApp</span>
-          </Button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="border-slate-300 text-slate-700 hover:bg-slate-200/80 font-bold px-4 py-3 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Voltar</span>
+            </Button>
+
+            <Button
+              onClick={handleOpenWhatsApp}
+              className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+            >
+              <MessageCircle className="w-5 h-5 shrink-0" />
+              <span className="truncate">
+                <span className="hidden xs:inline sm:hidden md:inline">Solicitar orçamento via </span>WhatsApp
+              </span>
+            </Button>
+          </div>
         </div>
       </DialogContent>
+
 
       {/* Modal / Overlay de Foto em Tela Cheia via Portal (evita traps do Radix UI) */}
       {isFullScreenImage && profile.images && profile.images.length > 0 && createPortal(
