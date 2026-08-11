@@ -442,42 +442,98 @@ export async function fetchTotalRedemptionsCountFromSupabase(): Promise<number> 
 
 const MERCHANTS_STORAGE_KEY = 'condo_market_merchants_db';
 
+/**
+ * Sincroniza automaticamente parceiros comerciais do localStorage com a tabela 'merchants' do Supabase.
+ * Garante que estabelecimentos salvos localmente sejam sincronizados com a nuvem e fiquem visíveis no celular.
+ */
+export async function syncLocalMerchantsToSupabase(): Promise<void> {
+  try {
+    const raw = localStorage.getItem(MERCHANTS_STORAGE_KEY);
+    if (!raw) return;
+    const localMerchants: Merchant[] = JSON.parse(raw);
+    if (!Array.isArray(localMerchants) || localMerchants.length === 0) return;
+
+    const { data: dbData } = await supabase.from('merchants').select('*');
+    const existingDbCodes = new Set((dbData || []).map((m: any) => m.access_code || m.accessCode || m.pin));
+    const existingDbIds = new Set((dbData || []).map((m: any) => m.id));
+
+    for (const localM of localMerchants) {
+      if (!localM.businessName) continue;
+      const code = localM.accessCode || '';
+      const id = localM.id || '';
+
+      if (!existingDbIds.has(id) && (!code || !existingDbCodes.has(code))) {
+        console.log(`[Sync] Enviando parceiro local "${localM.businessName}" para o Supabase...`);
+        const payload = {
+          business_name: localM.businessName,
+          category: localM.category || 'Outros',
+          responsible_name: localM.responsibleName || null,
+          phone: localM.whatsapp || '',
+          address: localM.address || null,
+          access_code: localM.accessCode || '',
+          description: localM.description || null,
+          logo_url: localM.logoUrl || null,
+        };
+
+        const { error } = await supabase.from('merchants').insert([payload]);
+        if (error) {
+          console.warn(`[Sync Warning] Erro ao sincronizar "${localM.businessName}":`, error.message);
+        } else {
+          console.log(`[Sync Success] Parceiro "${localM.businessName}" salvo no Supabase com sucesso!`);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Aviso ao sincronizar parceiros locais com o Supabase:', e);
+  }
+}
+
 export async function createMerchantInSupabase(
   merchant: Omit<Merchant, 'id'>
 ): Promise<Merchant> {
+  const payload = {
+    business_name: merchant.businessName,
+    category: merchant.category,
+    responsible_name: merchant.responsibleName || null,
+    phone: merchant.whatsapp,
+    address: merchant.address || null,
+    access_code: merchant.accessCode,
+    description: merchant.description || null,
+    logo_url: merchant.logoUrl || null,
+  };
+
   // 1. Tentar gravar diretamente no Supabase como banco de dados principal
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('merchants')
-    .insert([
-      {
-        business_name: merchant.businessName,
-        category: merchant.category,
-        responsible_name: merchant.responsibleName || null,
-        phone: merchant.whatsapp,
-        address: merchant.address || null,
-        access_code: merchant.accessCode,
-        description: merchant.description || null,
-        logo_url: merchant.logoUrl || null,
-      },
-    ])
+    .insert([payload])
     .select()
     .single();
 
   if (error) {
     console.error('Erro ao salvar parceiro comercial no Supabase:', error);
-    throw new Error(`Falha ao salvar no banco de dados Supabase: ${error.message || error.details || 'Verifique se a tabela "merchants" foi criada.'}`);
+    // Tentativa de fallback com upsert
+    const { data: upsertData, error: upsertErr } = await supabase
+      .from('merchants')
+      .upsert([payload])
+      .select()
+      .single();
+
+    if (upsertErr) {
+      throw new Error(`Falha ao salvar no banco de dados Supabase: ${upsertErr.message || error.message}`);
+    }
+    data = upsertData;
   }
 
   const createdMerchant: Merchant = {
     id: data.id,
-    businessName: data.business_name,
-    category: data.category,
-    responsibleName: data.responsible_name || '',
-    whatsapp: data.phone || merchant.whatsapp,
-    address: data.address || '',
-    accessCode: data.access_code || merchant.accessCode,
-    description: data.description || '',
-    logoUrl: data.logo_url || '',
+    businessName: data.business_name || merchant.businessName,
+    category: data.category || merchant.category,
+    responsibleName: data.responsible_name || merchant.responsibleName || '',
+    whatsapp: data.phone || data.whatsapp || merchant.whatsapp,
+    address: data.address || merchant.address || '',
+    accessCode: data.access_code || data.accessCode || merchant.accessCode,
+    description: data.description || merchant.description || '',
+    logoUrl: data.logo_url || merchant.logoUrl || '',
   };
 
   // 2. Atualizar cache local no LocalStorage
@@ -501,23 +557,27 @@ export async function getMerchantByAccessCode(code: string): Promise<Merchant | 
   try {
     const { data, error } = await supabase
       .from('merchants')
-      .select('id, business_name, category, responsible_name, phone, address, access_code, description, logo_url')
-      .eq('access_code', cleanCode)
-      .limit(1);
+      .select('*');
 
     if (!error && data && data.length > 0) {
-      const m = data[0];
-      return {
-        id: m.id,
-        businessName: m.business_name || m.businessName,
-        category: m.category,
-        responsibleName: m.responsible_name || '',
-        whatsapp: m.phone || m.whatsapp || '',
-        address: m.address || '',
-        accessCode: m.access_code || cleanCode,
-        description: m.description || '',
-        logoUrl: m.logo_url || '',
-      };
+      const match = data.find((m: any) => {
+        const mCode = (m.access_code || m.accessCode || m.pin || '').toString().trim();
+        return mCode === cleanCode;
+      });
+
+      if (match) {
+        return {
+          id: match.id,
+          businessName: match.business_name || match.businessName || match.name || '',
+          category: match.category || 'Outros',
+          responsibleName: match.responsible_name || match.responsibleName || '',
+          whatsapp: match.phone || match.whatsapp || '',
+          address: match.address || '',
+          accessCode: match.access_code || match.accessCode || match.pin || cleanCode,
+          description: match.description || '',
+          logoUrl: match.logo_url || match.logoUrl || '',
+        };
+      }
     }
   } catch (e) {
     console.error('Erro ao buscar comerciante por código no Supabase:', e);
@@ -546,23 +606,23 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
     // 1. Buscar da tabela 'merchants' no Supabase (Fonte Principal)
     const { data: merchantsData, error: merchantsErr } = await supabase
       .from('merchants')
-      .select('id, business_name, category, responsible_name, description, address, phone, logo_url, access_code')
-      .order('created_at', { ascending: false });
+      .select('*');
 
     if (!merchantsErr && merchantsData && merchantsData.length > 0) {
       merchantsData.forEach((m: any) => {
-        if (!addedIds.has(m.id)) {
-          addedIds.add(m.id);
+        const merchantId = m.id || `m-${Date.now()}`;
+        if (!addedIds.has(merchantId)) {
+          addedIds.add(merchantId);
           resultMerchants.push({
-            id: m.id,
-            businessName: m.business_name || m.businessName,
-            category: m.category,
-            responsibleName: m.responsible_name || '',
+            id: merchantId,
+            businessName: m.business_name || m.businessName || m.name || 'Parceiro Comercial',
+            category: m.category || 'Outros',
+            responsibleName: m.responsible_name || m.responsibleName || m.responsible || '',
             description: m.description || '',
             address: m.address || '',
-            whatsapp: m.phone || m.whatsapp || '',
-            accessCode: m.access_code || '',
-            logoUrl: m.logo_url || '',
+            whatsapp: m.phone || m.whatsapp || m.contact || '',
+            accessCode: m.access_code || m.accessCode || m.pin || '',
+            logoUrl: m.logo_url || m.logoUrl || '',
           });
         }
       });
@@ -571,11 +631,11 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
     // 2. Complementar com parceiros extraídos dos anúncios de promoções se não estiverem na lista
     const { data: promotionsData } = await supabase
       .from('promotions')
-      .select('merchant_name, merchant_category, merchant_whatsapp, description');
+      .select('*');
 
     if (promotionsData && promotionsData.length > 0) {
       promotionsData.forEach((p: any, idx: number) => {
-        const name = p.merchant_name || 'Comércio Local';
+        const name = p.merchant_name || p.merchantName || 'Comércio Local';
         const exists = resultMerchants.some((m) => m.businessName.toLowerCase() === name.toLowerCase());
         if (!exists) {
           const promoMerchantId = `m-db-${idx}`;
@@ -584,9 +644,9 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
             resultMerchants.push({
               id: promoMerchantId,
               businessName: name,
-              category: p.merchant_category || 'Geral',
+              category: p.merchant_category || p.category || 'Geral',
               description: p.description || 'Parceiro comercial do condomínio',
-              whatsapp: p.merchant_whatsapp || '',
+              whatsapp: p.merchant_whatsapp || p.whatsapp || p.phone || '',
             });
           }
         }
@@ -619,6 +679,9 @@ export async function fetchMerchantsFromSupabase(): Promise<Merchant[]> {
  * Busca TODOS os parceiros com detalhes de PIN para a Central do Super Admin
  */
 export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
+  // Sincronizar qualquer estabelecimento salvo localmente anteriormente para o Supabase
+  await syncLocalMerchantsToSupabase();
+
   const resultMerchants: Merchant[] = [];
   const addedIds = new Set<string>();
 
@@ -626,25 +689,25 @@ export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
   try {
     const { data: merchantsData, error: merchantsErr } = await supabase
       .from('merchants')
-      .select('id, business_name, category, responsible_name, description, address, phone, access_code, logo_url')
-      .order('created_at', { ascending: false });
+      .select('*');
 
     if (merchantsErr) {
       console.error('Erro de consulta Supabase (fetchAllMerchantsForAdmin):', merchantsErr);
     } else if (merchantsData && merchantsData.length > 0) {
       merchantsData.forEach((m: any) => {
-        if (!addedIds.has(m.id)) {
-          addedIds.add(m.id);
+        const merchantId = m.id || `m-${Date.now()}`;
+        if (!addedIds.has(merchantId)) {
+          addedIds.add(merchantId);
           resultMerchants.push({
-            id: m.id,
-            businessName: m.business_name || m.businessName,
-            category: m.category,
-            responsibleName: m.responsible_name || '',
+            id: merchantId,
+            businessName: m.business_name || m.businessName || m.name || 'Parceiro Comercial',
+            category: m.category || 'Outros',
+            responsibleName: m.responsible_name || m.responsibleName || m.responsible || '',
             description: m.description || '',
             address: m.address || '',
-            whatsapp: m.phone || m.whatsapp || '',
-            accessCode: m.access_code || '',
-            logoUrl: m.logo_url || '',
+            whatsapp: m.phone || m.whatsapp || m.contact || '',
+            accessCode: m.access_code || m.accessCode || m.pin || '',
+            logoUrl: m.logo_url || m.logoUrl || '',
           });
         }
       });
@@ -666,6 +729,13 @@ export async function fetchAllMerchantsForAdmin(): Promise<Merchant[]> {
           }
         });
       }
+    } catch (_e) {}
+  }
+
+  // 3. Manter cache local atualizado com o que foi puxado do Supabase
+  if (resultMerchants.length > 0) {
+    try {
+      localStorage.setItem(MERCHANTS_STORAGE_KEY, JSON.stringify(resultMerchants));
     } catch (_e) {}
   }
 

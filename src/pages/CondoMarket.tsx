@@ -161,10 +161,9 @@ export default function CondoMarket() {
   };
 
   const loadMerchants = async () => {
-
     try {
       const dbMerchants = await fetchMerchantsFromSupabase();
-      if (dbMerchants && dbMerchants.length > 0) {
+      if (dbMerchants) {
         setMerchants(dbMerchants);
       }
     } catch (e) {

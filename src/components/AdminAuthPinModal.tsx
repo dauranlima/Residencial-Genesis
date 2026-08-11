@@ -125,7 +125,7 @@ export default function AdminAuthPinModal({
         onClose();
       } else {
         setPinError(true);
-        toast.error("Código de 8 dígitos incorreto. Verifique o PIN do parceiro ou use o código Super Admin (85810220).");
+        toast.error("Código de 8 dígitos incorreto.");
       }
     } catch (e) {
       console.error("Erro ao verificar PIN:", e);
