@@ -692,7 +692,7 @@ export default function LandingPage() {
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between space-y-6 hover:border-slate-700 transition-all">
               <div className="space-y-4">
                 <Badge className="bg-slate-800 text-slate-300 text-xs">Até 32 Unidades</Badge>
-                <h3 className="text-xl font-bold text-white">Plano Essencial</h3>
+                <h3 className="text-xl font-bold text-white">Plano Essencial ViziGO Market</h3>
                 <p className="text-xs text-slate-400">Ideal para condomínios pequenos ou edifícios de bloco único.</p>
 
                 <div className="pt-2">
@@ -704,13 +704,13 @@ export default function LandingPage() {
 
                 <ul className="space-y-3 text-xs text-slate-300 pt-4 border-t border-slate-800">
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Vitrine de Anúncios do Condomínio
+                    <Check className="w-4 h-4 text-emerald-400" /> MarketPlace de Anúncios do Condomínio
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Cadastro de Prestadores Locais
+                    <Check className="w-4 h-4 text-emerald-400" /> 4 anuncio por Cadastro
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" /> Contato Direto via WhatsApp
+                    <Check className="w-4 h-4 text-emerald-400" /> Parcerias com Comércio Local & Cupons
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-400" /> Suporte via E-mail
