@@ -49,6 +49,7 @@ import { fetchAllUsersForAdmin } from '@/lib/condoMarketService';
 import SuperAdminUsersModal from '@/components/super-admin/SuperAdminUsersModal';
 import SystemPagesControlCard from '@/components/super-admin/SystemPagesControlCard';
 import SuperAdminLeadsCard from '@/components/super-admin/SuperAdminLeadsCard';
+import SuperAdminCondoUnitsCard from '@/components/super-admin/SuperAdminCondoUnitsCard';
 import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
@@ -347,6 +348,9 @@ export default function SuperAdminDashboard() {
 
             {/* Card de Controle de Telas e Módulos */}
             <SystemPagesControlCard />
+
+            {/* Card de Gestão de Torres, Unidades e Moradores */}
+            <SuperAdminCondoUnitsCard />
 
             <Card className="bg-slate-900/90 border-slate-800 shadow-xl">
               <CardHeader className="border-b border-slate-800/80 pb-4">

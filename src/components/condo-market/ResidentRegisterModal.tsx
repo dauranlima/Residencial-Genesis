@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getResidentByPhone, saveResidentProfile } from "@/lib/condoMarketService";
 import { sendWhatsAppVerificationCode, verifyWhatsAppCode } from "@/lib/verificationService";
+import { isValidCondoUnit } from "@/lib/condoUnits";
 import { toast } from "sonner";
 
 interface ResidentRegisterModalProps {
@@ -99,6 +100,14 @@ export default function ResidentRegisterModal({
     if (!phone || phone.replace(/\D/g, "").length < 10) {
       toast.error("Por favor, digite um número de celular válido com DDD.");
       return;
+    }
+
+    if (mode === "register") {
+      const validation = isValidCondoUnit(block, unit);
+      if (!validation.valid) {
+        toast.error(validation.errorReason || "Apartamento ou Torre não cadastrado no sistema.");
+        return;
+      }
     }
 
     if (mode === "login") {

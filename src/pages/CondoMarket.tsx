@@ -424,13 +424,13 @@ export default function CondoMarket() {
             </div>
           </div>
 
-          {/* Abas de Navegação (Desapegos vs Promoções vs Meus Anúncios) */}
+          {/* Abas de Navegação (Desapegos vs Promoções vs Serviços vs Meus Anúncios) */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8 border-t border-primary-foreground/10 pt-6">
             <button
               onClick={() => {
                 setActiveTab("classifieds");
                 setTimeout(() => {
-                  document.getElementById("market-categories-section")?.scrollIntoView({
+                  (document.getElementById("condo-market-main-content") || document.getElementById("market-categories-section"))?.scrollIntoView({
                     behavior: "smooth",
                     block: "start",
                   });
@@ -447,7 +447,15 @@ export default function CondoMarket() {
             </button>
 
             <button
-              onClick={() => setActiveTab("merchants")}
+              onClick={() => {
+                setActiveTab("merchants");
+                setTimeout(() => {
+                  (document.getElementById("condo-market-main-content") || document.getElementById("market-categories-section"))?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }, 50);
+              }}
               className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer ${
                 activeTab === "merchants"
                   ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
@@ -459,7 +467,15 @@ export default function CondoMarket() {
             </button>
 
             <button
-              onClick={() => setActiveTab("services")}
+              onClick={() => {
+                setActiveTab("services");
+                setTimeout(() => {
+                  (document.getElementById("condo-market-main-content") || document.getElementById("market-categories-section"))?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }, 50);
+              }}
               className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer border border-emerald-500/40 ${
                 activeTab === "services"
                   ? "bg-emerald-500 text-slate-950 shadow-luxury font-black"
@@ -472,7 +488,15 @@ export default function CondoMarket() {
 
             {currentUser && (
               <button
-                onClick={() => setActiveTab("my_classifieds")}
+                onClick={() => {
+                  setActiveTab("my_classifieds");
+                  setTimeout(() => {
+                    (document.getElementById("condo-market-main-content") || document.getElementById("market-categories-section"))?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }, 50);
+                }}
                 className={`flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl transition-all w-full sm:w-auto cursor-pointer border border-amber-500/40 ${
                   activeTab === "my_classifieds"
                     ? "bg-amber-500 text-slate-950 shadow-luxury font-black"
@@ -488,7 +512,8 @@ export default function CondoMarket() {
       </section>
 
       {/* Conteúdo Principal por Aba */}
-      <main className="container mx-auto px-4 mt-8">
+      <main className="container mx-auto px-4 mt-8" id="condo-market-main-content">
+
         {activeTab === "classifieds" ? (
           <ClassifiedsTab
             items={classifieds}

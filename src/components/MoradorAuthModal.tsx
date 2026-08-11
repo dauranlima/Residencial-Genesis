@@ -4,11 +4,7 @@ import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-
-const VALID_APTS = [
-  "511","512","513","514","521","522","523","524","531","532","533","534","541","542","543","544",
-  "411","412","413","414","421","422","423","424","431","432","433","434","441","442","443","444"
-];
+import { VALID_APTS } from "@/lib/condoUnits";
 
 interface MoradorAuthModalProps {
   onAuthenticated: () => void;

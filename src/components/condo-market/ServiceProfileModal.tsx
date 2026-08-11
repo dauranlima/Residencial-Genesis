@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Clock, CreditCard, Award, MessageCircle, X, ChevronLeft, ChevronRight, UserCheck, PlusCircle } from "lucide-react";
+import { Star, MapPin, Clock, CreditCard, Award, MessageCircle, X, ChevronLeft, ChevronRight, UserCheck, PlusCircle, Maximize2 } from "lucide-react";
 import { ResidentServiceProfile, ServiceReview } from "./types";
 import { fetchServiceReviewsFromSupabase } from "@/lib/residentServicesService";
 
@@ -26,6 +26,7 @@ export default function ServiceProfileModal({
   const [reviews, setReviews] = useState<ServiceReview[]>([]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [isFullScreenImage, setIsFullScreenImage] = useState(false);
 
   useEffect(() => {
     if (profile && isOpen) {
@@ -75,38 +76,51 @@ export default function ServiceProfileModal({
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 📷 Portfólio e Fotos do Trabalho
               </h4>
-              <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-slate-900 group">
+              <div
+                onClick={() => setIsFullScreenImage(true)}
+                className="relative w-full h-72 rounded-2xl overflow-hidden bg-slate-900 group cursor-zoom-in shadow-inner"
+                title="Clique para ver a imagem em tela cheia"
+              >
                 <img
                   src={profile.images[activeImageIndex]}
                   alt={`Portfólio ${activeImageIndex + 1}`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                 />
+
+                {/* Ícone Indicador de Tela Cheia */}
+                <div className="absolute top-3 right-3 bg-black/70 hover:bg-black/90 text-white px-2.5 py-1.5 rounded-lg opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-semibold shadow-md pointer-events-none z-10">
+                  <Maximize2 className="h-4 w-4 text-emerald-400" />
+                  <span className="hidden sm:inline">Ver em tela cheia</span>
+                </div>
 
                 {profile.images.length > 1 && (
                   <>
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setActiveImageIndex((prev) =>
                           prev === 0 ? profile.images.length - 1 : prev - 1
-                        )
-                      }
-                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+                        );
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setActiveImageIndex((prev) =>
                           prev === profile.images.length - 1 ? 0 : prev + 1
-                        )
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+                        );
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-all z-10"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
                   </>
                 )}
               </div>
+
 
               {/* Miniaturas de navegação */}
               {profile.images.length > 1 && (
@@ -285,6 +299,82 @@ export default function ServiceProfileModal({
           </Button>
         </div>
       </DialogContent>
+
+      {/* Modal / Overlay de Foto em Tela Cheia */}
+      {isFullScreenImage && profile.images && profile.images.length > 0 && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setIsFullScreenImage(false)}
+        >
+          {/* Cabeçalho do Fullscreen */}
+          <div className="flex items-center justify-between text-white z-10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base font-bold truncate max-w-[80%]">
+                {profile.residentName} - {profile.profession} ({activeImageIndex + 1} / {profile.images.length})
+              </span>
+            </div>
+            <button
+              onClick={() => setIsFullScreenImage(false)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              aria-label="Fechar tela cheia"
+            >
+              <X className="h-6 w-6 sm:h-8 sm:w-8" />
+            </button>
+          </div>
+
+          {/* Imagem Centralizada em Tela Cheia */}
+          <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={profile.images[activeImageIndex]}
+              alt={`Portfólio ${activeImageIndex + 1}`}
+              className="max-h-[85vh] max-w-[95vw] object-contain rounded-lg shadow-2xl select-none"
+            />
+
+            {profile.images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => (prev === 0 ? profile.images.length - 1 : prev - 1));
+                  }}
+                  className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => (prev === profile.images.length - 1 ? 0 : prev + 1));
+                  }}
+                  className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black text-white p-3 sm:p-4 rounded-full transition-all shadow-2xl border border-white/20 cursor-pointer"
+                  aria-label="Próxima foto"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Rodapé / Miniaturas no Fullscreen */}
+          {profile.images.length > 1 && (
+            <div className="flex justify-center gap-2 overflow-x-auto py-2 z-10" onClick={(e) => e.stopPropagation()}>
+              {profile.images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`w-16 h-12 rounded-md overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                    activeImageIndex === idx ? "border-emerald-400 scale-110" : "border-transparent opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </Dialog>
   );
 }
+
