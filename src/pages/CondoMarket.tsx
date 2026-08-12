@@ -14,6 +14,7 @@ import SuperAdminMerchantsModal from "@/components/condo-market/SuperAdminMercha
 import EditClassifiedModal from "@/components/condo-market/EditClassifiedModal";
 import ServiceProfileModal from "@/components/condo-market/ServiceProfileModal";
 import RegisterServiceProfileModal from "@/components/condo-market/RegisterServiceProfileModal";
+import ServiceTermsModal from "@/components/condo-market/ServiceTermsModal";
 import AddReviewModal from "@/components/condo-market/AddReviewModal";
 import AdminAuthPinModal from "@/components/AdminAuthPinModal";
 import { ClassifiedItem, Coupon, Merchant, CurrentUser, ClassifiedStatus, ResidentServiceProfile } from "@/components/condo-market/types";
@@ -59,6 +60,7 @@ export default function CondoMarket() {
 
   // Modais de Serviços
   const [selectedServiceProfile, setSelectedServiceProfile] = useState<ResidentServiceProfile | null>(null);
+  const [isServiceTermsOpen, setIsServiceTermsOpen] = useState(false);
   const [isRegisterServiceOpen, setIsRegisterServiceOpen] = useState(false);
   const [reviewTargetProfile, setReviewTargetProfile] = useState<ResidentServiceProfile | null>(null);
   
@@ -512,7 +514,7 @@ export default function CondoMarket() {
               if (!currentUser) {
                 setIsRegisterOpen(true);
               } else {
-                setIsRegisterServiceOpen(true);
+                setIsServiceTermsOpen(true);
               }
             }}
           />
@@ -577,6 +579,16 @@ export default function CondoMarket() {
         isOpen={!!selectedServiceProfile}
         onClose={() => setSelectedServiceProfile(null)}
         onOpenReviewModal={(profileToReview) => setReviewTargetProfile(profileToReview)}
+      />
+
+      <ServiceTermsModal
+        isOpen={isServiceTermsOpen}
+        onClose={() => setIsServiceTermsOpen(false)}
+        onAccept={() => {
+          setIsServiceTermsOpen(false);
+          setIsRegisterServiceOpen(true);
+        }}
+        isSeniorMode={isSeniorMode}
       />
 
       <RegisterServiceProfileModal

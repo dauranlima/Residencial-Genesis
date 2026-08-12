@@ -48,7 +48,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-primary-foreground/10 mt-8 pt-6 text-center text-xs text-primary-foreground/50">
-          © {new Date().getFullYear()} Residencial Morada do Sol II. Todos os direitos reservados.
+          © {new Date().getFullYear()} viziGO . Todos os direitos reservados.
         </div>
       </div>
     </footer>

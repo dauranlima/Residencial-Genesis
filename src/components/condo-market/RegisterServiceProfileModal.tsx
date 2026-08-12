@@ -13,7 +13,8 @@ import { SERVICE_CATEGORIES } from "./categories";
 import { ResidentServiceProfile, CurrentUser } from "./types";
 import { uploadServiceProfileImages, saveResidentServiceProfileInSupabase } from "@/lib/residentServicesService";
 import { toast } from "sonner";
-import { Upload, X, Briefcase, Camera, Loader2 } from "lucide-react";
+import { Upload, X, Briefcase, Camera, Loader2, ShieldAlert } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RegisterServiceProfileModalProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ export default function RegisterServiceProfileModal({
   const [whatsapp, setWhatsapp] = useState("");
   const [paymentMethods, setPaymentMethods] = useState<string[]>(["PIX"]);
 
+  // Aceite dos Termos de Responsabilidade
+  const [acceptedTerms, setAcceptedTerms] = useState(true);
+
   // Upload de Fotos
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -51,6 +55,7 @@ export default function RegisterServiceProfileModal({
 
   useEffect(() => {
     if (isOpen) {
+      setAcceptedTerms(true);
       if (existingProfile) {
         setResidentName(existingProfile.residentName);
         setResidentBlock(existingProfile.residentBlock || "");
@@ -129,6 +134,10 @@ export default function RegisterServiceProfileModal({
     }
     if (!whatsapp.trim()) {
       toast.error("Informe seu número de WhatsApp para contato.");
+      return;
+    }
+    if (!acceptedTerms) {
+      toast.error("Você deve declarar que a atividade oferecida não fere o Regimento Interno do condomínio.");
       return;
     }
 
@@ -386,6 +395,22 @@ export default function RegisterServiceProfileModal({
                 </label>
               )}
             </div>
+          </div>
+
+          {/* Aceite dos Termos de Responsabilidade */}
+          <div className="flex items-start space-x-3 p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl">
+            <Checkbox
+              id="form-service-terms-check"
+              checked={acceptedTerms}
+              onCheckedChange={(checked) => setAcceptedTerms(!!checked)}
+              className="mt-0.5 h-4 w-4 border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=checked]:text-white"
+            />
+            <label
+              htmlFor="form-service-terms-check"
+              className="text-xs font-semibold text-slate-800 cursor-pointer select-none leading-snug"
+            >
+              Declaro explicitamente que a atividade oferecida não fere o Regimento Interno e a Convenção do meu condomínio, isentando a plataforma de qualquer responsabilidade legal.
+            </label>
           </div>
 
           {/* Submit Action */}
